@@ -3,6 +3,12 @@ const THREE_URL='./assets/vendor/three.module.js';
 try {
 const THREE=await import(THREE_URL);
 const {makeBoomerangTowerMesh,updateBoomerangAppearance,makeBoomerangWeapon,boomerangProjectileKind,triggerBoomerangThrow,animateBoomerang}=await import('./boomerang-visuals.js?v=1');
+const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBombBottomTowerMesh,makeBombMissileProjectile,animateBomb}=await import('./bomb-visuals.js?v=4');
+const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
+const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
+const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
+const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
+const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
 const canvas=document.getElementById('game');
 const livesEl=document.getElementById('lives'),cashEl=document.getElementById('cash'),roundEl=document.getElementById('round');
 const startBtn=document.getElementById('startBtn'),autoBtn=document.getElementById('autoBtn'),speedBtn=document.getElementById('speedBtn'),restartBtn=document.getElementById('restartBtn'),shopBtns=[...document.querySelectorAll('.towerBtn')];
@@ -34,11 +40,26 @@ const exactRoundData={"1":[[20,"Red"]],"2":[[35,"Red"]],"3":[[25,"Red"],[5,"Blue
 const upgradeData={
  dart:[[['Sharp Shots',140],['Razor Sharp Shots',200],['Spike-o-pult',320],['Juggernaut',1800],['Ultra-Juggernaut',15000]],[['Quick Shots',100],['Very Quick Shots',190],['Triple Shot',450],['Super Monkey Fan Club',7200],['Plasma Monkey Fan Club',45000]],[['Long Range Darts',90],['Enhanced Eyesight',200],['Crossbow',575],['Sharp Shooter',2050],['Crossbow Master',21500]]],
  boomer:[[['Improved Rangs',200],['Glaives',280],['Glaive Ricochet',600],['M.O.A.R Glaives',2000],['Glaive Lord',32500]],[['Faster Throwing',175],['Faster Rangs',250],['Bionic Boomerang',1250],['Turbo Charge',4200],['Perma Charge',35000]],[['Long Range Rangs',100],['Red Hot Rangs',300],['Kylie Boomerang',1300],['MOAB Press',2700],['MOAB Domination',50000]]],
- bomb:[[['Bigger Bombs',350],['Heavy Bombs',650],['Really Big Bombs',1100],['Bloon Impact',2800],['Bloon Crush',55000]],[['Faster Reload',250],['Missile Launcher',400],['MOAB Mauler',1000],['MOAB Assassin',3450],['MOAB Eliminator',28000]],[['Extra Range',200],['Frag Bombs',300],['Cluster Bombs',700],['Recursive Cluster',2500],['Bomb Blitz',23000]]],
- tack:[[['Faster Shooting',150],['Even Faster Shooting',300],['Hot Shots',600],['Ring of Fire',3500],['Inferno Ring',45500]],[['Long Range Tacks',100],['Super Range Tacks',225],['Blade Shooter',550],['Blade Maelstrom',2700],['Super Maelstrom',15000]],[['More Tacks',100],['Even More Tacks',100],['Tack Sprayer',450],['Overdrive',3200],['The Tack Zone',20000]]],
- ice:[[['Permafrost',150],['Cold Snap',350],['Ice Shards',1500],['Embrittlement',2300],['Super Brittle',28000]],[['Enhanced Freeze',200],['Deep Freeze',300],['Arctic Wind',2750],['Snowstorm',4000],['Absolute Zero',16000]],[['Larger Radius',150],['Re-Freeze',200],['Cryo Cannon',1900],['Icicles',2750],['Icicle Impale',30000]]],
+ bomb:[[['Bigger Bombs',250],['Heavy Bombs',650],['Really Big Bombs',1100],['Bloon Impact',2800],['Bloon Crush',55000]],[['Faster Reload',250],['Missile Launcher',400],['MOAB Mauler',1000],['MOAB Assassin',3450],['MOAB Eliminator',28000]],[['Extra Range',200],['Frag Bombs',300],['Cluster Bombs',700],['Recursive Cluster',2500],['Bomb Blitz',23000]]],
+ tack:[[['Faster Shooting',150],['Even Faster Shooting',300],['Hot Shots',600],['Ring of Fire',3500],['Inferno Ring',45500]],[['Long Range Tacks',100],['Super Range Tacks',225],['Blade Shooter',550],['Blade Maelstrom',2700],['Super Maelstrom',15000]],[['More Tacks',110],['Even More Tacks',110],['Tack Sprayer',450],['Overdrive',3200],['The Tack Zone',20000]]],
+ ice:[[['Permafrost',150],['Cold Snap',350],['Ice Shards',1500],['Embrittlement',2300],['Super Brittle',28000]],[['Enhanced Freeze',200],['Deep Freeze',300],['Arctic Wind',2750],['Snowstorm',4000],['Absolute Zero',21000]],[['Larger Radius',150],['Re-Freeze',200],['Cryo Cannon',1900],['Icicles',2750],['Icicle Impale',30000]]],
  glue:[[['Glue Soak',200],['Corrosive Glue',300],['Bloon Dissolver',2000],['Bloon Liquefier',5000],['The Bloon Solver',22500]],[['Bigger Globs',100],['Glue Splatter',970],['Glue Hose',1950],['Glue Strike',4000],['Glue Storm',16000]],[['Stickier Glue',280],['Stronger Glue',400],['MOAB Glue',3600],['Relentless Glue',4000],['Super Glue',24000]]]
 };
+const iceTopUpgradeMetadata=[
+ {prices:[125,150,160,180],xp:160},{prices:[295,350,380,420],xp:500},
+ {prices:[1275,1500,1620,1800],xp:2500},{prices:[1955,2300,2485,2760],xp:8250},
+ {prices:[23800,28000,30240,33600],xp:25000}
+];
+const iceMiddleUpgradeMetadata=[
+ {prices:[170,200,215,240],xp:160},{prices:[255,300,325,360],xp:500},
+ {prices:[2335,2750,2970,3300],xp:2500},{prices:[3400,4000,4320,4800],xp:8500},
+ {prices:[17850,21000,22680,25200],xp:27500}
+];
+const iceBottomUpgradeMetadata=[
+ {prices:[125,150,160,180],xp:160},{prices:[170,200,215,240],xp:500},
+ {prices:[1615,1900,2050,2280],xp:2500},{prices:[2335,2750,2970,3300],xp:9000},
+ {prices:[25500,30000,32400,36000],xp:30000}
+];
 const upgradeDescriptions={
  dart:[
   ['Adds +1 pierce; Crossbow/Sharp Shooter gain +3, and Crossbow Master gains +8.','Adds +2 pierce; Crossbow/Sharp Shooter gain +5 more, and Crossbow Master gains +8 more.','Fires bouncing spiked balls: 2 damage, 18 pierce, +15% range, 1.15s attack interval. Pops Frozen, but not Lead.','Fires faster bouncing balls: 2 damage, +3 Ceramic, +2 Fortified, 60 pierce, 1s attack interval and 0.15s knockback. Pops Lead.','Fires 210-pierce balls: 5 damage, +8 Ceramic, +20 Lead, +5 Fortified. Splits into six 50-pierce mini Juggernauts at 105 and 210 hits.'],
@@ -51,19 +72,19 @@ const upgradeDescriptions={
   ['Adds 14.19 range and widens the boomerang curve.','Pops Lead and Frozen bloons and adds +1 damage to the main attack and Glaive Lord orbitals. Perma Charge gains its larger damage bonus.','Throws straight out-and-back Kylies with 18 pierce. Each Kylie can hit a bloon again after 0.3 seconds.','Adds a separate 200-pierce throw that deals 1 damage to regular bloons and 5 to blimps, knocking blimps back. Can re-hit after 0.1 seconds. Top-path upgrades increase its pierce and knockback.','Adds +10 main damage and +36 pierce (+54 with Glaives). Both attacks fire twice as fast. Special throws gain +100 pierce, double range, stronger blimp damage and knockback, and explode in flames when they expire.']
  ],
  bomb:[
-  ['Larger explosions cover a wider area.','Heavier bombs improve the explosion.','Even larger bombs hit more bloons.','Explosions stun many regular bloons.','Massive crushing explosions can stop even very tough bloons.'],
-  ['Reloads bombs faster.','Launches bombs faster and from farther away.','Specializes in dealing heavy damage to MOAB-class bloons.','Adds a powerful MOAB-damaging ability.','Greatly improves the anti-MOAB ability and normal attacks.'],
-  ['Increases firing range.','Bombs release extra fragments after exploding.','Each explosion creates several smaller cluster explosions.','Clusters repeatedly split for much better group damage.','Adds a devastating emergency explosion when bloons leak.']
+  ['Increases blast radius from 12 to 18 and adds +6 pierce.','Adds +1 damage and +10 pierce.','27 blast radius, 4 damage and 80 pierce. Pushes regular bloons back 20 units and improves Frag Bombs.','Stuns regular bloons for 1.4s, adds +3 range and improves fragment pierce, count and lifespan.','24 damage; pops Black and Zebra bloons. Stuns regular bloons and blimps for 2s and pushes blimps back 5 units. BADs resist crowd control. Improves fragment damage and pierce.'],
+  ['Attacks 33% faster: 0.75× cooldown.','Uses missiles: another 0.7333× cooldown, +4 range and 50% faster projectiles.','Deals 16 damage to blimps, gains +5 range and gives fragments bonus blimp damage. Heavy Bombs adds +1 damage.','Deals 31 damage to blimps and 5 to Ceramics; gains +5 range. Ability instantly deals 750 damage to a blimp using this tower’s target priority, with a weaker explosion and stronger Frag Bombs.','Deals 100 damage to blimps. Ability instantly deals 4,500 damage with a 10s cooldown (3× faster). Improves Frag Bombs further.'],
+  ['Adds +12 range.','Adds +2 range. Explosions release sharp 1-pierce fragments that cannot pop Lead. Top-path upgrades improve fragments.','Replaces fragments with 8 secondary bombs per shot; each secondary explosion has 8 pierce.','All explosions deal 2 damage. Every second shot creates 3 explosion stages: 73 visible explosions, up to 17 hits per target.','5 damage per explosion, 0.9s base cooldown and recursive explosions every shot. Bomb Storm triggers after a life is lost: 2,000 damage across the map, then clears MOABs and regular bloons.']
  ],
  tack:[
-  ['Shoots tacks faster.','Further increases firing speed.','Heats the tacks, giving the Tack Shooter Lead-popping power.','Replaces tacks with a continuous ring of fire.','Creates an extremely powerful inferno around the tower.'],
-  ['Increases tack range.','Further increases tack range.','Replaces tacks with spinning blades.','Unlocks a screen-clearing blade storm ability.','A much stronger and longer-lasting blade storm.'],
-  ['Fires more tacks per attack.','Adds even more tacks to each volley.','Sprays a dense ring of tacks.','Extremely rapid short-range tack attacks.','The ultimate close-range tack tower with huge damage output.']
+  ['0.75× attack cooldown; Maelstrom blade interval becomes 0.85×.','Another 0.75× attack cooldown and 0.85× Maelstrom blade interval.','Tacks gain +1 damage and pop Lead and Frozen.','Flame bursts deal 5 damage with 30 pierce every 0.315s; cannot pop Purple. Super Range adds pierce and bottom crosspaths add damage.','Flame bursts deal 8 damage (+4 to blimps), with 35 range and 45 pierce. Also launches 700-damage explosive meteors that burn for 50 damage per second.'],
+  ['Adds +4 range and faster projectiles.','Adds +4 range and +3 pierce. Flame bursts gain +15 pierce; Inferno meteors gain +1 pierce. The Tack Zone gains +16 range and +8 pierce instead.','Adds +15 range and replaces tacks with 8-pierce blades that pop Frozen.','Main blades deal 2 damage. Ability sends two clockwise blade waves for 3 seconds.','Main blades deal 5 damage and pop all standard materials. Ability sends four stronger, higher-pierce clockwise waves for 9 seconds.'],
+  ['10 tacks per volley, or +1 Ring of Fire damage. Maelstrom turns counter-clockwise and gains 0.5s duration; Super Maelstrom gains 1.5s.','12 tacks per volley, or +2 total Ring of Fire damage. Adds another 0.5s Maelstrom or 1.5s Super duration.','16 tacks per volley and +1 pierce.','Attacks three times as fast (one-third cooldown).','32 tacks per volley, 0.6× cooldown, +7 range and bonus blimp damage. Super Range adds +8 pierce and +16 range.']
  ],
  ice:[
-  ['Frozen bloons stay slowed after thawing.','Cold Snap lets the Ice Monkey freeze Lead bloons.','Frozen bloons burst into damaging ice shards.','Makes affected bloons more vulnerable to other attacks.','Greatly increases the vulnerability effect against strong bloons.'],
-  ['Freezes bloons for longer.','Freezing can affect additional layers.','Creates a cold aura that slows nearby bloons.','Unlocks a map-wide freezing ability.','A stronger global freeze with improved slowing power.'],
-  ['Increases freeze radius.','Can freeze bloons again shortly after they thaw.','Fires freezing projectiles instead of relying only on the aura.','Frozen bloons grow damaging icicles.','Launches massive icicles designed to stop MOAB-class bloons.']
+  ['Bloons stay 50% slower after thawing, for as many layers as the freeze.','Detects Camo and freezes and pops Lead.','Adds 5 range. Removes Camo and Regrow on hit; popping its frozen bloons releases three equally spaced damaging shards.','Hits MOAB-class and DDTs. Removes Camo and Regrow; temporarily makes targets vulnerable to sharp/freezing attacks and adds 1 damage to incoming hits.','Attacks twice as fast. Targets take 4 extra damage; frozen bloons release six stronger shards. Deals extra Ceramic damage and slows blimps by 25%.'],
+  ['0.75× attack cooldown and a 1.75s freeze.','45 pierce, 2.2s freeze and two frozen layers.','Freezable bloons in range move 40% slower. Enables initial land-tower placement on water within its radius.','30 range. Ability freezes ordinary bloons for 6s and blimps, White, Zebra and Camo for 3s; soaks two regular layers. Lead requires popping power. 30s cooldown.','300 pierce and 40 range. Main attacks briefly freeze freezable bloons everywhere; main and ability freezes soak eight regular layers. Ability freezes all materials for 10s and makes all Ice Monkeys attack 50% faster for 10s. 25s cooldown.'],
+  ['Adds 7 range.','Can target and re-freeze already frozen bloons.','46 range. Shoots snowballs with a 20-unit blast radius, 40 pierce, 1 damage and a 1.2s freeze.','Faster 2-damage blasts, plus 8 damage to blimps without slowing them. Frozen regular bloons carry icicles for 2s: 3 damage to at most three non-frozen contacts.','Blasts deal 50 total damage to blimps and freeze them. Cold Snap is needed for Camo/Lead targets such as DDTs.']
  ],
  glue:[
   ['Glue soaks through extra bloon layers.','Glue slowly damages affected bloons.','Corrosive glue melts bloons much faster.','Greatly increases corrosive glue damage.','Extremely powerful glue that rapidly dissolves regular bloons.'],
@@ -72,12 +93,17 @@ const upgradeDescriptions={
  ]
 };
 const RANGE_SCALE=.32;
+const iceTopTuning={brittleDuration:3,shardDamage:1,superShardDamage:6,shardPierce:3,superShardPierce:6,shardSpeed:28,shardLife:.65,superCeramicBonus:2};
+const iceMiddleTuning={secondaryFreeze:.3};
+const iceBottomTuning={cryoCooldown:1,iciclesCooldown:.5,projectileSpeed:32,projectileLife:3,impaleFreeze:1.2,contactRadius:.85};
+let absoluteZeroBuffT=0;
+const waterRegions=[];
 const towerDefs={
  dart:{name:'Dart Monkey',cost:200,range:32*RANGE_SCALE,displayRange:32,rate:.95,damage:1,projSpeed:34,color:0x8b5a2b,pierce:2,damageType:'Sharp',notes:'Cannot hit Lead or Camo natively'},
  boomer:{name:'Boomerang Monkey',cost:325,range:43*RANGE_SCALE,displayRange:43,rate:1.2,damage:1,projSpeed:31,color:0xb76a31,pierce:4,damageType:'Sharp',notes:'Cannot hit Camo natively'},
- bomb:{name:'Bomb Shooter',cost:525,range:40*RANGE_SCALE,displayRange:40,rate:1.5,damage:1,projSpeed:26,color:0x3d4147,pierce:22,splash:4.5,damageType:'Explosion',notes:'Pops Lead; cannot hit Black, Zebra, or Camo'},
- tack:{name:'Tack Shooter',cost:260,range:23*RANGE_SCALE,displayRange:23,rate:1.12,damage:1,color:0xa64040,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
- ice:{name:'Ice Monkey',cost:400,range:20*RANGE_SCALE,displayRange:20,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:2.2,radial:true,damageType:'Cold',notes:'Freezes bloons in its radius; cannot affect Lead, White, Zebra, or Camo'},
+ bomb:{name:'Bomb Shooter',cost:600,range:40*RANGE_SCALE,displayRange:40,rate:1.5,damage:1,projSpeed:26,color:0x3d4147,pierce:22,splash:12*RANGE_SCALE,damageType:'Explosion',notes:'Pops Lead; cannot hit Black, Zebra, DDT, or Camo'},
+ tack:{name:'Tack Shooter',cost:260,costByDifficulty:{easy:220,medium:260,hard:280,impoppable:310},range:23*RANGE_SCALE,displayRange:23,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.12,damage:1,color:0xfa398b,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
+ ice:{name:'Ice Monkey',cost:400,towerClass:'Primary',placementSurfaces:['land','water'],range:25*RANGE_SCALE,displayRange:25,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:1.5,radial:true,damageType:'Cold',notes:'Freezes bloons for 1.5s; cannot affect Lead, White, Zebra, or Camo'},
  glue:{name:'Glue Gunner',cost:225,range:46*RANGE_SCALE,displayRange:46,rate:1.0,damage:0,projSpeed:27,color:0xd1b034,pierce:1,slow:.5,slowDuration:11,glueLayers:3,damageType:'Acid',notes:'50% slow for 11s; soaks 3 layers; cannot hit Camo'},
  hero:{name:'Quincy',cost:540,range:50*RANGE_SCALE,displayRange:50,rate:.95,damage:1,projSpeed:44,color:0x704527,hero:true,pierce:3,camoDetect:false}
 };
@@ -93,16 +119,16 @@ const primaryAbilities={
   {kind:'turbo',name:'Perma Charge',cooldown:45,duration:15,rateMult:1,damageBonus:8,color:0xffe35b,description:'Adds +8 damage for 15s while keeping permanent Turbo speed. Red Hot Rangs adds another +2 ability damage. 45s cooldown.'}
  ],
  bomb:[
-  {kind:'assassin',name:'MOAB Assassin',cooldown:30,duration:0,damage:750,color:0xff6948,description:'Launch a 750-damage missile at the strongest blimp anywhere on the map, including Camo DDTs.'},
-  {kind:'assassin',name:'MOAB Eliminator',cooldown:10,duration:0,damage:4500,color:0xff4b35,description:'Launch a 4,500-damage missile at the strongest blimp anywhere on the map, including Camo DDTs.'}
+  {kind:'assassin',name:'MOAB Assassin',cooldown:30,duration:0,damage:750,color:0xff6948,description:'Instantly deal 750 damage to a blimp anywhere on the map using First, Last, Close or Strong targeting, including Camo DDTs. Adds a weaker explosion and powerful Frag Bombs.'},
+  {kind:'assassin',name:'MOAB Eliminator',cooldown:10,duration:0,damage:4500,color:0xff4b35,description:'Instantly deal 4,500 damage to a blimp using this tower’s target priority, including Camo DDTs. 10s cooldown and stronger Frag Bombs.'}
  ],
  tack:[
-  {kind:'maelstrom',name:'Blade Maelstrom',cooldown:20,duration:3,tick:.15,damage:1,pierce:50,color:0x9fd9ff,description:'Fire a rotating storm of long-range blades for 3s. Hits Camo, but cannot pop Lead.'},
-  {kind:'maelstrom',name:'Super Maelstrom',cooldown:20,duration:9,tick:.12,damage:2,pierce:100,color:0xd9f4ff,description:'Fire stronger blades across the map for 9s. Hits Camo and Lead.'}
+  {kind:'maelstrom',name:'Blade Maelstrom',cooldown:20,duration:3,tick:.15,damage:2,pierce:50,waves:2,color:0x9fd9ff,description:'Two clockwise waves of stronger blades for 3s. Pops Frozen and hits Camo; cannot pop Lead.'},
+  {kind:'maelstrom',name:'Super Maelstrom',cooldown:20,duration:9,tick:.12,damage:4,pierce:100,waves:4,color:0xd9f4ff,description:'Four clockwise waves of stronger, higher-pierce blades for 9s. Pops all standard materials and hits Camo.'}
  ],
  ice:[
-  {kind:'snowstorm',name:'Snowstorm',cooldown:30,duration:0,freezeDuration:3,slowDuration:3,moabSlow:.5,color:0x7ae5ff,description:'Freeze all regular bloons for 3s and slow blimps by 50%. BADs are immune.'},
-  {kind:'snowstorm',name:'Absolute Zero',cooldown:30,duration:0,freezeDuration:6,slowDuration:10,moabSlow:.35,color:0xc4f8ff,description:'Freeze all regular bloons for 6s and slow blimps by 65% for 10s. BADs are immune.'}
+  {kind:'snowstorm',name:'Snowstorm',cooldown:30,duration:0,freezeDuration:6,specialFreezeDuration:3,freezeLayers:2,color:0x7ae5ff,description:'Freeze ordinary bloons for 6s, and White, Zebra, Camo and blimps for 3s. Lead requires popping power; BADs resist freezing. Soaks two regular layers.'},
+  {kind:'snowstorm',name:'Absolute Zero',cooldown:25,duration:0,freezeDuration:10,specialFreezeDuration:10,freezeLayers:8,color:0xc4f8ff,description:'Freeze all materials for 10s, including blimps (except BADs). Soaks eight regular layers. All Ice Monkeys attack 50% faster for 10s.'}
  ],
  glue:[
   {kind:'glueStorm',name:'Glue Strike',cooldown:30,duration:0,coatDuration:12,color:0xffe550,description:'Glue all bloons, including Camo and blimps, for 12s. Glued targets take +2 damage per hit. BADs cannot be slowed.'},
@@ -119,151 +145,99 @@ const boomerSpecialTuning={
   explosionDamage:20,explosionRadius:20*RANGE_SCALE,burnDamage:10,burnDuration:4}
 };
 
+// Provisional values: the supplied top-path table describes fragment improvements
+// without their magnitudes. Replace these when exact Frag Bombs stats arrive.
+const bombFragmentTuning={
+ base:{damage:1,pierce:1,count:8,life:.15},
+ big:{damage:2,pierce:3,count:12,life:.3},
+ impact:{damage:2,pierce:4,count:16,life:.45},
+ crush:{damage:12,pierce:10,count:16,life:.45},
+ middleMoabBonus:[0,0,0,5,10,20],
+ assassin:{damage:5,pierce:3,count:8,life:.3,moabBonus:50},
+ eliminator:{damage:20,pierce:6,count:12,life:.45,moabBonus:100},
+ speed:30
+};
+
+// The supplied table fixes counts, secondary pierce and the recursive hit limit.
+// Spread, flight time and unspecified larger radii use these prototype defaults.
+const bombClusterTuning={count:8,pierce:8,radius:12*RANGE_SCALE,
+ recursiveRadius:20*RANGE_SCALE,spread:6*RANGE_SCALE,flightTime:.16,
+ recursiveBlastMult:1.5,maxThirdStageHits:8};
+
+// Exact supplied damage/range/pierce values are in syncTackStats. These values
+// were omitted from the table and remain provisional until supplied.
+const tackTopTuning={infernoCooldown:.1,bottomFlameDamagePerTier:1,
+ meteorCooldown:4,meteorSpeed:28,meteorRange:Infinity,meteorExplosionDamage:50,
+ meteorExplosionRadius:18*RANGE_SCALE,meteorExplosionPierce:10,meteorBurnDuration:5};
+const tackTopUpgradeDetails=[
+ {costs:[125,150,160,180],xp:150},{costs:[255,300,325,360],xp:550},
+ {costs:[510,600,650,720],xp:2400},{costs:[2975,3500,3780,4200],xp:9500},
+ {costs:[38675,45500,49140,54600],xp:32500}
+];
+// Magnitudes omitted from the middle-path table. Other Maelstrom prototype
+// values (damage, pierce, tick and cooldown) remain in primaryAbilities.tack.
+const tackMiddleTuning={longRangeProjectileSpeedMult:1.25,maelstromAngularStep:.31};
+const tackMiddleUpgradeDetails=[
+ {costs:[85,100,110,120],xp:140},{costs:[190,225,245,270],xp:500},
+ {costs:[465,550,595,660],xp:2300},{costs:[2295,2700,2915,3240],xp:9000},
+ {costs:[12750,15000,16200,18000],xp:28000}
+];
+// The supplied Tack Zone table does not give the magnitude of its blimp bonus.
+const tackBottomTuning={zoneMoabDamage:2};
+const tackBottomUpgradeDetails=[
+ {costs:[95,110,120,130],xp:150},{costs:[95,110,120,130],xp:490},
+ {costs:[380,450,485,540],xp:2450},{costs:[2720,3200,3455,3840],xp:8750},
+ {costs:[17000,20000,21600,24000],xp:26500}
+];
+
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x79c94e);
 const camera=new THREE.OrthographicCamera(-34,34,19,-19,.1,200);
-camera.position.set(0,52,38);camera.lookAt(0,0,0);
-scene.add(new THREE.HemisphereLight(0xe8ffd8,0x52712e,2.3));
-const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-20,40,18);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=35;sun.shadow.camera.bottom=-35;scene.add(sun);
+camera.position.set(0,68,36);camera.lookAt(0,0,0);
+scene.add(new THREE.HemisphereLight(0xffffff,0x52712e,1.8));
+const sun=new THREE.DirectionalLight(0xffffff,1.8);sun.position.set(-20,40,-18);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=35;sun.shadow.camera.bottom=-35;scene.add(sun);
+// Keep curved missile shells from shadowing their own surface into striped noise.
+sun.shadow.normalBias=.03;sun.shadow.bias=-.0001;
 
-// Fully 3D meadow inspired by the supplied reference image.
-// The reference is used only as a visual guide: there is no image/texture laid under the map.
-const MAP_W=66,MAP_H=37.15;
-const grassMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x6fbd45,roughness:.98});
-const soilMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x477534,roughness:1});
-const ground=new THREE.Mesh(new THREE.BoxGeometry(MAP_W,1.15,MAP_H),grassMat);
-ground.position.y=-.59;ground.receiveShadow=true;scene.add(ground);
-const soilLip=new THREE.Mesh(new THREE.BoxGeometry(MAP_W+.35,.8,MAP_H+.35),soilMat);
-soilLip.position.y=-1.15;soilLip.receiveShadow=true;scene.add(soilLip);
-
-// Soft raised grass patches make the field feel modeled instead of like a flat PNG.
-const patchMatA=new THREE.MeshStandardMaterial({flatShading:true,color:0x79c94c,roughness:1});
-const patchMatB=new THREE.MeshStandardMaterial({flatShading:true,color:0x63ad3c,roughness:1});
-for(const [x,z,sx,sz,c] of [
- [-25,-12,6,3,0],[-16,13,5,2.8,1],[-4,-15,6,2.3,0],[10,14,7,2.5,1],[24,-13,6,3,0],[28,10,5,2.5,1],[-30,5,4,2.2,0],[2,3,4.5,2,1]
-]){
- const mound=new THREE.Mesh(new THREE.SphereGeometry(1,18,10),c?patchMatB:patchMatA);
- mound.scale.set(sx,.18,sz);mound.position.set(x,.04,z);mound.receiveShadow=true;scene.add(mound);
-}
-
-// Centerline retraced from the supplied image. The repeated center junctions intentionally
-// reproduce the top loop, lower-left loop, right loop, and bottom exit in the reference.
-const px=p=>new THREE.Vector3((p[0]/263-.5)*MAP_W,.52,(p[1]/148-.5)*MAP_H);
-const pathPx=[[0,58],[84,58],[84,22],[128,22],[128,58],[84,58],[84,83],[43,83],[43,118],[84,118],[84,83],[157,83],[165,75],[165,49],[198,49],[198,105],[117,105],[117,148]];
-const PATH=pathPx.map(px);
-const ROAD_WIDTH=4.05, EDGE_WIDTH=4.85;
-
-function addRaisedPath(){
- const stoneMat=new THREE.MeshStandardMaterial({flatShading:true,color:0xbcbdb6,roughness:.93});
- const edgeMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x70736d,roughness:1});
- const seamMat=new THREE.MeshBasicMaterial({color:0x888b84});
- // The first and last center points sit exactly on the map boundary. Their straight pieces
- // are not lengthened, and those two endpoints deliberately receive no round cap.
- for(let i=0;i<PATH.length-1;i++){
-  const a=PATH[i],b=PATH[i+1],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<.1)continue;
-  const angle=Math.atan2(dz,dx);
-  const extra=(i===0||i===PATH.length-2)?0:.4;
-  const innerExtra=(i===0||i===PATH.length-2)?0:.32;
-  const edge=new THREE.Mesh(new THREE.BoxGeometry(len+extra,.28,EDGE_WIDTH),edgeMat);edge.position.set((a.x+b.x)/2,.22,(a.z+b.z)/2);edge.rotation.y=-angle;edge.receiveShadow=true;scene.add(edge);
-  const inner=new THREE.Mesh(new THREE.BoxGeometry(len+innerExtra,.34,ROAD_WIDTH),stoneMat);inner.position.set((a.x+b.x)/2,.41,(a.z+b.z)/2);inner.rotation.y=-angle;inner.receiveShadow=true;scene.add(inner);
-  const count=Math.max(1,Math.floor(len/2.35));
-  for(let n=1;n<count;n++){
-   const t=n/count,x=THREE.MathUtils.lerp(a.x,b.x,t),z=THREE.MathUtils.lerp(a.z,b.z,t);
-   const seam=new THREE.Mesh(new THREE.BoxGeometry(.075,.035,ROAD_WIDTH-.25),seamMat);
-   seam.position.set(x,.595,z);seam.rotation.y=-angle;scene.add(seam);
-  }
- }
- // Rounded stones are only used at interior turns/junctions, never at the entry/exit.
- const seen=new Set();
- for(let i=1;i<PATH.length-1;i++){
-  const p=PATH[i],key=p.x.toFixed(2)+','+p.z.toFixed(2);if(seen.has(key))continue;seen.add(key);
-  const edgeCap=new THREE.Mesh(new THREE.CylinderGeometry(EDGE_WIDTH/2,EDGE_WIDTH/2,.29,28),edgeMat);edgeCap.position.set(p.x,.23,p.z);edgeCap.receiveShadow=true;scene.add(edgeCap);
-  const cap=new THREE.Mesh(new THREE.CylinderGeometry(ROAD_WIDTH/2,ROAD_WIDTH/2,.35,28),stoneMat);cap.position.set(p.x,.42,p.z);cap.receiveShadow=true;scene.add(cap);
- }
-}
-addRaisedPath();
-
-const ballObstacles=[];
-function addDecor(){
- const bushDark=new THREE.MeshStandardMaterial({flatShading:true,color:0x287f35,roughness:1});
- const bushMid=new THREE.MeshStandardMaterial({flatShading:true,color:0x439a45,roughness:1});
- const bushLight=new THREE.MeshStandardMaterial({flatShading:true,color:0x69ba50,roughness:1});
- const trunkMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x76512f,roughness:1});
- const rockMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x879087,roughness:1});
- const rockLight=new THREE.MeshStandardMaterial({flatShading:true,color:0xabb1a8,roughness:1});
- const flowerWhite=new THREE.MeshBasicMaterial({color:0xf9f4dc});
- const flowerYellow=new THREE.MeshBasicMaterial({color:0xffdf5a});
- const tuftMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x4d9d38,roughness:1,side:THREE.DoubleSide});
- const occupied=[];
-
- function pathClear(x,z,r){
-  for(let i=0;i<PATH.length-1;i++)if(pointSegDist(x,z,PATH[i],PATH[i+1])<EDGE_WIDTH/2+r+.35)return false;
-  return true;
- }
- function reserve(x,z,r){
-  if(Math.abs(x)>MAP_W/2-r-.3||Math.abs(z)>MAP_H/2-r-.3)return false;
-  if(!pathClear(x,z,r))return false;
-  for(const o of occupied)if(Math.hypot(o.x-x,o.z-z)<o.r+r+.25)return false;
-  occupied.push({x,z,r});return true;
- }
- function bushCluster(x,z,scale=1){
-  if(!reserve(x,z,1.7*scale))return;
-  const g=new THREE.Group();
-  const parts=[[0,0,1.25,0],[-.95,.12,.9,1],[.95,.12,.95,2],[-.4,.42,.72,2],[.48,.46,.7,1]];
-  for(const [dx,dz,size,c] of parts){const m=new THREE.Mesh(new THREE.SphereGeometry(size*scale,12,8),[bushDark,bushMid,bushLight][c]);m.position.set(dx*scale,.72*size*scale,dz*scale);m.scale.y=.85;m.castShadow=true;m.receiveShadow=true;g.add(m)}
-  g.position.set(x,0,z);scene.add(g);
- }
- function tree(x,z,scale=1){
-  if(!reserve(x,z,2.15*scale))return;
-  ballObstacles.push({x,z,radius:.4*scale,kind:'tree'});
-  const g=new THREE.Group();
-  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.28*scale,.4*scale,2.25*scale,9),trunkMat);trunk.position.y=1.12*scale;trunk.castShadow=true;g.add(trunk);
-  for(const [dx,dy,dz,size,c] of [[0,2.9,0,1.65,0],[-.95,2.65,.15,1.15,1],[.9,2.7,-.12,1.18,2],[.12,3.45,.12,1.0,1]]){const m=new THREE.Mesh(new THREE.SphereGeometry(size*scale,13,9),[bushDark,bushMid,bushLight][c]);m.position.set(dx*scale,dy*scale,dz*scale);m.scale.y=.9;m.castShadow=true;m.receiveShadow=true;g.add(m)}
-  g.position.set(x,0,z);scene.add(g);
- }
- function rock(x,z,s=.55){
-  if(!reserve(x,z,s+.18))return;
-  ballObstacles.push({x,z,radius:s,kind:'rock'});
-  const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),s>.6?rockMat:rockLight);m.position.set(x,s*.55,z);m.scale.set(1,.58,.85);m.rotation.y=(x*1.7+z)*.19;m.castShadow=true;m.receiveShadow=true;scene.add(m);
- }
- function tuft(x,z,scale=1){
-  if(!reserve(x,z,.42*scale))return;
-  const g=new THREE.Group();for(let i=0;i<4;i++){const blade=new THREE.Mesh(new THREE.PlaneGeometry(.14*scale,.72*scale),tuftMat);blade.position.set((i-1.5)*.1*scale,.36*scale,0);blade.rotation.y=i*Math.PI/4;g.add(blade)}g.position.set(x,0,z);scene.add(g);
- }
- function flowers(x,z){
-  if(!reserve(x,z,.45))return;
-  for(let i=0;i<3;i++){const petal=new THREE.Mesh(new THREE.SphereGeometry(.1,7,5),i===1?flowerYellow:flowerWhite);petal.position.set(x+(i-1)*.17,.12,z+(i%2)*.11);scene.add(petal)}
- }
-
- // A cleaner leafy frame: spaced placements instead of intersecting clusters.
- const border=[[-30,-15],[-24,-16],[-17,-16],[-10,-16],[-3,-16],[5,-16],[13,-16],[21,-16],[28,-14],[30,-9],[30,-3],[30,4],[30,10],[28,15],[21,16],[14,16],[7,16],[0,16],[-7,16],[-14,16],[-21,16],[-28,14],[-30,9],[-30,3],[-30,-4],[-30,-10]];
- border.forEach(([x,z],i)=>{if(i%5===1)tree(x,z,.72);else bushCluster(x,z,.72)});
-
- // Small details are hand-spaced and collision checked, keeping the playable lawn clean.
- [[-27,-10,.68],[-23,4,.5],[-14,14,.47],[-8,-12,.44],[7,-14,.58],[16,13,.47],[24,10,.58],[26,-8,.5]].forEach(v=>rock(...v));
- [[-25,9],[-19,-10],[-12,7],[-2,14],[4,-12],[11,7],[18,-10],[25,3],[-27,-2],[26,13],[-20,11],[20,-13]].forEach(v=>tuft(...v));
- [[-24,12],[-20,-13],[-9,13],[-3,-14],[8,12],[14,-13],[22,12],[26,-4],[-27,5],[27,6]].forEach(v=>flowers(...v));
-}
-addDecor();
+// The rendering and combat route share the traced reference coordinates.
+const PATH=createMeadowPath();
+const {ground,obstacles:ballObstacles}=createMeadowMap(scene);
 
 const rangeRing=new THREE.Mesh(new THREE.RingGeometry(.98,1,64),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.23,side:THREE.DoubleSide,depthWrite:false}));
 rangeRing.rotation.x=-Math.PI/2;rangeRing.visible=false;scene.add(rangeRing);
 
-function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);const aspect=r.width/r.height;const halfH=19;camera.left=-halfH*aspect;camera.right=halfH*aspect;camera.top=halfH;camera.bottom=-halfH;camera.updateProjectionMatrix()}
+function resize(){
+ const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);
+ // Fit the whole reference meadow beside the shop, including its entry and exit.
+ const aspect=r.width/r.height,shop=document.getElementById('shop'),shopWidth=shop?shop.getBoundingClientRect().width+24:0;
+ const playableWidth=Math.max(r.width*.40,r.width-shopWidth);
+ const halfH=Math.max(23.3,35/(playableWidth/r.height));
+ camera.left=-halfH*aspect;camera.right=halfH*aspect;camera.top=halfH;camera.bottom=-halfH;
+ const centerShift=halfH*shopWidth/r.height;
+ camera.position.set(centerShift,68,36);camera.lookAt(centerShift,0,0);camera.updateProjectionMatrix();
+}
 addEventListener('resize',resize);resize();
 function toastMsg(s){toast.textContent=s;toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),1200)}
-function updateUI(){livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=cash<d.cost||(d.hero&&heroPlaced)})}
+let uiDirty=true;
+function updateUI(){uiDirty=true;}
+function flushUI(){if(!uiDirty)return;uiDirty=false;livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=cash<d.cost||(d.hero&&heroPlaced)})}
 function selectShop(type){selectedType=type;selectedTower=null;rangeRing.visible=false;selPanel.classList.add('hidden');shopBtns.forEach(b=>b.classList.toggle('active',b.dataset.tower===type))}
 shopBtns.forEach(b=>b.addEventListener('click',()=>selectShop(b.dataset.tower)));
 
 function mat(color){return new THREE.MeshStandardMaterial({flatShading:true,color,roughness:.65,metalness:.02})}
 // All models are original procedural meshes; no optional model downloads are needed.
-function makeTowerMesh(type){
+function makeTowerMesh(type,legacyBomb=false,legacyTack=false,legacyIce=false){
  if(type==='boomer')return makeBoomerangTowerMesh();
+ if(type==='bomb'&&!legacyBomb)return makeBaseBombTowerMesh();
+ if(type==='tack'&&!legacyTack)return makeBaseTackTowerMesh();
+ if(type==='ice'&&!legacyIce)return makeBaseIceTowerMesh();
  const g=new THREE.Group(),body=new THREE.Group();g.add(body);g.userData.body=body;if(type==='dart')g.userData.appearanceKey='dart-legacy';
+ if(type==='bomb')Object.assign(g.userData,{bombBaseModel:false,bombModelPath:-1,bombModelTier:-1,bombRig:null});
+ if(type==='tack')Object.assign(g.userData,{tackBaseModel:false,tackModelPath:-1,tackModelTier:-1,tackModelPorts:0,tackRig:null});
+ if(type==='ice')Object.assign(g.userData,{iceBaseModel:false,iceModelPath:null,iceModelTier:null,iceRig:null});
  const part=(geometry,color,x,y,z,parent=body)=>{const m=new THREE.Mesh(geometry,mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
  const sphere=(r,color,x,y,z,parent=body)=>part(new THREE.SphereGeometry(r,10,6),color,x,y,z,parent);
  const cube=(w,h,d,color,x,y,z,parent=body)=>part(new THREE.BoxGeometry(w,h,d),color,x,y,z,parent);
@@ -532,6 +506,7 @@ function buildDartTopWeapon(t){
 }
 
 function updateWeaponAppearance(t){
+ if(t.mesh.userData.bombRig||t.mesh.userData.tackRig||t.mesh.userData.iceRig)return;
  if(t.mesh.userData.dartTopTier){buildDartTopWeapon(t);return;}
  const w=t.mesh.userData.weapon;for(const child of [...w.children])disposeTransientMesh(child);
  const add=(o)=>{w.add(o);return o};const [a,b,c]=t.paths;
@@ -566,6 +541,31 @@ function cyl(rt,rb,h,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.Cylinde
 function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,24),mat(color));o.rotation.x=Math.PI/2;o.position.y=y;return o}
 function updateTowerAppearance(t){
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
+ if(t.type==='ice'){
+  const tier=Math.max(...t.paths),path=t.paths.indexOf(tier);
+  if(t.mesh.userData.iceModelTier!==tier||t.mesh.userData.iceModelPath!==(tier?path:-1)){
+   const factory=[makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh][path];
+   replaceTowerBody(t,tier?factory(tier):makeBaseIceTowerMesh());
+  }
+  return;
+ }
+ if(t.type==='tack'){
+  const tier=Math.max(...t.paths),path=t.paths.indexOf(tier);
+  const portCount=path===0&&tier>=4?8:t.tacks;
+  if(t.mesh.userData.tackModelPath!==path||t.mesh.userData.tackModelTier!==tier||t.mesh.userData.tackModelPorts!==portCount){
+   const factory=[makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh][path];
+   replaceTowerBody(t,factory(tier,portCount));
+  }
+  return;
+ }
+ if(t.type==='bomb'){
+  const tier=Math.max(...t.paths),path=t.paths.indexOf(tier);
+  if(t.mesh.userData.bombModelPath!==path||t.mesh.userData.bombModelTier!==tier){
+   const factory=[makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBombBottomTowerMesh][path];
+   replaceTowerBody(t,factory(tier));
+  }
+  return;
+ }
  if(t.type==='dart'){
   const [top,middle,bottom]=t.paths;
   const middleTier=middle>=1&&middle<=5&&top<=2&&bottom<=2?middle:0;
@@ -647,8 +647,10 @@ function damageTypeNotes(t){
  const camo=t.camoDetect?'Can detect Camo':'Cannot hit Camo';
  if(t.damageType==='Normal')return `Pops all standard bloon materials • ${camo}`;
  if(t.damageType==='Heat')return `Pops Lead natively • ${camo}`;
+ if(t.damageType==='Flame')return `Pops Lead and Frozen; cannot pop Purple • ${camo}`;
  if(t.damageType==='Plasma')return `Pops Lead but not Purple • ${camo}`;
  if(t.damageType==='Explosion')return `Pops Lead; cannot pop Black or Zebra • ${camo}`;
+ if(t.type==='ice'&&t.brittle)return `Hits blimps and DDTs; strips Camo/Regrow; targets take +${t.brittle} damage • ${camo}`;
  if(t.damageType==='Cold Snap')return `Can freeze Lead; cannot affect White or Zebra • ${camo}`;
  if(t.damageType==='Cold')return `Cannot affect Lead, White, or Zebra • ${camo}`;
  if(t.damageType==='Shatter')return `Pops Frozen; cannot pop Lead • ${camo}`;
@@ -664,9 +666,16 @@ function getTowerAbilities(t){
   return abilities;
  }
  const tier=t.paths[1];
- if(t.type==='bomb'&&t.paths[2]>=5)return [{key:'blitz',kind:'blitz',name:'Bomb Blitz',passive:true,description:'Automatically triggers a 2,000-damage explosion across the map when a bloon leaks. 45s cooldown; does not restore lost lives.'}];
+ if(t.type==='bomb'&&t.paths[2]>=5)return [{key:'blitz',kind:'blitz',name:'Bomb Storm',passive:true,description:'After a life is lost, instantly deal 2,000 damage across the map, then clear surviving MOABs and regular bloons. 45s cooldown.'}];
  if(tier<4)return [];
- return [{...primaryAbilities[t.type][tier>=5?1:0],tier,key:'primary'}];
+ const ability={...primaryAbilities[t.type][tier>=5?1:0],tier,key:'primary'};
+ if(t.type==='tack'){
+  ability.tick*=Math.pow(.85,Math.min(2,t.paths[0]));
+  ability.duration+=Math.min(2,t.paths[2])*(tier>=5?1.5:.5);
+  ability.direction=tier===4&&t.paths[2]>=1?-1:1;
+  ability.description=`${ability.waves} ${ability.direction<0?'counter-clockwise':'clockwise'} blade waves for ${ability.duration}s. Pops Frozen and hits Camo${tier>=5?' and Lead':'; cannot pop Lead'}.`;
+ }
+ return [ability];
 }
 function abilityState(t,ability){
  const cooldown=ability.key==='rapid'?t.rapidCd:ability.key==='storm'?t.stormCd:ability.key==='blitz'?t.blitzCd:t.abilityCd;
@@ -711,7 +720,7 @@ function disposeTransientMesh(mesh){
  if(!mesh)return;
  mesh.removeFromParent();
  const geometries=new Set(),materials=new Set();
- mesh.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m)}});
+ mesh.traverse(o=>{o.userData?.bloonInstance?.renderer.release(o);if(o.geometry)geometries.add(o.geometry);if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m)}});
  for(const geometry of geometries)geometry.dispose();
  for(const material of materials)material.dispose();
 }
@@ -747,10 +756,36 @@ function getAttackTower(t){
 function strongestBlimp(){
  return enemies.filter(e=>e.alive&&e.isBlimp).sort((a,b)=>b.hp-a.hp||progress(b)-progress(a))[0]||null;
 }
+function chooseBombAbilityTarget(t){
+ const candidates=enemies.filter(e=>e.alive&&e.isBlimp);
+ if(t.target==='strong')return candidates.sort((a,b)=>b.hp-a.hp||progress(b)-progress(a))[0]||null;
+ if(t.target==='close')return candidates.sort((a,b)=>Math.hypot(a.mesh.position.x-t.x,a.mesh.position.z-t.z)-Math.hypot(b.mesh.position.x-t.x,b.mesh.position.z-t.z))[0]||null;
+ return candidates.sort((a,b)=>t.target==='last'?progress(a)-progress(b):progress(b)-progress(a))[0]||null;
+}
+function fireBombAbility(t,ability){
+ const target=chooseBombAbilityTarget(t);if(!target)return;
+ const position=target.mesh.position.clone();
+ // Damage resolves immediately. The flying missile only illustrates the strike.
+ aimTower(t,target);
+ fireProjectile(t,{alive:true,mesh:{position}},0,{visualType:'missile',abilityMissile:true,cosmetic:true,speed:55,splash:0,pierce:1});
+ hitEnemy(target,ability.damage,{tower:t});
+ const attack={...t,sourceTower:t,paths:[...t.paths],camoDetect:true,
+  fragStats:t.paths[2]>=2?bombFragmentTuning[ability.tier>=5?'eliminator':'assassin']:null};
+ spawnAbilityPulse(position.x,position.z,ability.color,t.splash);
+ spawnImpactVisual({type:'bomb',visualType:'missile',tower:attack,splash:t.splash},position);
+ // The unspecified weaker explosion uses the normal attack's damage/radius/pierce.
+ explodeBomb({tower:attack,target,damage:t.damage,splash:t.splash,pierce:t.pierce},position);
+}
 function emitMaelstrom(t,ability){
- const attack={...t,sourceTower:t,camoDetect:true,damageType:ability.tier>=5?'Normal':'Sharp'};
- t.abilityAngle+=.31;
- for(let i=0;i<8;i++)fireLinearProjectile(attack,t.abilityAngle+i*Math.PI/4,{visualType:'blade',cosmetic:false,damage:ability.damage,pierce:ability.pierce,speed:45,life:1.8,radius:.8});
+ const attack={...t,sourceTower:t,paths:[...t.paths],damage:ability.damage,bonusMoab:0,camoDetect:true,damageType:ability.tier>=5?'Normal':'Shatter'};
+ const waves=ability.waves??(ability.tier>=5?4:2);
+ const direction=ability.tier===4&&t.paths[2]>=1?-1:1;
+ t.abilityAngle+=direction*tackMiddleTuning.maelstromAngularStep;
+ for(let i=0;i<waves;i++){
+  const angle=t.abilityAngle+i*Math.PI*2/waves;
+  const origin=t.mesh.userData.tackRig?.rotor?tackAbilityOrigin(t,angle):null;
+  fireLinearProjectile(attack,angle,{visualType:'blade',cosmetic:false,damage:ability.damage,pierce:ability.pierce,speed:45,life:1.8,radius:.8,origin});
+ }
  t.recoil=.11;t.fireAnim=.24;
 }
 function coatMapWithGlue(t,ability){
@@ -758,6 +793,18 @@ function coatMapWithGlue(t,ability){
   if(!e.alive)continue;
   const slow=e.isBlimp?Math.max(.75,t.slow||.5):(t.slow||.5);
   hitEnemy(e,0,{tower:t,glue:true,slow,slowDuration:ability.coatDuration,allowBlimpSlow:true,damageAmp:2,glueLayers:99,glueDps:t.glueDps||0});
+ }
+}
+function applyMapIceFreeze(t,ability){
+ const absolute=ability.tier>=5;
+ if(absolute)absoluteZeroBuffT=Math.max(absoluteZeroBuffT,10);
+ t.fireAnim=.24;t.iceAbilityAnim=.8;
+ for(const e of enemies){
+  if(!e.alive||e.type==='BAD'||(!absolute&&['Lead','DDT'].includes(e.type)&&t.damageType!=='Cold Snap'&&t.damageType!=='Normal'))continue;
+  const duration=e.isBlimp||e.camo||['White','Zebra'].includes(e.type)?ability.specialFreezeDuration:ability.freezeDuration;
+  e.abilityFreezeT=Math.max(e.abilityFreezeT||0,duration);
+  if(!e.isBlimp){e.abilityFreezeLayers=Math.max(e.abilityFreezeLayers||0,ability.freezeLayers);if(t.postFreezeSlow<1){e.permafrostLayers=Math.max(e.permafrostLayers||0,ability.freezeLayers);e.permafrostSlow=Math.min(e.permafrostSlow||1,t.postFreezeSlow);}}
+  ensureFreezeMarker(e);
  }
 }
 function activateTowerAbility(t,key){
@@ -782,15 +829,10 @@ function activateTowerAbility(t,key){
    }
   }else if(ability.kind==='turbo')t.cool=0;
   else if(ability.kind==='assassin'){
-   fireProjectile(t,strongestBlimp(),ability.damage,{visualType:'missile',abilityMissile:true,speed:55,splash:0,pierce:1});
+   fireBombAbility(t,ability);
   }else if(ability.kind==='maelstrom')emitMaelstrom(t,ability);
   else if(ability.kind==='snowstorm'){
-   for(const e of enemies){
-    if(!e.alive||e.type==='BAD')continue;
-    if(e.isBlimp){e.abilitySlowT=Math.max(e.abilitySlowT,ability.slowDuration);e.abilitySlowMult=Math.min(e.abilitySlowMult,ability.moabSlow)}
-    else e.abilityFreezeT=Math.max(e.abilityFreezeT,ability.freezeDuration);
-    ensureFreezeMarker(e);
-   }
+   applyMapIceFreeze(t,ability);
   }else if(ability.kind==='glueStorm')coatMapWithGlue(t,ability);
   if(ability.duration>0&&ability.kind!=='fanClub')setAbilityHalo(t,ability);
   spawnAbilityPulse(t.x,t.z,ability.color,['snowstorm','glueStorm'].includes(ability.kind)?Math.hypot(MAP_W,MAP_H):t.range);
@@ -811,24 +853,41 @@ function updateTowerAbility(t,dt){
    while(t.abilityTick<=0){
     if(ability.kind==='maelstrom')emitMaelstrom(t,ability);
     else if(ability.kind==='glueStorm')coatMapWithGlue(t,ability);
-    t.abilityTick+=ability.tick;
+    const tick=ability.kind==='maelstrom'?primaryAbilities.tack[ability.tier>=5?1:0].tick*Math.pow(.85,Math.min(2,t.paths[0])):ability.tick;
+    t.abilityTick+=tick;
    }
   }
   if(t.abilityHalo)t.abilityHalo.scale.setScalar(1+.08*Math.sin(t.abilityTimer*8));
   if(t.abilityTimer<=0){disposeTransientMesh(t.abilityHalo);t.abilityHalo=null;t.activeAbility=null}
  }
 }
+function loseLives(amount){
+ if(amount<=0)return;
+ lives=Math.max(0,lives-amount);triggerBombBlitz();
+}
 function triggerBombBlitz(){
  for(const t of towers){
   if(t.type!=='bomb'||t.paths[2]<5||t.blitzCd>0)continue;
   t.blitzCd=45;
-  for(const e of [...enemies])if(e.alive)hitEnemy(e,2000,{tower:t});
-  spawnAbilityPulse(t.x,t.z,0xff7538,Math.hypot(MAP_W,MAP_H));toastMsg('Bomb Blitz!');
+  for(const e of [...enemies])if(e.alive)hitEnemy(e,2000,{tower:t,ignoreGlueAmp:true});
+  // Process children created by both phases too, so the storm leaves no MOAB or
+  // regular layers alive. Larger surviving blimps keep their remaining HP.
+  for(const e of enemies)if(e.alive&&(!e.isBlimp||e.type==='MOAB'))hitEnemy(e,e.hp,{tower:t,ignoreGlueAmp:true});
+  spawnAbilityPulse(t.x,t.z,0xff7538,Math.hypot(MAP_W,MAP_H));toastMsg('Bomb Storm!');
  }
 }
 function pointSegDist(x,z,a,b){const dx=b.x-a.x,dz=b.z-a.z,l2=dx*dx+dz*dz||1;let t=((x-a.x)*dx+(z-a.z)*dz)/l2;t=Math.max(0,Math.min(1,t));return Math.hypot(x-(a.x+t*dx),z-(a.z+t*dz))}
-function onPath(x,z){return PATH.some((p,i)=>i<PATH.length-1&&pointSegDist(x,z,p,PATH[i+1])<EDGE_WIDTH/2+.25)}
-function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType];if(Math.abs(x)>MAP_W/2-1||Math.abs(z)>MAP_H/2-1)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z))return toastMsg('Cannot place on the path');if(towers.some(t=>Math.hypot(t.x-x,t.z-z)<2.4))return toastMsg('Too close to another tower');cash-=d.cost;const t=createTower(selectedType,x,z);updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
+function onPath(x,z,clearance=.25){return PATH.some((p,i)=>i<PATH.length-1&&pointSegDist(x,z/meadowDepthScale,{x:p.x,z:p.z/meadowDepthScale},{x:PATH[i+1].x,z:PATH[i+1].z/meadowDepthScale})<EDGE_WIDTH/2+clearance)}
+function towerFootprintRadius(type){return towerDefs[type].footprintRadius??1.2}
+function towerFootprintsOverlap(type,x,z){return towers.some(t=>Math.hypot(t.x-x,t.z-z)<towerFootprintRadius(type)+towerFootprintRadius(t.type))}
+function placementSurface(x,z){return waterRegions.some(r=>x>=r.minX&&x<=r.maxX&&z>=r.minZ&&z<=r.maxZ)?'water':'land';}
+function frozenWaterSource(x,z){return towers.find(t=>t.type==='ice'&&t.paths[1]>=3&&(t.x-x)**2+(t.z-z)**2<=t.range*t.range)||null;}
+function surfacePlacement(type,x,z){
+ const surface=placementSurface(x,z),native=(towerDefs[type].placementSurfaces||['land']).includes(surface);
+ const source=surface==='water'&&!native?frozenWaterSource(x,z):null;
+ return {allowed:native||!!source,surface,frozenBy:source?.id??null};
+}
+function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType],edgeClearance=d.footprintRadius??1;if(Math.abs(x)>MAP_W/2-edgeClearance||Math.abs(z)>MAP_H/2-edgeClearance)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z,d.footprintRadius??.25))return toastMsg('Cannot place on the path');if(towerFootprintsOverlap(selectedType,x,z))return toastMsg('Too close to another tower');const placement=surfacePlacement(selectedType,x,z);if(!placement.allowed)return toastMsg('Place this tower on land or frozen water');cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
 
 function selectTower(t){selectedTower=t;selectedUpgradePath=null;selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected()}
 // Preserve the elements under the pointer between pointerdown and click.
@@ -845,7 +904,17 @@ function refreshSelected(){
  const attack=getAttackTower(t);
  rangeRing.scale.setScalar(attack.range);
  const shownRange=Math.round(attack.range/RANGE_SCALE*10)/10;
- selStats.innerHTML=`<b>Damage dealt: ${Math.floor(t.damageDealt||0).toLocaleString()}</b><br>Range ${shownRange} • Cooldown ${attack.rate.toFixed(2)}s • Damage ${attack.damage} • Pierce ${attack.pierce}<br><b>${attack.damageType||'Hero'}</b>${t.type==='hero'?'':' • '+damageTypeNotes(attack)}`;
+ selStats.innerHTML=`<b>Damage dealt: ${Math.floor(t.damageDealt||0).toLocaleString()}</b><br>Range ${shownRange} • Cooldown ${(attack.rate/(t.type==='ice'&&absoluteZeroBuffT>0?1.5:1)).toFixed(2)}s • Damage ${attack.damage} • Pierce ${attack.pierce}<br><b>${attack.damageType||'Hero'}</b>${t.type==='hero'?'':' • '+damageTypeNotes(attack)}`;
+ if(t.type==='tack'){
+  selStats.innerHTML+=`<br>${t.paths[0]>=4?'Flame burst':t.tacks+' nearby bloons per burst'} • Footprint radius 6`;
+  if(t.paths[2]>=5)selStats.innerHTML+=`<br>Tack damage to blimps: ${t.damage+(t.bonusMoab||0)}`;
+  if(t.paths[0]>=5)selStats.innerHTML+='<br>Flames: +4 blimp damage • Meteors: 700 impact damage • Burn: 50 damage/s';
+ }
+ if(t.type==='ice'&&t.cryo)selStats.innerHTML+=`<br>Blast radius 20 • Blimp damage ${t.damage+t.bonusMoab}${t.icicles?' • Icicles: 3 damage / 3 contacts / 2s':''}${t.canFreezeBlimps?' • Blimp freeze '+t.blimpFreeze+'s':''}`;
+ if(t.type==='ice')selStats.innerHTML+=`<br>${d.towerClass} • Freeze ${t.freeze}s • ${t.freezeLayers||1} frozen layer${(t.freezeLayers||1)>1?'s':''}${t.auraSlow?' • Aura: 40% slower':''}${absoluteZeroBuffT>0?' • Absolute Zero: +50% attack speed':''}`;
+ if(t.type==='bomb')selStats.innerHTML+=`<br>Blast radius ${Math.round(attack.splash/RANGE_SCALE*10)/10}${attack.stun?' • '+attack.stun+'s stun'+(attack.stunBlimps?' (bloons & blimps)':' (regular bloons)'):''}${attack.bombKnockback?' • 20-unit bloon knockback':''}${attack.bombMoabKnockback?' • 5-unit blimp knockback':''}`;
+ if(t.type==='bomb'&&t.paths[1]>=2)selStats.innerHTML+=`<br>Missile speed ${attack.projSpeed}${attack.bonusMoab?' • Blimp damage '+(attack.damage+attack.bonusMoab):''}${attack.ceramicBonus?' • Ceramic damage '+(attack.damage+attack.ceramicBonus):''}`;
+ if(t.type==='bomb'&&t.paths[2]>=3)selStats.innerHTML+=`<br>8 secondary bombs • 8 pierce each${t.paths[2]>=4?' • Recursive '+(t.paths[2]>=5?'every shot':'every second shot')+' (max 17 hits/target)':''}`;
  if(t.type==='dart'&&t.paths[0]>=3)selStats.innerHTML+=`<br>Projectile speed ${t.projSpeed||34} • Bounces off map edges, rocks and trunks${t.ceramicBonus?' • +'+t.ceramicBonus+' Ceramic':''}${t.leadBonus?' • +'+t.leadBonus+' Lead':''}${t.fortifiedBonus?' • +'+t.fortifiedBonus+' Fortified':''}${t.knockbackDuration?' • 0.15s knockback':''}${t.paths[0]>=5?' • Splits at 105 / 210 hits':''}`;
  if(t.fanTier)selStats.innerHTML+='<br>Fan Club attack boost active';
  if(t.type==='bomb'&&t.paths[2]>=5)selStats.innerHTML+='<br>Bomb Blitz: '+(t.blitzCd>0?'Cooldown '+Math.ceil(t.blitzCd)+'s':'Automatic on leak');
@@ -889,6 +958,61 @@ function syncDartStats(t){
   t.shots=middle>=3?3:1;
  }
 }
+function syncBombStats(t){
+ const [top,middle,bottom]=t.paths;
+ // Recompute from paths so buying a crosspath first gives the same final stats.
+ t.damage=top>=5?24:top>=3?4:(bottom>=5?5:bottom>=4?2:1)+(top>=2?1:0);
+ t.pierce=top>=3?80:22+(top>=1?6:0)+(top>=2?10:0);
+ t.splash=(top>=3?27:top>=1?18:12)*RANGE_SCALE;
+ t.range=(40+(top>=4?3:0)+(middle>=2?4:0)+(middle>=3?5:0)+(middle>=4?5:0)+(bottom>=1?12:0)+(bottom>=2?2:0))*RANGE_SCALE;
+ t.rate=1.5*(middle>=1?.75:1)*(middle>=2?.7333:1)*(bottom>=5?.6:1);
+ t.projSpeed=towerDefs.bomb.projSpeed*(middle>=2?1.5:1);
+ t.bonusMoab=middle>=5?99:middle>=4?30:middle>=3?15:0;
+ t.ceramicBonus=middle>=4?4:0;
+ t.damageType=top>=5?'Normal':'Explosion';
+ t.stun=top>=5?2:top>=4?1.4:0;t.stunBlimps=top>=5;
+ t.bombKnockback=top>=3?20*RANGE_SCALE:0;t.bombMoabKnockback=top>=5?5*RANGE_SCALE:0;
+ t.fragStats=bottom===2?{...bombFragmentTuning[top>=5?'crush':top>=4?'impact':top>=3?'big':'base'],moabBonus:bombFragmentTuning.middleMoabBonus[middle]}:null;
+}
+function syncTackStats(t){
+ const [top,middle,bottom]=t.paths,base=towerDefs.tack,flame=top>=4;
+ t.range=((top>=5?35:23)+(middle>=1?4:0)+(middle>=2?(bottom>=5?16:4):0)+(middle>=3?15:0)+(bottom>=5?7:0))*RANGE_SCALE;
+ t.rate=top>=5?tackTopTuning.infernoCooldown:top>=4?.315:base.rate*Math.pow(.75,Math.min(top,2));
+ if(bottom>=4)t.rate/=3;if(bottom>=5)t.rate*=.6;
+ t.tacks=flame?0:bottom>=5?32:bottom>=3?16:bottom>=2?12:bottom>=1?10:8;
+ t.pierce=flame?(top>=5?45:30)+(middle>=2?15:0):Math.max(base.pierce+(middle>=2?(bottom>=5?8:3):0)+(bottom>=3?1:0),middle>=3?8:0);
+ t.meteorPierce=top>=5?1+(middle>=2?1:0):0;
+ t.projSpeed=(middle>=3?32:36)*(middle>=1?tackMiddleTuning.longRangeProjectileSpeedMult:1);
+ t.damage=flame?(top>=5?8:5)+Math.min(bottom,2)*(top>=5?tackTopTuning.bottomFlameDamagePerTier:1):top>=3?2:1;
+ if(!flame){if(middle>=4)t.damage=Math.max(t.damage,2);if(middle>=5)t.damage=Math.max(t.damage,5);}
+ t.bonusMoab=top>=5?4:bottom>=5?tackBottomTuning.zoneMoabDamage:0;
+ t.damageType=flame?'Flame':middle>=5?'Normal':top>=3?'Heat':middle>=3?'Shatter':'Sharp';
+ if(t.activeAbility?.kind==='maelstrom'&&t.abilityTimer>0){
+  const ability=t.activeAbility,baseAbility=primaryAbilities.tack[ability.tier>=5?1:0];
+  const duration=baseAbility.duration+Math.min(2,bottom)*(ability.tier>=5?1.5:.5);
+  t.abilityTimer+=Math.max(0,duration-ability.duration);
+  ability.duration=duration;ability.direction=ability.tier===4&&bottom>=1?-1:1;
+ }
+}
+function syncIceStats(t){
+ const [top,middle,bottom]=t.paths,base=towerDefs.ice;
+ let range=bottom>=3?46:(middle>=5?40:middle>=4?30:25)+(bottom>=1?7:0);
+ range+=top>=3?5:0;
+ t.range=range*RANGE_SCALE;t.rate=(bottom>=4?iceBottomTuning.iciclesCooldown:bottom>=3?iceBottomTuning.cryoCooldown:base.rate)*(top>=5?.5:1)*(middle>=1?.75:1);
+ t.damage=bottom>=4?2:base.damage;t.bonusMoab=bottom>=5?48:bottom>=4?8:0;
+ t.pierce=middle>=5?300:middle>=2?45:40;
+ t.freeze=(bottom>=3?1.2:base.freeze)+(middle>=2?.7:middle>=1?.25:0);
+ t.refreeze=bottom>=2;t.cryo=bottom>=3;t.icicles=bottom>=4;t.canFreezeBlimps=bottom>=5;
+ t.blimpFreeze=bottom>=5?iceBottomTuning.impaleFreeze:0;
+ t.splash=bottom>=3?20*RANGE_SCALE:0;t.projSpeed=bottom>=3?iceBottomTuning.projectileSpeed:0;
+ t.freezeLayers=middle>=5?8:middle>=2?2:1;t.postFreezeSlow=top>=1?.5:1;
+ t.brittle=top>=5?4:top>=4?1:0;t.canHitBlimps=top>=4||bottom>=4;
+ t.iceCeramicBonus=top>=5?iceTopTuning.superCeramicBonus:0;
+ t.shardCount=top>=5?6:top>=3?3:0;t.shardDamage=top>=5?iceTopTuning.superShardDamage:iceTopTuning.shardDamage;
+ t.shardPierce=top>=5?iceTopTuning.superShardPierce:iceTopTuning.shardPierce;
+ t.stripIceProperties=top>=3;t.camoDetect=top>=2;t.damageType=t.camoDetect?'Cold Snap':'Cold';
+ t.auraSlow=middle>=3?.6:0;
+}
 function applyUpgrade(t,p,tier){
  t.invest+=upgradeData[t.type][p][tier][1];
  const T=tier+1;
@@ -911,20 +1035,13 @@ function applyUpgrade(t,p,tier){
   }
  }
  if(t.type==='bomb'){
-  if(p===0){if(T===1){t.splash*=1.5;t.pierce+=6}if(T===2){t.damage+=1;t.pierce+=10}if(T===3){t.damage=4;t.pierce=Math.max(t.pierce,80);t.splash*=1.5}if(T===4){t.range+=3*RANGE_SCALE;t.stun=1.4}if(T===5){t.damage=24;t.damageType='Normal';t.stun=2}}
-  if(p===1){if(T===1)t.rate*=.75;if(T===2){t.rate*=.8;t.range+=4*RANGE_SCALE}if(T===3)t.bonusMoab+=4;if(T===4)t.bonusMoab+=8;if(T===5){t.bonusMoab+=18;t.rate*=.75;t.damageType='Normal'}}
-  if(p===2){if(T===1)t.range+=12*RANGE_SCALE;if(T===2){t.range+=2*RANGE_SCALE;t.pierce+=8}if(T===3){t.pierce=Math.max(t.pierce,64);t.splash*=1.25}if(T===4){t.pierce+=32;t.rate*=.9}if(T===5){t.damage+=4;t.pierce+=60}}
+  if(p===2&&T===4)t.bombShotCounter=0;
+  syncBombStats(t);
  }
  if(t.type==='tack'){
-  if(p===0){if(T===1)t.rate*=.75;if(T===2)t.rate*=.75;if(T===3){t.damage+=1;t.damageType='Heat'}if(T===4){t.damage=5;t.rate=Math.min(t.rate,.5);t.tacks=Math.max(t.tacks,16);t.range+=4*RANGE_SCALE;t.damageType='Heat'}if(T===5){t.damage=8;t.rate=Math.min(t.rate,.12);t.tacks=Math.max(t.tacks,24);t.damageType='Heat'}}
-  if(p===1){if(T===1)t.range+=4*RANGE_SCALE;if(T===2){t.range+=4*RANGE_SCALE;t.pierce+=3}if(T===3){t.range+=15*RANGE_SCALE;t.pierce=Math.max(t.pierce,8)}if(T===4)t.damage=Math.max(t.damage,2);if(T===5){t.damage=Math.max(t.damage,5);t.damageType='Heat'}}
-  if(p===2){if(T===1)t.tacks=10;if(T===2)t.tacks=12;if(T===3){t.tacks=16;t.pierce+=1}if(T===4)t.rate/=3;if(T===5){t.tacks=32;t.rate*=.6;t.range+=7*RANGE_SCALE;t.damage+=2;t.bonusMoab+=2}}
+  syncTackStats(t);if(p===0&&T===5)t.meteorCool=0;
  }
- if(t.type==='ice'){
-  if(p===0){if(T===1)t.postFreezeSlow=.5;if(T===2){t.damageType='Cold Snap';t.camoDetect=true}if(T===3)t.range+=5*RANGE_SCALE;if(T===4){t.damage+=1;t.brittle=1}if(T===5){t.damage+=3;t.brittle=4;t.pierce+=50}}
-  if(p===1){if(T===1)t.rate*=.85;if(T===2)t.freeze+=1;if(T===3){t.auraSlow=.20;t.range+=5*RANGE_SCALE}if(T===4){t.range=Math.max(t.range,30*RANGE_SCALE);t.freeze+=1}if(T===5){t.pierce=300;t.range=Math.max(t.range,40*RANGE_SCALE);t.rate*=.67;t.freeze+=2}}
-  if(p===2){if(T===1)t.range+=10*RANGE_SCALE;if(T===2)t.rate*=.8;if(T===3){t.cryo=true;t.range=Math.max(t.range,45*RANGE_SCALE)}if(T===4){t.damage+=1;t.pierce+=20}if(T===5){t.damage+=40;t.bonusMoab+=20;t.freeze+=2;t.damageType='Cold Snap';t.camoDetect=true}}
- }
+ if(t.type==='ice')syncIceStats(t);
  if(t.type==='glue'){
   if(p===0){if(T===1)t.glueLayers=99;if(T===2)t.glueDps=.5;if(T===3){t.glueDps=2;t.pierce+=1;t.rate*=.5}if(T===4)t.glueDps=10;if(T===5){t.glueDps=20;t.pierce=Math.max(t.pierce,5);t.rate*=.5}}
   if(p===1){if(T===1)t.pierce+=1;if(T===2)t.pierce=Math.max(t.pierce,5);if(T===3)t.rate/=3;if(T===4)t.damageAmp=2;if(T===5){t.damageAmp=2;t.slowDuration*=2}}
@@ -942,60 +1059,19 @@ sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=M
 function pointerGround(ev){const r=canvas.getBoundingClientRect();pointer.x=((ev.clientX-r.left)/r.width)*2-1;pointer.y=-((ev.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObject(ground);return hits[0]?.point||null}
 canvas.addEventListener('pointerdown',ev=>{const p=pointerGround(ev);if(!p)return;if(selectedType){placeTower(p.x,p.z);return}let nearest=null,nd=2.1;for(const t of towers){const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<nd){nd=d;nearest=t}}if(nearest)selectTower(nearest);else{selectedTower=null;rangeRing.visible=false;selPanel.classList.add('hidden')}});
 
-function makeBloonMesh(layer,opts={}){
- const g=new THREE.Group();
- const name=layerNames[layer]||opts.type||'Red';
- const color=layerColors[layer]??0xe43c36;
- const isLead=name==='Lead';
- const matl=new THREE.MeshStandardMaterial({flatShading:true,color,roughness:isLead?.34:.38,metalness:isLead?.58:.03});
- const darkMat=new THREE.MeshStandardMaterial({flatShading:true,color:0x161616,roughness:.45,metalness:.02});
- const ceramicMat=new THREE.MeshStandardMaterial({flatShading:true,color:0xc89462,roughness:.62,metalness:.02});
- const addNormalBody=()=>{
-  const balloon=new THREE.Mesh(new THREE.SphereGeometry(.62,12,8),matl);balloon.scale.set(.90,1.22,.90);balloon.position.y=1.16;balloon.castShadow=true;g.add(balloon);
- };
- const addHeartBody=()=>{
-  // Regrow bloons use a chunky 3D heart silhouette rather than a round balloon.
-  for(const x of [-.28,.28]){const lobe=new THREE.Mesh(new THREE.SphereGeometry(.43,12,8),matl);lobe.scale.set(1,1.02,.92);lobe.position.set(x,1.34,0);lobe.castShadow=true;g.add(lobe)}
-  const lower=new THREE.Mesh(new THREE.ConeGeometry(.62,1.18,20),matl);lower.position.y=.86;lower.rotation.z=Math.PI;lower.scale.z=.88;lower.castShadow=true;g.add(lower);
- };
- if(opts.regrow)addHeartBody();else addNormalBody();
- const string=new THREE.Mesh(new THREE.CylinderGeometry(.016,.016,.27,3),mat(0xf5edce));string.position.y=.2;g.add(string);
- const knot=new THREE.Mesh(new THREE.ConeGeometry(.12,.25,7),matl);knot.position.y=.39;knot.rotation.z=Math.PI;g.add(knot);
-
- // Layer-specific model details.
- if(name==='Black'){
-  const sheen=new THREE.Mesh(new THREE.TorusGeometry(.52,.028,5,12),new THREE.MeshBasicMaterial({color:0x55585c}));sheen.rotation.x=Math.PI/2;sheen.position.y=1.24;g.add(sheen)
- }
- if(name==='White'){
-  const sheen=new THREE.Mesh(new THREE.TorusGeometry(.52,.025,5,12),new THREE.MeshBasicMaterial({color:0xc8d9e6}));sheen.rotation.x=Math.PI/2;sheen.position.y=1.24;g.add(sheen)
- }
- if(name==='Zebra'){
-  for(const y of [.90,1.18,1.46]){const stripe=new THREE.Mesh(new THREE.TorusGeometry(.55,.075,5,12),darkMat);stripe.rotation.x=Math.PI/2;stripe.position.y=y;g.add(stripe)}
- }
- if(name==='Rainbow'){
-  const cols=[0xef445f,0xffa62b,0xf7e34b,0x50c878,0x4f8cff,0x9a5ee8];
-  cols.forEach((c,i)=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(.56,.045,5,12),new THREE.MeshBasicMaterial({color:c}));ring.rotation.x=Math.PI/2;ring.position.y=.89+i*.115;g.add(ring)});
- }
- if(name==='Ceramic'){
-  // Ceramic shell ridges make the 10 HP layer visually distinct.
-  for(const y of [.84,1.04,1.24,1.44]){const ring=new THREE.Mesh(new THREE.TorusGeometry(.59,.055,5,12),ceramicMat);ring.rotation.x=Math.PI/2;ring.position.y=y;g.add(ring)}
-  const cap=new THREE.Mesh(new THREE.CylinderGeometry(.32,.42,.18,12),ceramicMat);cap.position.y=1.73;g.add(cap)
- }
- if(name==='Lead'){
-  for(const y of [.93,1.34]){const ring=new THREE.Mesh(new THREE.TorusGeometry(.57,.045,5,12),new THREE.MeshStandardMaterial({flatShading:true,color:0x646c73,roughness:.3,metalness:.72}));ring.rotation.x=Math.PI/2;ring.position.y=y;g.add(ring)}
+const bloonRenderer=new BloonRenderer(scene,makeBloonTemplate);
+function makeBloonMesh(layer,opts={}){return bloonRenderer.create(layer,opts);}
+function makeBloonTemplate(layer,opts={}){return makeReferenceBloonTemplate(layer,opts);}
+function finishBlimpMesh(g,type,opts={}){
+ if(opts.camo||type==='DDT'){
+  const replaced=new Set();g.traverse(part=>{
+   if(part.geometry?.type!=='SphereGeometry')return;
+   const old=part.material,base=old.color.clone();replaced.add(old);part.material=old.clone();part.material.color.setHex(0xffffff);part.material.vertexColors=true;
+   part.geometry=paintBloonGeometry(part.geometry,base,{type,camo:true});part.name='painted-camo-blimp-hull';
+  });
+  const used=new Set();g.traverse(part=>{if(part.material)used.add(part.material);});for(const material of replaced)if(!used.has(material))material.dispose();
  }
 
- // Camo = clear black stripes wrapped around the balloon.
- if(opts.camo){
-  for(const [y,rz] of [[.94,.48],[1.19,-.42],[1.43,.58]]){const stripe=new THREE.Mesh(new THREE.TorusGeometry(.59,.062,5,12),darkMat);stripe.rotation.x=Math.PI/2;stripe.rotation.z=rz;stripe.position.y=y;g.add(stripe)}
- }
- // Fortified = double HP plus ceramic-colored reinforcement rings.
- if(opts.fort){
-  for(const y of [.82,1.16,1.50]){const band=new THREE.Mesh(new THREE.TorusGeometry(.68,.075,5,12),ceramicMat);band.rotation.x=Math.PI/2;band.position.y=y;g.add(band)}
- }
- return g;
-}
-function finishBlimpMesh(g,type){
  const length={MOAB:2.6,BFB:3.15,ZOMG:3.7,DDT:2.75,BAD:4.55}[type]||2.6;
  const height={MOAB:1.55,BFB:1.72,ZOMG:1.92,DDT:1.48,BAD:2.18}[type]||1.55;
  const rotor=new THREE.Group();rotor.position.set(0,height,-length-.2);
@@ -1006,7 +1082,7 @@ function makeBlimpMesh(type,opts={}){
  const s=blimpStats[type],g=new THREE.Group();
  const std=(c,r=.42,m=.1)=>new THREE.MeshStandardMaterial({flatShading:true,color:c,roughness:r,metalness:m});
  const addFin=(parent,mat,x,y,z,scale=[1,1,1],rx=Math.PI/2,rz=0)=>{const fin=new THREE.Mesh(new THREE.ConeGeometry(.52,1.08,4),mat);fin.position.set(x,y,z);fin.rotation.x=rx;fin.rotation.z=rz;fin.scale.set(...scale);fin.castShadow=true;parent.add(fin);return fin};
- const addFortArmor=(parent,width,length,y)=>{if(!opts.fort)return;const mat=std(0xb8c0c7,.34,.48);for(const z of [-length*.28,length*.28]){const plate=new THREE.Mesh(new THREE.BoxGeometry(width,.26,.42),mat);plate.position.set(0,y,z);plate.castShadow=true;parent.add(plate)}};
+ const addFortArmor=(parent,width,length,y)=>{if(!opts.fort)return;const armor=std(0x96613d,.31,.48),edge=std(0xe0ded4,.28,.58);for(const z of [-length*.28,length*.28]){const plate=new THREE.Mesh(new THREE.BoxGeometry(width,.29,.55),armor);plate.name='fortified-bronze-blimp-armor';plate.position.set(0,y,z);plate.castShadow=true;parent.add(plate);for(const side of [-1,1]){const rim=new THREE.Mesh(new THREE.BoxGeometry(width+.035,.31,.055),edge);rim.position.set(0,y,z+side*.255);parent.add(rim)}}};
 
  if(type==='MOAB'){
   const blueMat=std(0x397fbe,.38,.12),blueDark=std(0x235f98,.45,.08),darkMat=std(0x20252b,.48,.16),panelMat=std(0xc9ced1,.42,.42),panelDark=std(0x737a80,.45,.28);
@@ -1020,7 +1096,7 @@ function makeBlimpMesh(type,opts={}){
   const rearCap=new THREE.Mesh(new THREE.CylinderGeometry(.62,.82,.34,16),darkMat);rearCap.rotation.x=Math.PI/2;rearCap.position.set(0,1.55,-2.48);g.add(rearCap);
   addFortArmor(g,1.65,3.7,2.38);
   g.userData.blimpVisualScale=1;
-  return finishBlimpMesh(g,type);
+  return finishBlimpMesh(g,type,opts);
  }
 
  if(type==='BFB'){
@@ -1036,7 +1112,7 @@ function makeBlimpMesh(type,opts={}){
   addFin(g,redDark,1.22,1.68,-2.18,[.9,1.15,.48],Math.PI/2,-Math.PI/2);addFin(g,redDark,-1.22,1.68,-2.18,[.9,1.15,.48],Math.PI/2,Math.PI/2);
   addFortArmor(g,2.05,4.7,2.73);
   g.userData.blimpVisualScale=1.28;
-  return finishBlimpMesh(g,type);
+  return finishBlimpMesh(g,type,opts);
  }
 
  if(type==='ZOMG'){
@@ -1053,7 +1129,7 @@ function makeBlimpMesh(type,opts={}){
   addFin(g,greenDark,0,3.05,-3.08,[1.18,1.4,.62],Math.PI/2,0);addFin(g,greenDark,0,.82,-3.08,[1.18,1.4,.62],Math.PI/2,Math.PI);addFin(g,greenDark,1.48,1.92,-3.0,[1.05,1.35,.56],Math.PI/2,-Math.PI/2);addFin(g,greenDark,-1.48,1.92,-3.0,[1.05,1.35,.56],Math.PI/2,Math.PI/2);
   addFortArmor(g,2.45,5.6,3.35);
   g.userData.blimpVisualScale=1.62;
-  return finishBlimpMesh(g,type);
+  return finishBlimpMesh(g,type,opts);
  }
 
  if(type==='DDT'){
@@ -1069,7 +1145,7 @@ function makeBlimpMesh(type,opts={}){
   const cam=new THREE.Mesh(new THREE.TorusGeometry(1.04,.05,5,12),new THREE.MeshBasicMaterial({color:0x587d55}));cam.rotation.x=0;cam.position.set(0,1.48,-.32);g.add(cam);
   addFortArmor(g,1.42,3.8,2.31);
   g.userData.blimpVisualScale=.98;
-  return finishBlimpMesh(g,type);
+  return finishBlimpMesh(g,type,opts);
  }
 
  if(type==='BAD'){
@@ -1086,12 +1162,12 @@ function makeBlimpMesh(type,opts={}){
   addFin(g,purpleDark,0,3.58,-3.70,[1.42,1.68,.72],Math.PI/2,0);addFin(g,purpleDark,0,.82,-3.70,[1.42,1.68,.72],Math.PI/2,Math.PI);addFin(g,purpleDark,1.82,2.18,-3.60,[1.25,1.6,.68],Math.PI/2,-Math.PI/2);addFin(g,purpleDark,-1.82,2.18,-3.60,[1.25,1.6,.68],Math.PI/2,Math.PI/2);
   addFortArmor(g,3.0,6.7,3.92);
   g.userData.blimpVisualScale=2.05;
-  return finishBlimpMesh(g,type);
+  return finishBlimpMesh(g,type,opts);
  }
 
  // Fallback, should only be reached for future blimp classes.
  const body=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),std(s.color,.48,.08));body.scale.set(...s.scale);body.position.y=1.55;body.castShadow=true;g.add(body);
- return finishBlimpMesh(g,type);
+ return finishBlimpMesh(g,type,opts);
 }
 function normalizeSpawnName(raw){
  let name=String(raw).replace(/\s+/g,' ').trim(),camo=/\bCamo\b/i.test(name),regrow=/\bRegrow\b/i.test(name),fort=/\bFortified\b/i.test(name),superCeramic=/Super Ceramic/i.test(name);
@@ -1103,10 +1179,21 @@ function normalizeSpawnName(raw){
  if(!name)throw new Error('Unknown bloon type: '+raw);
  return {type:name,camo,regrow,fort,superCeramic};
 }
+function blimpHealthMultiplier(r){
+ if(r<=80)return 1;
+ if(r<=100)return 1+(r-80)*.02;
+ if(r<=124)return 1.4+(r-100)*.05;
+ if(r<=150)return 2.6+(r-124)*.15;
+ if(r<=250)return 6.5+(r-150)*.35;
+ if(r<=300)return 41.5+(r-250);
+ if(r<=400)return 91.5+(r-300)*1.5;
+ if(r<=500)return 241.5+(r-400)*2.5;
+ return 491.5+(r-500)*5;
+}
 function enemyBaseHp(type,opts={}){
- if(blimpStats[type])return blimpStats[type].hp;
- if(opts.superCeramic&&type==='Ceramic')return 60;
- if(type==='Ceramic')return 10;
+ const spawnRound=opts.spawnRound??round;
+ if(blimpStats[type])return Math.round(blimpStats[type].hp*blimpHealthMultiplier(spawnRound));
+ if(type==='Ceramic')return opts.superCeramic||spawnRound>=81?60:10;
  return 1;
 }
 function placeEnemyOnTrack(e){
@@ -1119,15 +1206,17 @@ function spawnEnemy(spec,trackState=null){
  const o=typeof spec==='string'?normalizeSpawnName(spec):{...spec};
  if(!blimpStats[o.type]&&!Object.hasOwn(layerIndex,o.type))throw new Error('Unknown bloon type: '+o.type);
  if(o.type==='DDT')o.camo=true;
+ o.spawnRound=o.spawnRound??round;
+ if(o.type==='Ceramic'&&o.spawnRound>=81)o.superCeramic=true;
  const isBlimp=!!blimpStats[o.type];
  const layer=isBlimp?null:(layerIndex[o.type]??0);
  const mesh=isBlimp?makeBlimpMesh(o.type,o):makeBloonMesh(layer,o);scene.add(mesh);
  const hp=enemyBaseHp(o.type,o)*(o.fort?2:1);
- const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueDps:0,glueCarry:0,glueLayers:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
+ const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueDps:0,glueCarry:0,glueLayers:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
  enemies.push(e);placeEnemyOnTrack(e);return e;
 }
 function childProps(parent,type,regrowStack){
- return {type,camo:parent.camo,regrow:parent.regrow,fort:parent.fort,superCeramic:false,regrowStack};
+ return {type,camo:parent.camo,regrow:parent.regrow,fort:parent.fort,superCeramic:!!parent.superCeramic,spawnRound:parent.spawnRound??round,regrowStack};
 }
 function spawnChildSet(parent,types){
  const made=[];
@@ -1136,12 +1225,16 @@ function spawnChildSet(parent,types){
   const stack=parent.regrow?[parent.type,...(parent.regrowStack||[])]:[];
   const lane=(i-(total-1)/2)*.22;
   const child=spawnEnemy(childProps(parent,type,stack),{seg:parent.seg,dist:parent.dist,laneOffset:(parent.laneOffset||0)+lane});
-  child.abilityFreezeT=parent.abilityFreezeT;child.abilitySlowT=parent.abilitySlowT;child.abilitySlowMult=parent.abilitySlowMult;
+  if(!parent.isBlimp&&!child.isBlimp&&parent.abilityFreezeLayers>1){child.abilityFreezeT=parent.abilityFreezeT;child.abilityFreezeLayers=parent.abilityFreezeLayers-1;}
+  child.abilitySlowT=parent.abilitySlowT;child.abilitySlowMult=parent.abilitySlowMult;
   if(child.abilityFreezeT>0||child.abilitySlowT>0)ensureFreezeMarker(child);
   if(parent.glueT>0&&parent.glueLayers>1){
    child.glueT=parent.glueT;child.glueSlow=parent.glueSlow;child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glueDps=parent.glueDps;child.glueSource=parent.glueSource;child.glueLayers=parent.glueLayers-1;
    child.glued=true;ensureGlueMarker(child);
   }
+  if(parent.permafrostLayers>1){child.permafrostLayers=parent.permafrostLayers-1;child.permafrostSlow=parent.permafrostSlow;}
+  if(parent.freezeT>0&&parent.freezeLayers>1){child.freezeT=parent.freezeT;child.freezeLayers=parent.freezeLayers-1;child.iceShards=parent.iceShards;ensureFreezeMarker(child);}
+  if(parent.brittleT>0){child.brittleT=parent.brittleT;child.brittleDamage=parent.brittleDamage;}
   if(parent.burns?.length)child.burns=parent.burns.map(burn=>({...burn}));
   made.push(child);
  });
@@ -1155,8 +1248,10 @@ const regularChildren={
 const blimpChildren={MOAB:['Ceramic','Ceramic','Ceramic','Ceramic'],BFB:['MOAB','MOAB','MOAB','MOAB'],ZOMG:['BFB','BFB','BFB','BFB'],DDT:['Ceramic','Ceramic','Ceramic','Ceramic'],BAD:['ZOMG','ZOMG','ZOMG','ZOMG']};
 function destroyEnemyAndSpawnChildren(e){
  if(!e.alive)return[];
+ if(e.freezeT>0&&e.iceShards)releaseIceShards(e);
  spawnPopVisual(e);e.alive=false;disposeTransientMesh(e.mesh);
- const kids=e.isBlimp?blimpChildren[e.type]:regularChildren[e.type];
+ const normalKids=regularChildren[e.type];
+ const kids=e.isBlimp?blimpChildren[e.type]:e.superCeramic?normalKids?.slice(0,1):normalKids;
  return kids?spawnChildSet(e,kids):[];
 }
 // Distance along the whole track stays monotonic across corners.
@@ -1165,28 +1260,70 @@ function progress(e){return trackDistances[e.seg]+e.dist}
 function enemySpeed(e){
  const key=e.isBlimp?e.type:layerNames[Math.min(e.layer,layerNames.length-1)],base=(bloonSpeeds[key]||75)/9.5;
  if(e.type==='BAD')return base;
- if(e.abilityFreezeT>0)return 0;
- const slow=Math.min(e.slowT>0?e.slowMult:1,e.glueT>0?e.glueSlow:1,e.abilitySlowT>0?e.abilitySlowMult:1);
- return base*slow*(e.freezeT>0?.15:1);
+ if(e.abilityFreezeT>0||e.freezeT>0)return 0;
+ const slow=Math.min(e.auraSlowMult||1,e.permafrostLayers>0?(e.permafrostSlow||1):1,e.slowT>0?e.slowMult:1,e.glueT>0?e.glueSlow:1,e.abilitySlowT>0?e.abilitySlowMult:1);
+ return base*slow;
 }
 function leakDamage(e){if(e.isBlimp)return Math.max(1,Math.ceil(e.hp));return Math.max(1,(e.layer??0)+1)}
 function setEnemyType(e,newType){
- const old=e.mesh;disposeTransientMesh(old);e.glueMarker=null;e.freezeMarker=null;
+ const old=e.mesh;disposeTransientMesh(old);e.glueMarker=null;e.freezeMarker=null;e.icicleMarker=null;
  e.type=newType;e.layer=layerIndex[newType]??0;e.isBlimp=!!blimpStats[newType];
  e.hp=enemyBaseHp(newType,e)*(e.fort?2:1);e.maxHp=e.hp;e.maxLayer=e.layer;
  e.mesh=e.isBlimp?makeBlimpMesh(newType,e):makeBloonMesh(e.layer,e);scene.add(e.mesh);placeEnemyOnTrack(e);
  if(e.glueT>0)ensureGlueMarker(e);
- if(e.abilityFreezeT>0||e.abilitySlowT>0)ensureFreezeMarker(e);
+ if(e.abilityFreezeT>0||e.abilitySlowT>0||e.freezeT>0)ensureFreezeMarker(e);
+ if(e.icicles){const state=e.icicles;addIcicles(e,state.attack);e.icicles=state;}
 }
 function updateRegrow(e,dt){
  if(!e.regrow||e.isBlimp||!e.alive)return;
  e.regrowTimer+=dt;
- if(e.type==='Ceramic'&&e.hp<e.maxHp&&e.regrowTimer>=3){e.hp=Math.min(e.maxHp,e.hp+1);e.regrowTimer=0;return}
- if(e.regrowStack?.length&&e.regrowTimer>=3){const next=e.regrowStack.shift();setEnemyType(e,next);e.regrowTimer=0}
+ while(e.regrowTimer>=3){
+  if(e.type==='Ceramic'&&e.hp<e.maxHp){
+   // A ceramic shell is one layer, even when it has sixty hit points.
+   e.hp=e.maxHp;e.regrowTimer-=3;
+  }else if(e.regrowStack?.length){
+   const next=e.regrowStack.shift();setEnemyType(e,next);e.regrowTimer-=3;
+  }else{e.regrowTimer=0;break;}
+ }
+}
+function damageIcicleFamily(state,e,damage,initial=true){
+ if(!e.alive)return;state.hitEnemies.add(e);
+ const result=hitEnemy(e,damage,{tower:state.attack,ignoreGlueAmp:!initial});
+ for(const child of result?.children||[]){state.hitEnemies.add(child);if(result.remainingDamage>0)damageIcicleFamily(state,child,result.remainingDamage,false);}
+}
+function updateIcicleContacts(dt){
+ const hosts=enemies.filter(e=>e.alive&&e.icicles);if(!hosts.length||dt<=0)return;
+ // Index swept bounds so even fast bloons crossing an icicle can be found.
+ const grid=new Map(),size=2,radius=iceBottomTuning.contactRadius;
+ for(const e of enemies){
+  if(!e.alive||e.freezeT>0||e.abilityFreezeT>0)continue;
+  const p=e.mesh.position,px=e.previousX??p.x,pz=e.previousZ??p.z;
+  for(let x=Math.floor(Math.min(px,p.x)/size);x<=Math.floor(Math.max(px,p.x)/size);x++)for(let z=Math.floor(Math.min(pz,p.z)/size);z<=Math.floor(Math.max(pz,p.z)/size);z++){
+   const key=x+':'+z;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(e);
+  }
+ }
+ for(const host of hosts){
+  if(!host.alive)continue;const state=host.icicles,activeDt=Math.min(dt,state.remaining);state.remaining=Math.max(0,state.remaining-dt);
+  const fraction=activeDt/dt,p=host.mesh.position,px=host.previousX??p.x,pz=host.previousZ??p.z;
+  const hx=px+(p.x-px)*fraction,hz=pz+(p.z-pz)*fraction,visited=new Set();
+  for(let x=Math.floor((Math.min(px,hx)-radius)/size);x<=Math.floor((Math.max(px,hx)+radius)/size)&&state.pierceLeft>0;x++)for(let z=Math.floor((Math.min(pz,hz)-radius)/size);z<=Math.floor((Math.max(pz,hz)+radius)/size)&&state.pierceLeft>0;z++){
+   for(const e of grid.get(x+':'+z)||[]){
+    if(state.pierceLeft<=0)break;
+    if(visited.has(e))continue;visited.add(e);
+    if(e===host||!e.alive||e.freezeT>0||e.abilityFreezeT>0||state.hitEnemies.has(e)||!towerCanDamage(state.attack,e))continue;
+    const ep=e.mesh.position,ex=e.previousX??ep.x,ez=e.previousZ??ep.z;
+    if(pointSegDist(0,0,{x:ex-px,z:ez-pz},{x:ex+(ep.x-ex)*fraction-hx,z:ez+(ep.z-ez)*fraction-hz})>radius)continue;
+    state.pierceLeft--;damageIcicleFamily(state,e,3);
+   }
+  }
+  if(state.remaining<=0||state.pierceLeft<=0){host.icicles=null;clearIcicles(host);}
+ }
 }
 function moveEnemies(dt){
  for(const e of enemies){
   if(!e.alive)continue;
+  e.previousX=e.mesh.position.x;e.previousZ=e.mesh.position.z;
+  const frozenDt=Math.min(dt,Math.max(e.freezeT||0,e.abilityFreezeT||0));
   tickDominationBurns(e,dt);
   if(!e.alive)continue;
   if(e.shredT>0){
@@ -1206,41 +1343,49 @@ function moveEnemies(dt){
   if(e.glueT<=0&&e.glued){e.glued=false;e.glueSlow=1;e.glueDamageAmp=0;e.glueAmpT=0;e.glueDps=0;e.glueCarry=0;clearGlueMarker(e)}
   e.abilityFreezeT=Math.max(0,e.abilityFreezeT-dt);e.abilitySlowT=Math.max(0,e.abilitySlowT-dt);
   if(e.abilitySlowT<=0)e.abilitySlowMult=1;
-  if(e.abilityFreezeT<=0&&e.abilitySlowT<=0&&e.freezeT<=0&&e.freezeMarker){disposeTransientMesh(e.freezeMarker);e.freezeMarker=null}
+  e.brittleT=Math.max(0,(e.brittleT||0)-dt);if(e.brittleT<=0)e.brittleDamage=0;
   e.slowT=Math.max(0,e.slowT-dt);e.freezeT=Math.max(0,e.freezeT-dt);updateRegrow(e,dt);
+  if(e.abilityFreezeT<=0&&e.abilitySlowT<=0&&e.freezeT<=0&&e.freezeMarker){disposeTransientMesh(e.freezeMarker);e.freezeMarker=null}
+  e.auraSlowMult=1;
   if(!e.isBlimp){
    for(const t of towers){
     if(t.type==='ice'&&t.auraSlow&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range){
-     e.slowT=Math.max(e.slowT,.18);e.slowMult=Math.min(e.slowMult,t.auraSlow);
+     e.auraSlowMult=Math.min(e.auraSlowMult,t.auraSlow);
     }
    }
   }
   if(e.slowT<=0)e.slowMult=1;
-  const knockDt=e.isBlimp?0:Math.min(dt,e.knockbackT||0);e.knockbackT=Math.max(0,(e.knockbackT||0)-dt);
+  const motionDt=bombStunMotionDt(e,dt);
+  const knockDt=e.isBlimp?0:Math.min(motionDt,e.knockbackT||0);e.knockbackT=Math.max(0,(e.knockbackT||0)-dt);
   if(knockDt>0)retreatEnemy(e,e.knockbackSpeed*knockDt);
-  let move=enemySpeed(e)*(dt-knockDt);
+  let move=enemySpeed(e)*Math.min(motionDt-knockDt,dt-frozenDt);
   while(move>0&&e.alive){
    const a=PATH[e.seg],b=PATH[e.seg+1];
-   if(!b){lives-=leakDamage(e);e.alive=false;disposeTransientMesh(e.mesh);triggerBombBlitz();if(lives<=0)endGame(false);break}
+   if(!b){e.alive=false;disposeTransientMesh(e.mesh);loseLives(leakDamage(e));if(lives<=0)endGame(false);break}
    const len=a.distanceTo(b),remain=len-e.dist;
    if(move<remain){e.dist+=move;move=0}else{move-=remain;e.seg++;e.dist=0}
    if(e.alive){placeEnemyOnTrack(e);e.mesh.rotation.y=e.isBlimp?Math.atan2(b.x-a.x,b.z-a.z):Math.sin(animationTime*1.5+e.laneOffset)*.12}
   }
  }
  for(const e of enemies){if(e.alive){if(e.mesh.userData.rotor)e.mesh.userData.rotor.rotation.z+=dt*(e.type==='DDT'?22:9);e.mesh.position.y=.65+Math.sin(animationTime*2.4+progress(e)*.21)*(e.isBlimp?.045:.09);e.hitFlash=Math.max(0,(e.hitFlash||0)-dt);const squash=1-Math.sin(e.hitFlash/.16*Math.PI)*.09;e.mesh.scale.set(1/squash,squash,1/squash);}}
- for(let i=enemies.length-1;i>=0;i--)if(!enemies[i].alive)enemies.splice(i,1);updateUI()
+ updateIcicleContacts(dt);
+ let write=0;for(const enemy of enemies)if(enemy.alive)enemies[write++]=enemy;enemies.length=write;updateUI()
 }
 function towerCanDamage(t,e){
  const n=e.isBlimp?e.type:layerNames[e.layer];
+ if(t.type==='ice'&&e.isBlimp&&!t.canHitBlimps)return false;
+ const brittle=e.brittleT>0;
+ if(t.type==='ice'&&!t.refreeze&&!brittle&&!e.isBlimp&&(e.freezeT>0||e.abilityFreezeT>0))return false;
  if(e.camo&&!t.camoDetect&&t.type!=='hero')return false;
  if(t.type==='hero'&&t.level<5&&e.camo)return false;
  // DDTs carry Camo + Lead + Black properties. Camo is checked above; material immunities are checked here.
  if(t.damageType==='Explosion'&&(n==='Black'||n==='Zebra'||n==='DDT'))return false;
- if(t.damageType==='Cold'&&(n==='White'||n==='Zebra'||n==='Lead'||n==='DDT'))return false;
- if(t.damageType==='Cold Snap'&&(n==='White'||n==='Zebra'||n==='DDT'))return false;
- if(t.damageType==='Sharp'&&(n==='Lead'||n==='DDT'||e.freezeT>0))return false;
- if(t.damageType==='Shatter'&&(n==='Lead'||n==='DDT'))return false;
+ if(!brittle&&t.damageType==='Cold'&&(n==='White'||n==='Zebra'||n==='Lead'||n==='DDT'))return false;
+ if(!brittle&&!t.brittle&&t.damageType==='Cold Snap'&&(n==='White'||n==='Zebra'||(n==='DDT'&&!t.canHitBlimps)))return false;
+ if(!brittle&&t.damageType==='Sharp'&&(n==='Lead'||n==='DDT'||(!e.isBlimp&&(e.freezeT>0||e.abilityFreezeT>0))))return false;
+ if(!brittle&&t.damageType==='Shatter'&&(n==='Lead'||n==='DDT'))return false;
  if(t.damageType==='Plasma'&&n==='Purple')return false;
+ if(t.damageType==='Flame'&&n==='Purple')return false;
  return true;
 }
 function ensureGlueMarker(e){
@@ -1254,10 +1399,22 @@ function ensureGlueMarker(e){
 }
 function clearGlueMarker(e){if(e?.glueMarker){disposeTransientMesh(e.glueMarker);e.glueMarker=null}}
 function enemyMarkerHeight(e){return ({MOAB:2.8,BFB:3.2,ZOMG:3.6,DDT:2.6,BAD:4.25})[e.type]||2.05}
+const icicleMarkerRenderer=new BloonRenderer(scene,()=>{
+ const template=new THREE.Group(),material=new THREE.MeshStandardMaterial({color:0x8deaff,flatShading:true});
+ for(const x of [-.28,0,.28]){const spike=new THREE.Mesh(new THREE.ConeGeometry(.14,.55,4),material);spike.position.set(x,0,Math.abs(x)*.4);spike.rotation.z=-x*.5;template.add(spike);}return template;
+},{worldMatrices:true,castShadow:false});
+function addIcicles(e,t){
+ e.icicles={remaining:2,pierceLeft:3,hitEnemies:new Set(),attack:{type:'iceIcicle',damageType:'Sharp',camoDetect:t.camoDetect,sourceTower:sourceTowerForDamage(t)}};
+ if(!e.icicleMarker){e.icicleMarker=icicleMarkerRenderer.create(0);e.icicleMarker.position.y=enemyMarkerHeight(e)+.24;e.mesh.add(e.icicleMarker);}
+}
+function clearIcicles(e){if(e.icicleMarker){disposeTransientMesh(e.icicleMarker);e.icicleMarker=null;}}
+const freezeMarkerRenderer=new BloonRenderer(scene,()=>{
+ const template=new THREE.Group(),ring=new THREE.Mesh(new THREE.TorusGeometry(.75,.065,6,20),new THREE.MeshBasicMaterial({color:0xb9f3ff}));ring.rotation.x=Math.PI/2;template.add(ring);return template;
+},{worldMatrices:true,castShadow:false,materialFactory:()=>new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.8,depthWrite:false})});
 function ensureFreezeMarker(e){
  if(!e?.mesh||e.freezeMarker)return;
- const marker=new THREE.Mesh(new THREE.TorusGeometry(.75,.065,6,20),new THREE.MeshBasicMaterial({color:0xb9f3ff,transparent:true,opacity:.8}));
- marker.rotation.x=Math.PI/2;marker.position.y=enemyMarkerHeight(e)+.12;if(e.isBlimp)marker.scale.setScalar(1.5);e.mesh.add(marker);e.freezeMarker=marker;
+ const marker=freezeMarkerRenderer.create(0);
+ marker.position.y=enemyMarkerHeight(e)+.12;if(e.isBlimp)marker.scale.setScalar(1.5);e.mesh.add(marker);e.freezeMarker=marker;
 }
 
 function moveEnemyBackward(e,distance){
@@ -1269,9 +1426,11 @@ function moveEnemyBackward(e,distance){
  }
 }
 function sourceTowerForDamage(t){return t?.sourceTower||t}
+function projectileBounds(a,b,radius){return {minX:Math.min(a.x,b.x)-radius-1e-8,maxX:Math.max(a.x,b.x)+radius+1e-8,minZ:Math.min(a.z,b.z)-radius-1e-8,maxZ:Math.max(a.z,b.z)+radius+1e-8};}
+function inProjectileBounds(e,bounds){const p=e.mesh.position;return p.x>=bounds.minX&&p.x<=bounds.maxX&&p.z>=bounds.minZ&&p.z<=bounds.maxZ;}
 function hitEnemy(e,dmg,fx={}){
  if(!e||!e.alive)return;
- e.regrowTimer=0;if(dmg>0)e.hitFlash=.16;
+ if(dmg>0){e.regrowTimer=0;e.hitFlash=.16;}
  if(fx.glue&&(!e.isBlimp||fx.allowBlimpSlow)){
   e.glueT=Math.max(e.glueT,fx.slowDuration||2.8);
   e.glueSlow=e.type==='BAD'?1:Math.min(e.glueSlow,fx.slow||1);
@@ -1282,22 +1441,63 @@ function hitEnemy(e,dmg,fx={}){
  }else if(fx.slow&&e.type!=='BAD'&&(!e.isBlimp||fx.allowBlimpSlow)){
   e.slowT=Math.max(e.slowT,fx.slowDuration||2.8);e.slowMult=Math.min(e.slowMult,fx.slow);
  }
- const source=sourceTowerForDamage(fx.tower);
+ const source=sourceTowerForDamage(fx.tower),ice=fx.tower?.type==='ice'?fx.tower:null;
+ if(ice?.stripIceProperties){e.camo=false;e.regrow=false;e.regrowStack=[];e.mesh.userData?.bloonInstance?.renderer.restyle(e.mesh,e.layer,e);}
+ if(ice&&e.type==='Ceramic')dmg+=ice.iceCeramicBonus||0;
  let dealt=0,children=[];
- let left=dmg>0?Math.max(0,Math.floor(dmg+(fx.ignoreGlueAmp?0:e.glueDamageAmp))):0;
- while(left>0&&e.alive){
-  if(!e.isBlimp)cash+=cashPerPop(round);
-  e.hp-=1;left--;dealt++;
-  if(e.hp<=0){if(e.isBlimp)cash+=1;children=destroyEnemyAndSpawnChildren(e);break}
+ let left=dmg>0?Math.max(0,Math.floor(dmg+(fx.ignoreGlueAmp?0:(e.glueDamageAmp||0)+(e.brittleT>0?e.brittleDamage||0:0)))):0;
+ if(left>0&&e.alive){
+  const taken=Math.min(left,e.hp);if(!e.isBlimp)cash+=taken*cashPerPop(round);
+  e.hp-=taken;left-=taken;dealt=taken;
+  if(e.hp<=0){if(e.isBlimp)cash+=1;children=destroyEnemyAndSpawnChildren(e)||[];}
  }
- if(e.alive){
-  if(fx.freeze&&!e.isBlimp){e.freezeT=Math.max(e.freezeT,fx.freeze);ensureFreezeMarker(e);}
+ for(const target of e.alive?[e]:children){
+  if(ice){
+   if(ice.brittle){target.brittleT=Math.max(target.brittleT||0,iceTopTuning.brittleDuration);target.brittleDamage=Math.max(target.brittleDamage||0,ice.brittle);}
+   if(ice.postFreezeSlow<1&&(!target.isBlimp||ice.paths[0]>=5)&&target.type!=='BAD'){
+    target.permafrostLayers=Math.max(target.permafrostLayers||0,ice.freezeLayers||1);
+    target.permafrostSlow=Math.min(target.permafrostSlow||1,target.isBlimp?.75:ice.postFreezeSlow);
+   }
+  }
+  if(!fx.freeze||(target.isBlimp&&!ice?.canFreezeBlimps)||target.type==='BAD'||(fx.tower&&!towerCanDamage(fx.tower,target)))continue;
+  target.freezeT=Math.max(target.freezeT||0,target.isBlimp?ice.blimpFreeze:fx.freeze);target.freezeLayers=Math.max(target.freezeLayers||0,ice?.freezeLayers||1);
+  if(ice?.shardCount)target.iceShards={tower:source,count:ice.shardCount,damage:ice.shardDamage,pierce:ice.shardPierce,camoDetect:ice.camoDetect};
+  ensureFreezeMarker(target);if(ice?.icicles&&!target.isBlimp)addIcicles(target,ice);
  }
  if(source)source.damageDealt=(source.damageDealt||0)+dealt;
  updateUI();return {children,remainingDamage:left};
 }
-function chooseTarget(t){let inRange=enemies.filter(e=>e.alive&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range);if(!inRange.length)return null;if(t.camoPriority&&t.camoDetect){const camo=inRange.filter(e=>e.camo);if(camo.length)inRange=camo;}if(t.target==='first')return inRange.sort((a,b)=>progress(b)-progress(a))[0];if(t.target==='last')return inRange.sort((a,b)=>progress(a)-progress(b))[0];if(t.target==='strong')return inRange.sort((a,b)=>(b.isBlimp?1000+b.hp:(b.layer||0))-(a.isBlimp?1000+a.hp:(a.layer||0)))[0];return inRange.sort((a,b)=>Math.hypot(a.mesh.position.x-t.x,a.mesh.position.z-t.z)-Math.hypot(b.mesh.position.x-t.x,b.mesh.position.z-t.z))[0]}
+function releaseIceShards(e){
+ const stats=e.iceShards,origin=e.mesh.position;
+ const attack={type:'iceShard',sourceTower:stats.tower,damage:stats.damage,range:iceTopTuning.shardSpeed*iceTopTuning.shardLife,damageType:'Sharp',camoDetect:stats.camoDetect};
+ for(let i=0;i<stats.count;i++)fireLinearProjectile(attack,i*Math.PI*2/stats.count,{visualType:'ice',origin:{x:origin.x,y:origin.y+1,z:origin.z},cosmetic:false,damage:stats.damage,pierce:stats.pierce,speed:iceTopTuning.shardSpeed,life:iceTopTuning.shardLife,radius:.32});
+}
+function chooseTarget(t,candidates=enemies){
+ let best=null,bestScore=-Infinity,preferCamo=false;const rangeSquared=t.range*t.range;
+ for(const e of candidates){
+  if(!e.alive||!towerCanDamage(t,e))continue;
+  const dx=e.mesh.position.x-t.x,dz=e.mesh.position.z-t.z,distanceSquared=dx*dx+dz*dz;
+  if(distanceSquared>rangeSquared)continue;
+  const priority=!!(t.camoPriority&&t.camoDetect&&e.camo);
+  if(preferCamo&&!priority)continue;
+  if(priority&&!preferCamo){best=null;bestScore=-Infinity;preferCamo=true;}
+  const score=t.target==='first'?progress(e):t.target==='last'?-progress(e):t.target==='strong'?(e.isBlimp?1000+e.hp:e.layer||0):-distanceSquared;
+  if(score>bestScore){best=e;bestScore=score;}
+ }
+ return best;
+}
 function makeProjectileMesh(kind,angle=0){
+ if(kind==='iceSnowball')return new THREE.Mesh(new THREE.IcosahedronGeometry(.25,1),new THREE.MeshStandardMaterial({color:0xe4fbff,emissive:0x21b9d0,emissiveIntensity:.35,flatShading:true}));
+ if(kind==='iceImpale'){
+  const g=new THREE.Group(),tip=new THREE.Mesh(new THREE.ConeGeometry(.23,.94,5),new THREE.MeshStandardMaterial({color:0xd9faff,emissive:0x17bada,emissiveIntensity:.55,flatShading:true}));tip.rotation.x=Math.PI/2;g.add(tip);return g;
+ }
+ if(kind==='infernoMeteor'){
+  const g=new THREE.Group();
+  const core=new THREE.Mesh(new THREE.IcosahedronGeometry(.38,1),new THREE.MeshStandardMaterial({color:0xffcb3c,emissive:0xff8b15,emissiveIntensity:1.5,flatShading:true}));g.add(core);
+  const tail=new THREE.Mesh(new THREE.ConeGeometry(.30,1.35,7),new THREE.MeshBasicMaterial({color:0xff4a17}));tail.rotation.x=-Math.PI/2;tail.position.z=-.73;g.add(tail);g.userData.exhaust=tail;
+  const hot=new THREE.Mesh(new THREE.IcosahedronGeometry(.23,0),new THREE.MeshBasicMaterial({color:0xfff1a0}));hot.position.set(.08,.08,.22);g.add(hot);return g;
+ }
+ if(/^bombMissile[2-5]$/.test(kind))return makeBombMissileProjectile(Number(kind.at(-1)));
  if(['boomer','hotBoomer','glaive','hotGlaive','lordGlaive','hotLordGlaive','kylie','pressKylie','dominationKylie','bionicRang','turboRang','permaRang'].includes(kind))return makeBoomerangWeapon(kind);
  if(kind==='sharpDart'){
   const g=new THREE.Group();
@@ -1330,12 +1530,7 @@ function makeProjectileMesh(kind,angle=0){
   const mesh=new THREE.Mesh(new THREE.ConeGeometry(.13,.62,8),new THREE.MeshStandardMaterial({flatShading:true,color:0xff6b21,emissive:0xff3b00,emissiveIntensity:.65,roughness:.28,metalness:.15}));
   mesh.rotation.z=-Math.PI/2;mesh.rotation.y=-angle;return mesh;
  }
- if(kind==='blade'){
-  const g=new THREE.Group();
-  const m=new THREE.MeshStandardMaterial({flatShading:true,color:0xb9d8e8,metalness:.7,roughness:.2});
-  for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.75),m);b.rotation.y=i*Math.PI/2;b.position.z=.26;g.add(b)}
-  g.rotation.y=-angle;g.scale.setScalar(1.1);return g;
- }
+ if(kind==='blade')return makeTackBladeProjectile();
  if(kind==='fire'){
   const g=new THREE.Group();
   const core=new THREE.Mesh(new THREE.SphereGeometry(.21,10,8),new THREE.MeshStandardMaterial({flatShading:true,color:0xffb02e,emissive:0xff4b00,emissiveIntensity:1,roughness:.25}));g.add(core);
@@ -1382,6 +1577,7 @@ function makeProjectileMesh(kind,angle=0){
   return mesh;
  }
  if(kind==='bomb')return new THREE.Mesh(new THREE.SphereGeometry(.24,10,8),new THREE.MeshStandardMaterial({flatShading:true,color:0x222222,roughness:.7}));
+ if(kind==='bombFrag')return new THREE.Mesh(new THREE.OctahedronGeometry(.13),new THREE.MeshStandardMaterial({flatShading:true,color:0x8b929c,metalness:.35,roughness:.5}));
  if(kind==='glue'){
   const g=new THREE.Group();
   const m=new THREE.MeshStandardMaterial({flatShading:true,color:0xf1df32,emissive:0x6e5f00,emissiveIntensity:.12,roughness:.38});
@@ -1457,8 +1653,8 @@ function updateRicochet(p,dt){
    const radius=obstacle.radius+p.radius,distance=circleEntry(a,v,wall,obstacle.x,obstacle.z,radius);
    if(distance<wall){const hx=a.x+v.x*distance-obstacle.x,hz=a.z+v.z*distance-obstacle.z,h=Math.hypot(hx,hz)||1;if(v.x*hx+v.z*hz<0){wall=distance;normal={x:hx/h,z:hz/h};}}
   }
-  const hits=[];
-  for(const e of enemies){if(!e.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;const radius=p.radius+({MOAB:1.15,BFB:1.48,ZOMG:1.78,DDT:1,BAD:2.18}[e.type]||.55);const distance=circleEntry(a,v,wall,e.mesh.position.x,e.mesh.position.z,radius);if(Number.isFinite(distance))hits.push({e,distance});}
+  const hits=[],bounds=projectileBounds(a,{x:a.x+v.x*wall,z:a.z+v.z*wall},p.radius+2.18);
+  for(const e of enemies){if(!e.alive||!inProjectileBounds(e,bounds)||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;const radius=p.radius+({MOAB:1.15,BFB:1.48,ZOMG:1.78,DDT:1,BAD:2.18}[e.type]||.55);const distance=circleEntry(a,v,wall,e.mesh.position.x,e.mesh.position.z,radius);if(Number.isFinite(distance))hits.push({e,distance});}
   hits.sort((a,b)=>a.distance-b.distance);
   const start={...a};
   for(const {e,distance} of hits){if(!e.alive||p.hitEnemies.has(e))continue;a.x=start.x+v.x*distance;a.z=start.z+v.z*distance;
@@ -1478,6 +1674,7 @@ function updateRicochet(p,dt){
 }
 
 function fireProjectile(t,target,damage=t.damage,extra={}){
+ if(t.type==='ice'&&t.cryo&&!extra.cosmetic){fireIceProjectile(t,target);return;}
  let critical=false;
  if(t.type==='dart'&&t.critEvery&&!extra.cosmetic&&!extra.visualType){
   const source=t.sourceTower||t;source.critShotCounter=(source.critShotCounter||0)+1;
@@ -1488,6 +1685,7 @@ function fireProjectile(t,target,damage=t.damage,extra={}){
  if(!extra.visualType&&t.type==='dart'){if(t.fanTier>=5)kind='plasma';else if((t.paths?.[0]||0)>=5)kind='ultraJuggernautBall';else if((t.paths?.[0]||0)>=4)kind='juggernautBall';else if((t.paths?.[0]||0)>=3)kind='spikeball';else if((t.paths?.[2]||0)>=3)kind='crossbowBolt';else if((t.paths?.[0]||0)>=1)kind='sharpDart';}
  if(!extra.visualType&&t.type==='boomer')kind=boomerangProjectileKind(t);
  if(!extra.visualType&&t.type==='bomb'&&(t.paths?.[1]||0)>=2)kind='missile';
+ if(t.type==='bomb'&&kind==='missile'&&(t.paths?.[1]||0)>=2)kind='bombMissile'+Math.min(5,t.paths[1]);
  if(!extra.visualType&&t.type==='glue')kind='glue';
  if(t.type==='dart'&&['spikeball','juggernautBall','ultraJuggernautBall'].includes(kind)&&!extra.cosmetic){launchRicochet(t,target,kind);return;}
  const mesh=makeProjectileMesh(kind);
@@ -1522,7 +1720,13 @@ function fireProjectile(t,target,damage=t.damage,extra={}){
  if(extra.abilityMissile)mesh.scale.setScalar(1.8);
  scene.add(mesh);
  const mode=extra.mode||(t.type==='boomer'?'boomer':'homing');
- projectiles.push({mesh,target,logicalPosition,launchOffset,flightTime:0,tower:t,damage,critical,speed:extra.speed||t.projSpeed||towerDefs[t.type].projSpeed||32,type:t.type,splash:extra.splash??t.splash,slow:t.slow,freeze:t.freeze,pierce:extra.pierce??t.pierce,slowDuration:t.slowDuration,cosmetic:!!extra.cosmetic,abilityMissile:!!extra.abilityMissile,mode,life:extra.life||(1.4*(t.projectileLifeMult||1)),vx:extra.vx||0,vz:extra.vz||0,visualType:kind,radius:extra.radius||.5,curvePhase:Math.random()*Math.PI*2,travel:0});
+ let recursive=false;
+ if(t.type==='bomb'&&!extra.abilityMissile&&!extra.cosmetic){
+  const source=sourceTowerForDamage(t);source.bombShotCounter=(source.bombShotCounter||0)+1;
+  recursive=t.paths[2]>=5||(t.paths[2]>=4&&source.bombShotCounter%2===0);
+  t={...t,sourceTower:source,paths:[...t.paths]};
+ }
+ projectiles.push({mesh,target,logicalPosition,launchOffset,flightTime:0,tower:t,damage,critical,recursive,speed:extra.speed||t.projSpeed||towerDefs[t.type].projSpeed||32,type:t.type,splash:extra.splash??(t.splash*(recursive?bombClusterTuning.recursiveBlastMult:1)),slow:t.slow,freeze:t.freeze,pierce:extra.pierce??t.pierce,slowDuration:t.slowDuration,cosmetic:!!extra.cosmetic,abilityMissile:!!extra.abilityMissile,mode,life:extra.life||(1.4*(t.projectileLifeMult||1)),vx:extra.vx||0,vz:extra.vz||0,visualType:kind,radius:extra.radius||.5,curvePhase:Math.random()*Math.PI*2,travel:0});
 }
 function fireKylieProjectile(t,target,{mesh=null,damage=t.damage,special=false}={}){
  const tuning=t.paths[2]>=5?boomerSpecialTuning.domination:boomerSpecialTuning.press;
@@ -1540,10 +1744,38 @@ function fireKylieProjectile(t,target,{mesh=null,damage=t.damage,special=false}=
   pierceLeft:special?tuning.pierce+topPierce:t.pierce,knockback:special?tuning.knockback*knockMult:0,
   special,explodes:special&&t.paths[2]>=5,tuning});
 }
+function fireIceProjectile(t,target){
+ const attack={...t,paths:[...t.paths],sourceTower:sourceTowerForDamage(t)};
+ const kind=t.paths[2]>=5?'iceImpale':'iceSnowball',mesh=makeProjectileMesh(kind),origin=iceMuzzleOrigin(t);
+ mesh.position.set(origin.x,origin.y,origin.z);scene.add(mesh);
+ projectiles.push({mesh,tower:attack,type:'ice',visualType:kind,mode:'iceBomb',target,targetPoint:{x:target.mesh.position.x,z:target.mesh.position.z},logicalPosition:{x:t.x,z:t.z},launchOffset:{x:origin.x-t.x,y:origin.y-1.8,z:origin.z-t.z},flightTime:0,speed:t.projSpeed,life:iceBottomTuning.projectileLife,damage:t.damage,pierce:t.pierce});
+}
+function damageIceFamily(attack,e,damage,initial=true){
+ if(!e.alive)return;
+ const result=hitEnemy(e,damage,{tower:attack,freeze:attack.freeze,ignoreGlueAmp:!initial});
+ for(const child of result?.children||[])if(result.remainingDamage>0)damageIceFamily(attack,child,Math.min(result.remainingDamage,attack.damage+(child.isBlimp?attack.bonusMoab:0)),false);
+}
+function explodeIceProjectile(p,position){
+ const attack=p.tower,targets=enemies.filter(e=>e.alive&&towerCanDamage(attack,e)&&(e.mesh.position.x-position.x)**2+(e.mesh.position.z-position.z)**2<=attack.splash*attack.splash);
+ if(targets.includes(p.target)){targets.splice(targets.indexOf(p.target),1);targets.unshift(p.target);}
+ for(const e of targets.slice(0,p.pierce))if(e.alive)damageIceFamily(attack,e,p.damage+(e.isBlimp?attack.bonusMoab:0));
+ spawnImpactVisual({...p,splash:attack.splash},{...position,y:1.4});
+ if(visualEffects.length<80)spawnIceAuraVisual({x:position.x,z:position.z,range:attack.splash});
+}
+function updateIceProjectile(p,dt){
+ const travelDt=Math.min(dt,Math.max(0,p.life));p.life-=dt;p.flightTime+=travelDt;
+ if(p.target?.alive){p.targetPoint.x=p.target.mesh.position.x;p.targetPoint.z=p.target.mesh.position.z;}
+ const motion=p.logicalPosition,dx=p.targetPoint.x-motion.x,dz=p.targetPoint.z-motion.z,d=Math.hypot(dx,dz),step=p.speed*travelDt;
+ if(d<=step+.25){explodeIceProjectile(p,p.targetPoint);p.dead=true;return;}
+ motion.x+=dx/d*step;motion.z+=dz/d*step;p.mesh.rotation.y=Math.atan2(dx,dz);
+ const fade=Math.max(0,1-p.flightTime/.12);p.mesh.position.set(motion.x+p.launchOffset.x*fade,1.8+p.launchOffset.y*fade,motion.z+p.launchOffset.z*fade);
+ if(p.visualType==='iceSnowball')p.mesh.rotation.x+=travelDt*5;
+ if(p.life<=0)p.dead=true;
+}
 function fireLinearProjectile(t,angle,extra={}){
  const kind=extra.visualType||'tack';
  const mesh=makeProjectileMesh(kind,angle);
- mesh.position.set(t.x,kind==='tack'?1.15:1.55,t.z);
+ mesh.position.set(extra.origin?.x??t.x,extra.origin?.y??(kind==='tack'?1.15:1.55),extra.origin?.z??t.z);
  if(t.type==='dart')mesh.rotation.y=Math.PI/2-angle;
  scene.add(mesh);
  const speed=extra.speed||34;
@@ -1552,14 +1784,22 @@ function fireLinearProjectile(t,angle,extra={}){
 function spawnTackVolleyVisual(t){
  t.recoil=.11;t.fireAnim=.24;
  const count=Math.max(1,Math.round(t.tacks||8));
- const offset=(performance.now()/450)%(Math.PI*2/count);
+ const referenceBase=!!t.mesh.userData.tackRig;
+ const heading=t.mesh.rotation.y+(t.mesh.userData.body?.rotation.y||0);
+ const offset=Math.PI/2-heading;
  let visualType='tack';
  if((t.paths?.[0]||0)>=4)visualType='fire';
  else if((t.paths?.[1]||0)>=3)visualType='blade';
  else if((t.paths?.[0]||0)>=3)visualType='hotTack';
- const speed=visualType==='fire'?28:visualType==='blade'?32:36;
+ const speed=visualType==='fire'?28:t.projSpeed||(visualType==='blade'?32:36);
  const visibleCount=visualType==='fire'?Math.min(16,count):count;
- for(let i=0;i<visibleCount;i++)fireLinearProjectile(t,offset+i*Math.PI*2/visibleCount,{visualType,cosmetic:true,speed,life:Math.max(.28,t.range/(speed*.95)),radius:.35});
+ const attack={...t,sourceTower:t,paths:[...t.paths]};
+ for(let i=0;i<visibleCount;i++){
+  const angle=offset+i*Math.PI*2/visibleCount;
+  const origin=referenceBase?tackMuzzleOrigin(t,(count-i)%count):{x:t.x+Math.cos(angle)*1.45,y:1.66,z:t.z+Math.sin(angle)*1.45};
+  const muzzleDistance=origin?Math.hypot(origin.x-t.x,origin.z-t.z):0;
+  fireLinearProjectile(attack,angle,{visualType,cosmetic:true,speed,life:Math.max(.001,(t.range-muzzleDistance)/speed),radius:visualType==='blade'?.8:.35,pierce:t.pierce,origin});
+ }
 }
 function spawnIceAuraVisual(t){
  const radius=Math.max(.5,t.range);
@@ -1588,8 +1828,8 @@ function spawnArrowRainVisual(e){
 }
 function spawnImpactVisual(p,position){
  if(p.critical)spawnBurst(position,0xffd151,5,2,.3,'impact');
- const colors={bomb:0xffb657,missile:0xffb657,glue:0xf6dd4e,ice:0xb8f4ff,hotBoomer:0xff7138,plasma:0xcb93ff};
- const color=p.type==='glue'?((p.tower.paths?.[0]||0)>=2?0x83d961:(p.tower.paths?.[2]||0)>=3?0xba8ce3:0xf6dd4e):colors[p.visualType];if(color)spawnBurst(position,color,p.splash?8:4,p.splash?4:1.5,.25,'impact');
+ const colors={bomb:0xffb657,missile:0xffb657,infernoMeteor:0xff9522,glue:0xf6dd4e,ice:0xb8f4ff,iceSnowball:0xb8f4ff,iceImpale:0x7eefff,hotBoomer:0xff7138,plasma:0xcb93ff};
+ const color=p.type==='glue'?((p.tower.paths?.[0]||0)>=2?0x83d961:(p.tower.paths?.[2]||0)>=3?0xba8ce3:0xf6dd4e):p.visualType?.startsWith('bombMissile')?0xffb657:colors[p.visualType];if(color)spawnBurst(position,color,p.splash?8:4,p.splash?4:1.5,.25,'impact');
 }
 function updateVisualEffects(dt){
  for(const fx of visualEffects){
@@ -1609,7 +1849,7 @@ function animateTower(t,dt){
  t.fireAnim=Math.max(0,t.fireAnim-dt);const phase=t.fireAnim/.24,kick=Math.sin(phase*Math.PI);const idle=Math.sin(animationTime*2+t.id*.8);
  const body=t.mesh.userData.body,w=t.mesh.userData.weapon;body.position.y=idle*.035;
  if(t.mesh.userData.loadedAmmo)t.mesh.userData.loadedAmmo.visible=t.fireAnim<=.06;
- if(t.type==='tack'){body.scale.set(1+kick*.08,1-kick*.12,1+kick*.08);body.rotation.y+=dt*(t.activeAbility?.kind==='maelstrom'?8:.12);}
+ if(t.type==='tack'){body.scale.set(1+kick*.08,1-kick*.12,1+kick*.08);body.rotation.y+=dt*(t.activeAbility?.kind==='maelstrom'?8*(t.activeAbility.direction??1):.12);}
  else{body.rotation.x=-kick*.055;if(w.userData.rest){w.position.copy(w.userData.rest);if(t.type==='bomb')w.position.x-=kick*.25;else w.position.z-=kick*.16;w.rotation.x=t.mesh.userData.dartTopTier>=3?-kick*.34:t.type==='boomer'?kick*.7:t.type==='hero'?-kick*.22:-kick*.08;}
  if(t.type==='hero'&&w.children[1])w.children[1].position.z=-kick*.2;
  if(t.mesh.userData.uniformCape)t.mesh.userData.uniformCape.rotation.x=Math.sin(animationTime*2+t.id)*.045;
@@ -1634,16 +1874,107 @@ function updateMOABPress(t,dt){
   t.pressCool+=boomerSpecialTuning.cooldown*t.rate/towerDefs.boomer.rate;
  }
 }
+function damageTackFamily(p,e,damage,initial=true){
+ if(!e.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))return;
+ p.hitEnemies.add(e);const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial});
+ for(const child of result?.children||[]){
+  p.hitEnemies.add(child);
+  if(result.remainingDamage>0){
+   p.hitEnemies.delete(child);
+   damageTackFamily(p,child,Math.min(result.remainingDamage,p.tower.damage+(child.isBlimp?p.tower.bonusMoab||0:0)),false);
+  }
+ }
+}
+function spawnTackFlameVisual(t){
+ if(visualEffects.length>=80)return;
+ const material=new THREE.MeshBasicMaterial({color:t.paths[0]>=5?0xffbf25:0xff6625,transparent:true,opacity:.30,depthWrite:false,side:THREE.DoubleSide});
+ const disc=new THREE.Mesh(new THREE.CircleGeometry(t.range,48),material);disc.rotation.x=-Math.PI/2;disc.position.set(t.x,.62,t.z);scene.add(disc);
+ const edge=new THREE.Mesh(new THREE.TorusGeometry(t.range,.14,6,48),new THREE.MeshBasicMaterial({color:0xffd452,transparent:true,opacity:.72,depthWrite:false}));edge.rotation.x=Math.PI/2;edge.position.set(t.x,.66,t.z);scene.add(edge);
+ visualEffects.push({kind:'tackFlame',meshes:[disc,edge],life:.20,maxLife:.20});
+}
+function fireTackFlameBurst(t){
+ const candidates=enemies.filter(e=>e.alive&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range).sort((a,b)=>progress(b)-progress(a));
+ if(!candidates.length)return false;
+ const p={tower:t,hitEnemies:new Set()};let hits=0;
+ for(const e of candidates){if(hits>=t.pierce)break;if(!e.alive||p.hitEnemies.has(e))continue;hits++;damageTackFamily(p,e,t.damage+(e.isBlimp?t.bonusMoab||0:0));}
+ t.fireAnim=.24;t.recoil=.11;spawnTackFlameVisual(t);return true;
+}
+function fireTackRadialBurst(t){
+ // Resolve normal volleys throughout the range circle; flying tacks are cosmetic.
+ const count=Math.max(1,Math.round(t.tacks||8));
+ const targets=enemies.filter(e=>e.alive&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range).slice(0,count);
+ if(!targets.length)return false;
+ const p={tower:t,hitEnemies:new Set()};
+ for(const e of targets)damageTackFamily(p,e,t.damage+(e.isBlimp?t.bonusMoab||0:0));
+ spawnTackVolleyVisual(t);return true;
+}
+function addInfernoBurn(e,t){
+ const source=sourceTowerForDamage(t);e.burns=e.burns||[];
+ const burn=e.burns.find(b=>b.source===source);
+ if(burn){burn.remaining=Math.max(burn.remaining,tackTopTuning.meteorBurnDuration);burn.damage=Math.max(burn.damage,50);}
+ else e.burns.push({source,remaining:tackTopTuning.meteorBurnDuration,tick:0,damage:50});
+}
+function launchInfernoMeteor(t,target){
+ t.meteorAnim=.30;
+ const attack={...t,sourceTower:t,paths:[...t.paths],damage:700,bonusMoab:0,damageType:'Normal'};
+ const mesh=makeProjectileMesh('infernoMeteor');mesh.position.set(t.x,2.45,t.z);scene.add(mesh);
+ projectiles.push({mode:'infernoMeteor',type:'tack',visualType:'infernoMeteor',mesh,tower:attack,target,targetPosition:target.mesh.position.clone(),damage:700,pierceLeft:t.meteorPierce||1,hitEnemies:new Set(),splash:tackTopTuning.meteorExplosionRadius,speed:tackTopTuning.meteorSpeed,life:Math.hypot(MAP_W,MAP_H)/tackTopTuning.meteorSpeed+1});
+}
+function updateInfernoMeteor(t,dt){
+ if(t.paths[0]<5||dt<=0)return;
+ t.meteorCool=(t.meteorCool||0)-dt;
+ while(t.meteorCool<=0){
+  const target=chooseTarget({...t,range:tackTopTuning.meteorRange,damageType:'Normal'});
+  if(!target){t.meteorCool=0;break;}launchInfernoMeteor(t,target);t.meteorCool+=tackTopTuning.meteorCooldown;
+ }
+}
+function explodeInfernoMeteor(p){
+ const position=p.mesh.position;
+ const blast={tower:{...p.tower,damage:tackTopTuning.meteorExplosionDamage},hitEnemies:new Set()};let hits=0;
+ for(const e of [...enemies]){
+  if(hits>=tackTopTuning.meteorExplosionPierce)break;
+  if(!e.alive||blast.hitEnemies.has(e)||!towerCanDamage(blast.tower,e)||Math.hypot(e.mesh.position.x-position.x,e.mesh.position.z-position.z)>p.splash)continue;
+  hits++;addInfernoBurn(e,p.tower);damageTackFamily(blast,e,tackTopTuning.meteorExplosionDamage);
+ }
+ spawnImpactVisual(p,position);spawnAbilityPulse(position.x,position.z,0xff8820,p.splash);p.dead=true;
+}
+function updateInfernoMeteorProjectile(p,dt){
+ if(p.dead)return;
+ const nextTarget=()=>chooseTarget({...p.tower,range:tackTopTuning.meteorRange},enemies.filter(e=>!p.hitEnemies.has(e)));
+ if(!p.target?.alive)p.target=nextTarget();
+ if(p.target?.alive)p.targetPosition=p.target.mesh.position.clone();
+ const travelDt=Math.min(dt,Math.max(0,p.life));p.life-=dt;
+ let distanceBudget=p.speed*travelDt;
+ while(distanceBudget>=0){
+  const dx=p.targetPosition.x-p.mesh.position.x,dz=p.targetPosition.z-p.mesh.position.z,d=Math.hypot(dx,dz);
+  p.mesh.rotation.y=Math.atan2(dx,dz);
+  if(d>distanceBudget+.35){p.mesh.position.x+=dx/d*distanceBudget;p.mesh.position.z+=dz/d*distanceBudget;break;}
+  p.mesh.position.x=p.targetPosition.x;p.mesh.position.z=p.targetPosition.z;distanceBudget=Math.max(0,distanceBudget-d);
+  if(p.target?.alive&&!p.hitEnemies.has(p.target)&&towerCanDamage(p.tower,p.target)){
+   addInfernoBurn(p.target,p.tower);damageTackFamily(p,p.target,700);p.pierceLeft--;
+  }
+  const target=p.pierceLeft>0?nextTarget():null;
+  if(!target){explodeInfernoMeteor(p);return;}
+  p.target=target;p.targetPosition=target.mesh.position.clone();
+  if(distanceBudget<=0)break;
+ }
+ p.mesh.position.y=2.3+Math.sin(animationTime*8)*.15;
+ if(p.mesh.userData.exhaust)p.mesh.userData.exhaust.scale.setScalar(.85+.15*Math.sin(animationTime*35));
+ if(p.life<=0)p.dead=true;
+}
 function updateTowers(dt){
+ const iceBuffDt=roundActive?Math.min(dt,absoluteZeroBuffT):0;if(roundActive)absoluteZeroBuffT=Math.max(0,absoluteZeroBuffT-dt);
  for(const t of towers){
   const combatDt=roundActive?dt:0;
   updateTowerAbility(t,combatDt);
-  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else animateTower(t,dt);
+  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else animateTower(t,dt);
   if(t.type==='hero'){
    t.rapidCd=Math.max(0,(t.rapidCd||0)-combatDt);t.rapidTimer=Math.max(0,(t.rapidTimer||0)-combatDt);t.stormCd=Math.max(0,(t.stormCd||0)-combatDt);t.stormTimer=Math.max(0,(t.stormTimer||0)-combatDt);
    if(t.stormTimer>0&&combatDt>0){t.stormTick-=combatDt;if(t.stormTick<=0){t.stormTick=.05;const chance=t.level>=20?.10:t.level>=18?.075:.05;const stormDamage=t.level>=20?10:6;for(const e of enemies){if(!e.alive)continue;if(Math.random()>Math.min(1,chance*3))continue;const d=stormDamage+(e.isBlimp?(t.level>=20?10:6):0);spawnArrowRainVisual(e);hitEnemy(e,d,{tower:t});}}}
   }
-  t.cool-=dt;if(t.cool>0)continue;
+  if(t.type==='tack')updateInfernoMeteor(t,combatDt);
+  const pausedRadial=(t.type==='tack'||t.type==='ice')&&combatDt<=0;
+  t.cool-=t.type==='ice'?combatDt+iceBuffDt*.5:t.type==='tack'?combatDt:dt;if(pausedRadial)continue;if(t.cool>0)continue;
   if(towerDefs[t.type].hero){
    const prev=t.level;
    t.level=Math.min(20,1+Math.floor((round-1)/5));
@@ -1658,14 +1989,25 @@ function updateTowers(dt){
    if(prev!==t.level)updateHeroAppearance(t);
   }
   if(t.type==='tack'){
-   const targets=enemies.filter(e=>e.alive&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range).slice(0,t.tacks);
-   if(targets.length){t.fireAnim=.24;targets.forEach(e=>{if(towerCanDamage(t,e))hitEnemy(e,t.damage,{tower:t})});spawnTackVolleyVisual(t);t.cool=t.rate}
+   if(t.paths[0]>=4){
+    while(t.cool<=0){if(!fireTackFlameBurst(t)){t.cool=0;break;}t.cool+=t.rate;}
+    continue;
+   }
+   while(t.cool<=0){
+    if(!fireTackRadialBurst(t)){t.cool=0;break;}t.cool+=t.rate;
+   }
+   continue;
   }else if(t.type==='ice'){
    if((t.paths?.[2]||0)>=3){
     const e=chooseTarget(t);if(e){aimTower(t,e);fireProjectile(t,e,t.damage,{visualType:'ice'});t.cool=t.rate}
    }else{
     const targets=enemies.filter(e=>e.alive&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range).slice(0,t.pierce);
-    if(targets.length){aimTower(t,targets[0]);targets.forEach(e=>hitEnemy(e,t.damage,{tower:t,freeze:t.freeze}));spawnIceAuraVisual(t);t.cool=t.rate}
+    const global=t.paths[1]>=5?enemies.filter(e=>e.alive&&!e.isBlimp&&towerCanDamage(t,e)):[];
+    if(targets.length||global.length){
+     aimTower(t,targets[0]||global[0]);targets.forEach(e=>hitEnemy(e,t.damage,{tower:t,freeze:t.freeze}));
+     for(const e of global)if(e.alive)hitEnemy(e,0,{tower:t,freeze:iceMiddleTuning.secondaryFreeze});
+     spawnIceAuraVisual(t);t.cool=t.rate;
+    }
    }
   }else if(t.type==='boomer'){
    const attack=getAttackTower(t);
@@ -1773,9 +2115,10 @@ function updateKylieProjectile(p,dt){
   p.elapsed+=(next-p.travel)/p.speed;p.travel=next;
   const along=p.travel<=p.range?p.travel:p.range*2-p.travel;
   p.mesh.position.x=p.origin.x+p.forward.x*along;p.mesh.position.z=p.origin.z+p.forward.z*along;
+  const bounds=projectileBounds(previous,p.mesh.position,p.radius);
   for(const e of [...enemies]){
    if(p.pierceLeft<=0)break;
-   if(!e.alive||!towerCanDamage(p.tower,e)||(p.hitTimes.has(e)&&p.elapsed-p.hitTimes.get(e)<p.rehitCooldown-1e-9))continue;
+   if(!e.alive||!inProjectileBounds(e,bounds)||!towerCanDamage(p.tower,e)||(p.hitTimes.has(e)&&p.elapsed-p.hitTimes.get(e)<p.rehitCooldown-1e-9))continue;
    if(pointSegDist(e.mesh.position.x,e.mesh.position.z,previous,p.mesh.position)>p.radius)continue;
    p.hitTimes.set(e,p.elapsed);p.pierceLeft--;
    hitEnemy(e,e.isBlimp?p.moabDamage:p.damage,{tower:p.tower});
@@ -1796,9 +2139,10 @@ function updateBoomerArc(p,dt){
   p.angle=Math.min(end,p.angle+.05);
   const next=boomerArcPosition(p,p.angle);
   p.mesh.position.x=next.x;p.mesh.position.z=next.z;
+  const bounds=projectileBounds(previous,next,p.radius);
   for(const e of enemies){
    if(p.pierceLeft<=0)break;
-   if(!e.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;
+   if(!e.alive||!inProjectileBounds(e,bounds)||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;
    if(pointSegDist(e.mesh.position.x,e.mesh.position.z,previous,next)<p.radius){
     p.hitEnemies.add(e);p.pierceLeft--;
     hitEnemy(e,p.damage+(e.isBlimp?p.tower.bonusMoab||0:0),{tower:p.tower});
@@ -1808,29 +2152,104 @@ function updateBoomerArc(p,dt){
  p.mesh.rotation.y+=dt*18;
  if(p.angle>=Math.PI*2||p.pierceLeft<=0)p.dead=true;
 }
+function bombStunMotionDt(e,dt){
+ const stopped=e.type==='BAD'?0:Math.min(dt,e.bombStunT||0);
+ e.bombStunT=Math.max(0,(e.bombStunT||0)-dt);
+ return dt-stopped;
+}
+function applyBombControl(t,e){
+ if(!e.alive||e.type==='BAD')return;
+ if(t.stun&&(!e.isBlimp||t.stunBlimps))e.bombStunT=Math.max(e.bombStunT||0,t.stun);
+ const distance=e.isBlimp?t.bombMoabKnockback:t.bombKnockback;
+ if(distance){moveEnemyBackward(e,distance);placeEnemyOnTrack(e);}
+}
+function damageBombFamily(p,e,damage,initial=true){
+ if(!e.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))return;
+ if(p.clusterStage===2&&(p.thirdHitLedger.get(e)||0)>=bombClusterTuning.maxThirdStageHits)return;
+ p.hitEnemies.add(e);
+ if(p.clusterStage===2)p.thirdHitLedger.set(e,(p.thirdHitLedger.get(e)||0)+1);
+ const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial});
+ if(e.alive)applyBombControl(p.tower,e);
+ for(const child of result?.children||[]){
+  if(result.remainingDamage>0)damageBombFamily(p,child,Math.min(result.remainingDamage,bombHitDamage(p,child)),false);
+  else if(towerCanDamage(p.tower,child)){p.hitEnemies.add(child);applyBombControl(p.tower,child);}
+ }
+}
+function bombHitDamage(p,e){
+ const bonus=p.visualType==='bombFrag'?(e.isBlimp?p.tower.fragMoabBonus||0:0):(e.isBlimp?p.tower.bonusMoab||0:e.type==='Ceramic'?p.tower.ceramicBonus||0:0);
+ return p.damage+bonus;
+}
+function spawnBombFragments(p,position){
+ const stats=p.tower.fragStats;if(!stats)return;
+ // Sharp attacks have independent pierce/lifetime and do not explode or stun.
+ const attack={...p.tower,sourceTower:sourceTowerForDamage(p.tower),damageType:'Sharp',stun:0,stunBlimps:false,bombKnockback:0,bombMoabKnockback:0,fragMoabBonus:stats.moabBonus||0};
+ const offset=Math.atan2(position.z-p.tower.z,position.x-p.tower.x);
+ for(let i=0;i<stats.count;i++)fireLinearProjectile(attack,offset+i*Math.PI*2/stats.count,{visualType:'bombFrag',cosmetic:false,origin:position,damage:stats.damage,pierce:stats.pierce,life:stats.life,speed:bombFragmentTuning.speed,radius:.18});
+}
+function spawnBombClusters(p,position,stage=1){
+ const tuning=bombClusterTuning,ledger=p.thirdHitLedger||new Map();
+ const spread=tuning.spread*(p.recursive?1.5:1);
+ for(let i=0;i<tuning.count;i++){
+  const angle=i*Math.PI*2/tuning.count,mesh=makeProjectileMesh('bomb');mesh.scale.setScalar(stage===1?.7:.5);
+  mesh.position.set(position.x,1.6,position.z);scene.add(mesh);
+  projectiles.push({mesh,tower:p.tower,type:'bomb',visualType:'bomb',mode:'bombCluster',damage:p.damage,
+   clusterStage:stage,recursive:p.recursive,thirdHitLedger:ledger,elapsed:0,
+   origin:{x:position.x,z:position.z},destination:{x:position.x+Math.cos(angle)*spread,z:position.z+Math.sin(angle)*spread},
+   splash:p.recursive?tuning.recursiveRadius:tuning.radius,pierce:tuning.pierce});
+ }
+}
+function updateBombCluster(p,dt){
+ p.elapsed+=dt;const fraction=Math.min(1,p.elapsed/bombClusterTuning.flightTime);
+ p.mesh.position.set(p.origin.x+(p.destination.x-p.origin.x)*fraction,1.6+Math.sin(fraction*Math.PI)*.8,p.origin.z+(p.destination.z-p.origin.z)*fraction);
+ p.mesh.rotation.x+=dt*12;
+ if(fraction>=1){spawnImpactVisual(p,p.mesh.position);explodeBomb(p,p.mesh.position);p.dead=true;}
+}
+function explodeBomb(p,position){
+ p.hitEnemies=new Set();
+ const candidates=[p.target,...enemies.filter(e=>e!==p.target)],radius=p.splash;
+ let hits=0;
+ for(const e of candidates){
+  if(hits>=p.pierce)break;
+  if(!e?.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e)||Math.hypot(e.mesh.position.x-position.x,e.mesh.position.z-position.z)>radius)continue;
+  if(p.clusterStage===2&&(p.thirdHitLedger.get(e)||0)>=bombClusterTuning.maxThirdStageHits)continue;
+  damageBombFamily(p,e,bombHitDamage(p,e));hits++;
+ }
+ if(p.mode==='bombCluster'){
+  if(p.recursive&&p.clusterStage===1)spawnBombClusters(p,position,2);
+ }else if(p.tower.paths[2]>=3)spawnBombClusters(p,position);
+ else spawnBombFragments(p,position);
+}
 function updateProjectiles(dt){
  const frameProjectiles=[...projectiles];
  for(const p of frameProjectiles){
+  if(p.mode==='iceBomb'){updateIceProjectile(p,dt);continue;}
+  if(p.mode==='infernoMeteor'){updateInfernoMeteorProjectile(p,dt);continue;}
+  if(p.mode==='bombCluster'){updateBombCluster(p,dt);continue;}
   if(p.mode==='kylie'){updateKylieProjectile(p,dt);continue}
   if(p.mode==='ricochet'&&p.type==='boomer'){updateGlaiveRicochet(p,dt);continue}
   if(p.mode==='boomerArc'){updateBoomerArc(p,dt);continue}
   if(p.mode==='ricochet'){updateRicochet(p,dt);continue;}
-  if(p.visualType==='missile'){const flame=p.mesh.children.at(-1);if(flame)flame.scale.setScalar(.8+Math.sin(animationTime*45)*.2);}
+  if(p.visualType==='missile'||p.visualType?.startsWith('bombMissile')){const flame=p.mesh.userData.exhaust||(p.visualType==='missile'?p.mesh.children.at(-1):null);if(flame)flame.scale.setScalar(.8+Math.sin(animationTime*45)*.2);}
   if(p.visualType==='glue')p.mesh.scale.y=.85+Math.sin(animationTime*20)*.13;
   if(p.visualType==='plasma')p.mesh.rotation.z+=dt*8;
   if(p.mode==='linear'){
-   const travelDt=p.type==='dart'?Math.min(dt,Math.max(0,p.life)):dt;
+   const realTack=p.type==='tack'&&!p.cosmetic;
+   const travelDt=p.type==='dart'||p.type==='iceShard'||p.visualType==='bombFrag'||realTack?Math.min(dt,Math.max(0,p.life)):dt;
    p.life-=dt;
    const previous={x:p.mesh.position.x,z:p.mesh.position.z};
    p.mesh.position.x+=p.vx*travelDt;
    p.mesh.position.z+=p.vz*travelDt;
    if(p.mesh.children?.length&&p.type!=='dart')p.mesh.rotation.y+=dt*14;
    if(!p.cosmetic){
-    for(const e of enemies){
+    const bounds=projectileBounds(previous,p.mesh.position,p.radius||.45);
+    const collisionEnemies=realTack?enemies.filter(e=>e.alive&&inProjectileBounds(e,bounds)).sort((a,b)=>Math.hypot(a.mesh.position.x-previous.x,a.mesh.position.z-previous.z)-Math.hypot(b.mesh.position.x-previous.x,b.mesh.position.z-previous.z)):enemies;
+    for(const e of collisionEnemies){
      if(p.pierceLeft<=0)break;
-     if(!e.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;
+     if(!e.alive||!inProjectileBounds(e,bounds)||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;
      if(pointSegDist(e.mesh.position.x,e.mesh.position.z,previous,p.mesh.position)<(p.radius||.45)){
-      hitEnemy(e,p.damage,{tower:p.tower,slow:p.slow,slowDuration:p.slowDuration,freeze:p.freeze,glue:p.type==='glue',glueLayers:p.tower.glueLayers,glueDps:p.tower.glueDps,allowBlimpSlow:p.type==='glue'&&p.tower?.moabGlue});
+      if(p.visualType==='bombFrag')damageBombFamily(p,e,bombHitDamage(p,e));
+      else if(p.type==='tack')damageTackFamily(p,e,p.damage+(e.isBlimp?p.tower.bonusMoab||0:0));
+      else hitEnemy(e,p.damage,{tower:p.tower,slow:p.slow,slowDuration:p.slowDuration,freeze:p.freeze,glue:p.type==='glue',glueLayers:p.tower.glueLayers,glueDps:p.tower.glueDps,allowBlimpSlow:p.type==='glue'&&p.tower?.moabGlue});
       p.hitEnemies.add(e);p.pierceLeft--;
      }
     }
@@ -1853,6 +2272,7 @@ function updateProjectiles(dt){
   if(d<step+.5){
    if(p.cosmetic){p.dead=true;continue}
    const hitPos=p.target.mesh.position.clone();spawnImpactVisual(p,hitPos);
+   if(p.type==='bomb'&&!p.abilityMissile){explodeBomb(p,hitPos);p.dead=true;continue;}
    const crossbow=p.type==='dart'&&p.tower.paths[2]>=3;
    if(crossbow)p.hitEnemies=new Set();
    if(p.abilityMissile||towerCanDamage(p.tower,p.target)){const dealt=p.damage+(p.abilityMissile?0:((p.target.isBlimp&&p.tower.bonusMoab)||0));if(crossbow)damageBallFamily(p,p.target,dealt);else hitEnemy(p.target,dealt,{tower:p.tower,slow:p.slow,slowDuration:p.slowDuration,freeze:p.freeze,glue:p.type==='glue',glueLayers:p.tower.glueLayers,glueDps:p.tower.glueDps,allowBlimpSlow:p.type==='glue'&&p.tower?.moabGlue});}
@@ -1918,8 +2338,8 @@ speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.
 restartBtn.addEventListener('click',()=>location.reload());
 function endGame(win){gameEnded=true;roundActive=false;endScreen.classList.remove('hidden');endTitle.textContent=win?'Round 100 cleared!':'Game Over';endText.textContent=win?'You survived all 100 rounds.':'The balloons made it through the meadow.';refreshAbilityUI()}
 
-let last=performance.now();function loop(now){const dt=Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}renderer.render(scene,camera);requestAnimationFrame(loop)}
-updateUI();refreshAbilityUI();requestAnimationFrame(loop);
+let last=performance.now();function loop(now){const dt=Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
+updateUI();flushUI();refreshAbilityUI();requestAnimationFrame(loop);
 } catch (err) {
  console.error(err);
  const box=document.createElement('div');

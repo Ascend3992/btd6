@@ -6,10 +6,11 @@ const visuals=fs.readFileSync(path.join(__dirname,'..','..','boomerang-visuals.j
 
 // Exercise the game's existing combat functions without requiring a WebGL context.
 function game(){
- const context={RANGE_SCALE:.32,towers:[],enemies:[],projectiles:[],roundActive:true,gameEnded:false,selectedTower:null,
-  round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,
+ const context={RANGE_SCALE:.32,meadowDepthScale:1,towers:[],enemies:[],projectiles:[],roundActive:true,gameEnded:false,selectedTower:null,
+  round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
   updateTowerAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
-  animateTower(){},aimTower(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
+  iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
+  animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
   updateUI(){},ensureGlueMarker(){},destroyEnemyAndSpawnChildren(e){e.alive=false},
   PATH:Array.from({length:10},()=>({distanceTo:()=>10})),
   trackDistances:Array.from({length:10},(_,i)=>i*10),
@@ -28,22 +29,29 @@ function game(){
  }
  include('const bloonSpeeds=','const exactRoundData=');
  include('const upgradeData=','const upgradeDescriptions=');
- include('const towerDefs=','const renderer=');
+ include('const iceTopTuning=','const renderer=');
  include('function createTower(','function damageTypeNotes(');
  include('function getTowerAbilities(','function refreshAbilityUI(');
  include('function setFanBoostTier(','function strongestBlimp(');
- include('function activateTowerAbility(','function triggerBombBlitz(');
+ include('function strongestBlimp(','function emitMaelstrom(');
+ include('function emitMaelstrom(','function coatMapWithGlue(');
+ include('function applyMapIceFreeze(','function loseLives(');
+ include('function loseLives(','function pointSegDist(');
  include('function syncDartStats(','function applyUpgrade(');
  include('function applyUpgrade(','upgradeBtns.forEach((b,p)=>b.addEventListener');
  include('function pointSegDist(','function placeTower(');
  include('function progress(','function enemySpeed(');
  include('function enemySpeed(','function leakDamage(');
+ include('function updateRegrow(','function towerCanDamage(');
  include('function tierFiveTaken(','function refreshSelected(');
  include('function applyBallKnockback(','function updateRicochet(');
  include('function towerCanDamage(','function ensureGlueMarker(');
  include('function moveEnemyBackward(','function makeProjectileMesh(');
  include('function fireProjectile(','function fireLinearProjectile(');
+ include('function fireLinearProjectile(','function spawnTackVolleyVisual(');
+ include('function spawnTackVolleyVisual(','function spawnIceAuraVisual(');
  include('function updateMOABPress(','function dealGlaiveHit(');
+ context.spawnTackFlameVisual=()=>{};context.visualEffects=[];
  include('function dealGlaiveHit(','function buildRound(');
  return context;
 }

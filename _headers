@@ -9,3 +9,18 @@
   Cache-Control: no-cache
 /boomerang-visuals.js
   Cache-Control: no-cache
+/bomb-visuals.js
+  Cache-Control: no-cache
+/tack-visuals.js
+  Cache-Control: no-cache
+/ice-visuals.js
+  Cache-Control: no-cache
+
+/bloon-renderer.js
+  Cache-Control: no-cache
+
+/meadow-map.js
+  Cache-Control: no-cache
+
+/bloon-visuals.js
+  Cache-Control: no-cache
