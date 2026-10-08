@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v52 Glue Gunner base model, stats and coating prioritization
+Meadow Balloon Defense 3D - v53 Glue Gunner top-path stats, timed corrosion and acid puddles
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -238,3 +238,19 @@ Glue Gunner v52
 - Base shots ignore Camo, blimps, bosses and equal/higher-ranked active glue. First, Last, Close and Strong target eligible Bloons. Existing upgraded blimp glue remains available.
 - The newer supplied prioritization diagram governs all crosspaths. Independent coatings retain their timers, layer limits and corrosion. Highest active rank controls target exclusion; the latest active coating controls slowdown. Expired coatings stop blocking weaker glue.
 - All 26 regression test files pass, including the full precedence matrix, coating inheritance/expiry, projectile limits and animation checks. Browser verification confirms the gun muzzle, zero base damage/income, correct slow and target skipping, and no runtime errors.
+
+Glue Gunner top path v53
+-----------------------
+- All five top upgrades use the supplied prices and XP metadata. Glue Soak carries through every ordinary layer, including branching, but never transfers through a blimp shell.
+- Corrosive Glue: 1 damage every 2s. Dissolver: 1 every 0.5s, or 2 to Ceramics, +1 pierce and 0.5s shot cooldown. Liquefier: 1 every 0.1s, or 3 to Ceramics. Solver: 1 every 0.1s, 8 to Ceramics and 6 to blimps, with 0.25s shot cooldown and two independently limited 5-pierce splatters. Extra Ceramic/blimp damage does not spill into descendants.
+- Corrosive and stronger top-path glue can target blimps. Coatings last half the ordinary duration, and only bottom-path MOAB Glue enables slowing blimps. Existing global glue abilities retain their explicit durations.
+- A directly glued popped Bloon leaves one acid puddle. Glue-soaked descendants do not duplicate its puddle. Puddles deal flat damage to both glued and unglued Bloons, consume pierce per target and cannot hit the same Bloon twice.
+- Solver puddles follow the user's overrides: 15 damage, base pierce 3, pierce 4 for 5-1-0 and 7 for 5-2-0. Both 5-0-1 and 5-0-2 extend life by 9.1 seconds and permit carrying through one round transition. Base life 7.7 seconds gives 16.8 seconds with those crosspaths.
+- Remaining Liquefier puddle values come from the referenced wiki: 4 damage, base pierce 3, 4 for 4-1-0 and 5 for 4-2-0, base life 7.7 seconds. 4-0-1 carries one transition; 4-0-2 also extends life to 16.8 seconds. Explicit user values take priority where the wiki differs.
+- Puddle collision radius uses the supplied base glue hitbox, 4 display units (1.28 world units), because no puddle radius was supplied or found. Solver splatter radius is 12 display units. These dimensions are named tuning constants in game.js.
+- Puddles share instanced geometry, and collision queries use a spatial grid rather than scanning every Bloon for every puddle. No Bloons, children or authored spawns are removed or capped.
+- All 27 regression test files pass. Browser checks verified exact corrosion damage, blimp slow/duration, puddle damage/pierce/no-repeat rules and zero runtime errors. A local stress check kept 1,606 live Bloons and 401 puddles, with about 5.1ms average puddle-update time and 490 draw calls in software-rendered Chromium; these measurements are environment-specific.
+
+Puddle references (explicit user overrides above take priority):
+  https://bloons.fandom.com/wiki/The_Bloon_Solver
+  https://bloons.fandom.com/wiki/Bloon_Liquefier_(BTD6)
