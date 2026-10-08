@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v51 reference meadow, Round 81 health scaling and bloon status models
+Meadow Balloon Defense 3D - v52 Glue Gunner base model, stats and coating prioritization
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -9,12 +9,12 @@ From this folder, run:
   python -m http.server 8000
 Then open http://localhost:8000 in a browser with WebGL support.
 
-Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.js, ice-visuals.js, bloon-renderer.js, bloon-visuals.js, meadow-map.js, style.css, _headers and assets together at the site root. No build step or external script host is required. Three.js 0.168.0 and its MIT license are bundled in assets/vendor. All tower models in this version are procedural; no GLTF assets or model loader are needed.
+Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.js, ice-visuals.js, glue-visuals.js, bloon-renderer.js, bloon-visuals.js, meadow-map.js, style.css, _headers and assets together at the site root. No build step or external script host is required. Three.js 0.168.0 and its MIT license are bundled in assets/vendor. All tower models in this version are procedural; no GLTF assets or model loader are needed.
 
 Preserved from the uploaded game
 -------------------------------
 - Rounds 1-100, six primary towers and Quincy. The meadow now follows the latest supplied map and arrow route.
-- All 15 Dart Monkey upgrade models, held weapons, idle and attack animations. Tack Shooter base and all 15 upgrades use new reference models. Ice Monkey's base and all 15 upgrades use the supplied references. Glue Gunner and Quincy retain their existing models and animations.
+- All 15 Dart Monkey upgrade models, held weapons, idle and attack animations. Tack Shooter base and all 15 upgrades use new reference models. Ice Monkey's base and all 15 upgrades use the supplied references. Glue Gunner has a new brown monkey / yellow gun reference model with idle, blink and recoil animations. Quincy retains its existing model and animations.
 - Dart upgrade stats, prices, camo priority, crossbow critical hits, obstacle/wall ricochets and Ultra-Juggernaut splitting balls.
 - Existing tower abilities, combat effects and other tower upgrades. Bloon status models now use the latest supplied textures as references.
 
@@ -230,3 +230,11 @@ Visual previews:
   docs/restored-towers.png
   docs/meadow-map-preview.png
   docs/bloon-variants-preview.png
+
+Glue Gunner v52
+---------------
+- Normal cost $270, display range 46, footprint 6, cooldown 1s, damage 0, pierce 1. Base glue slows non-blimps to 50% for 11s and soaks exactly three layers; glue level 1.
+- Straight glue shots use 300 display units/s, a 0.43s lifespan and radius 4, converted to the same world scale as the tower range. Swept collision preserves hits on long frames without extending projectile life.
+- Base shots ignore Camo, blimps, bosses and equal/higher-ranked active glue. First, Last, Close and Strong target eligible Bloons. Existing upgraded blimp glue remains available.
+- The newer supplied prioritization diagram governs all crosspaths. Independent coatings retain their timers, layer limits and corrosion. Highest active rank controls target exclusion; the latest active coating controls slowdown. Expired coatings stop blocking weaker glue.
+- All 26 regression test files pass, including the full precedence matrix, coating inheritance/expiry, projectile limits and animation checks. Browser verification confirms the gun muzzle, zero base damage/income, correct slow and target skipping, and no runtime errors.

@@ -6,6 +6,7 @@ const {makeBoomerangTowerMesh,updateBoomerangAppearance,makeBoomerangWeapon,boom
 const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBombBottomTowerMesh,makeBombMissileProjectile,animateBomb}=await import('./bomb-visuals.js?v=4');
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
+const {makeBaseGlueTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -104,7 +105,7 @@ const towerDefs={
  bomb:{name:'Bomb Shooter',cost:600,range:40*RANGE_SCALE,displayRange:40,rate:1.5,damage:1,projSpeed:26,color:0x3d4147,pierce:22,splash:12*RANGE_SCALE,damageType:'Explosion',notes:'Pops Lead; cannot hit Black, Zebra, DDT, or Camo'},
  tack:{name:'Tack Shooter',cost:260,costByDifficulty:{easy:220,medium:260,hard:280,impoppable:310},range:23*RANGE_SCALE,displayRange:23,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.12,damage:1,color:0xfa398b,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
  ice:{name:'Ice Monkey',cost:400,towerClass:'Primary',placementSurfaces:['land','water'],range:25*RANGE_SCALE,displayRange:25,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:1.5,radial:true,damageType:'Cold',notes:'Freezes bloons for 1.5s; cannot affect Lead, White, Zebra, or Camo'},
- glue:{name:'Glue Gunner',cost:225,range:46*RANGE_SCALE,displayRange:46,rate:1.0,damage:0,projSpeed:27,color:0xd1b034,pierce:1,slow:.5,slowDuration:11,glueLayers:3,damageType:'Acid',notes:'50% slow for 11s; soaks 3 layers; cannot hit Camo'},
+ glue:{name:'Glue Gunner',cost:270,range:46*RANGE_SCALE,displayRange:46,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1,damage:0,projSpeed:300*RANGE_SCALE,displayProjectileSpeed:300,projectileLife:.43,projectileRadius:4*RANGE_SCALE,displayProjectileRadius:4,glueLevel:1,color:0xd1b034,pierce:1,slow:.5,slowDuration:11,glueLayers:3,damageType:'Acid',notes:'50% slow for 11s; soaks 3 layers; ignores Camo, blimps and already-glued Bloons'},
  hero:{name:'Quincy',cost:540,range:50*RANGE_SCALE,displayRange:50,rate:.95,damage:1,projSpeed:44,color:0x704527,hero:true,pierce:3,camoDetect:false}
 };
 
@@ -230,6 +231,7 @@ shopBtns.forEach(b=>b.addEventListener('click',()=>selectShop(b.dataset.tower)))
 function mat(color){return new THREE.MeshStandardMaterial({flatShading:true,color,roughness:.65,metalness:.02})}
 // All models are original procedural meshes; no optional model downloads are needed.
 function makeTowerMesh(type,legacyBomb=false,legacyTack=false,legacyIce=false){
+ if(type==='glue')return makeBaseGlueTowerMesh();
  if(type==='boomer')return makeBoomerangTowerMesh();
  if(type==='bomb'&&!legacyBomb)return makeBaseBombTowerMesh();
  if(type==='tack'&&!legacyTack)return makeBaseTackTowerMesh();
@@ -506,6 +508,9 @@ function buildDartTopWeapon(t){
 }
 
 function updateWeaponAppearance(t){
+ if(t.mesh.userData.glueRig){
+  const rig=t.mesh.userData.glueRig,[a,,c]=t.paths;rig.glueMaterial.color.setHex(a>=2?0x83d961:c>=3?0xba8ce3:0xf0cf25);return;
+ }
  if(t.mesh.userData.bombRig||t.mesh.userData.tackRig||t.mesh.userData.iceRig)return;
  if(t.mesh.userData.dartTopTier){buildDartTopWeapon(t);return;}
  const w=t.mesh.userData.weapon;for(const child of [...w.children])disposeTransientMesh(child);
@@ -641,7 +646,7 @@ function updateHeroAppearance(t){
  if(t.level>=10)addVisual(g,ring(.82,.07,0xe3bd55,2.02));
  if(t.level>=20)addVisual(g,ring(1.0,.09,0xffe89a,1.75));
 }
-function createTower(type,x,z){const d=towerDefs[type];const mesh=makeTowerMesh(type);mesh.position.set(x,.66,z);scene.add(mesh);return{id:nextTowerId++,type,x,z,mesh,throwHand:1,damageDealt:0,abilityCd:0,blitzCd:0,abilityTimer:0,abilityTick:0,abilityAngle:0,activeAbility:null,fanBuffs:[],fanTier:0,glueLayers:d.glueLayers||0,range:d.range,rate:d.rate,damage:d.damage||0,cool:0,pressCool:0,invest:d.cost,target:'first',paths:[0,0,0],level:d.hero?1:0,pierce:d.pierce||1,splash:d.splash||0,slow:d.slow||0,slowDuration:d.slowDuration||2.8,freeze:d.freeze||0,tacks:d.tacks||8,shots:1,bonusMoab:0,shotCounter:0,rapidCd:0,rapidTimer:0,stormCd:0,stormTimer:0,stormTick:0,damageType:d.damageType||'',notes:d.notes||'',camoDetect:!!d.camoDetect,recoil:0,fireAnim:0}}
+function createTower(type,x,z){const d=towerDefs[type];const mesh=makeTowerMesh(type);mesh.position.set(x,.66,z);scene.add(mesh);return{id:nextTowerId++,type,x,z,mesh,throwHand:1,damageDealt:0,abilityCd:0,blitzCd:0,abilityTimer:0,abilityTick:0,abilityAngle:0,activeAbility:null,fanBuffs:[],fanTier:0,glueLevel:d.glueLevel||0,projSpeed:d.projSpeed,projectileLife:d.projectileLife,projectileRadius:d.projectileRadius,glueLayers:d.glueLayers||0,range:d.range,rate:d.rate,damage:d.damage||0,cool:0,pressCool:0,invest:d.cost,target:'first',paths:[0,0,0],level:d.hero?1:0,pierce:d.pierce||1,splash:d.splash||0,slow:d.slow||0,slowDuration:d.slowDuration||2.8,freeze:d.freeze||0,tacks:d.tacks||8,shots:1,bonusMoab:0,shotCounter:0,rapidCd:0,rapidTimer:0,stormCd:0,stormTimer:0,stormTick:0,damageType:d.damageType||'',notes:d.notes||'',camoDetect:!!d.camoDetect,recoil:0,fireAnim:0}}
 function damageTypeNotes(t){
  if(t.type==='hero')return '';
  const camo=t.camoDetect?'Can detect Camo':'Cannot hit Camo';
@@ -1046,6 +1051,7 @@ function applyUpgrade(t,p,tier){
   if(p===0){if(T===1)t.glueLayers=99;if(T===2)t.glueDps=.5;if(T===3){t.glueDps=2;t.pierce+=1;t.rate*=.5}if(T===4)t.glueDps=10;if(T===5){t.glueDps=20;t.pierce=Math.max(t.pierce,5);t.rate*=.5}}
   if(p===1){if(T===1)t.pierce+=1;if(T===2)t.pierce=Math.max(t.pierce,5);if(T===3)t.rate/=3;if(T===4)t.damageAmp=2;if(T===5){t.damageAmp=2;t.slowDuration*=2}}
   if(p===2){if(T===1)t.slowDuration=24;if(T===2)t.slow=.25;if(T===3)t.moabGlue=true;if(T===4)t.relentless=true;if(T===5){t.slow=.05;t.pierce+=6;t.superGlue=true;t.damage+=2}}
+  t.gluePriority=gluePriority(t);
  }
  updateTowerAppearance(t);
 }
@@ -1212,7 +1218,7 @@ function spawnEnemy(spec,trackState=null){
  const layer=isBlimp?null:(layerIndex[o.type]??0);
  const mesh=isBlimp?makeBlimpMesh(o.type,o):makeBloonMesh(layer,o);scene.add(mesh);
  const hp=enemyBaseHp(o.type,o)*(o.fort?2:1);
- const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueDps:0,glueCarry:0,glueLayers:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
+ const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueDps:0,glueCarry:0,glueLayers:0,glueLevel:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
  enemies.push(e);placeEnemyOnTrack(e);return e;
 }
 function childProps(parent,type,regrowStack){
@@ -1228,8 +1234,11 @@ function spawnChildSet(parent,types){
   if(!parent.isBlimp&&!child.isBlimp&&parent.abilityFreezeLayers>1){child.abilityFreezeT=parent.abilityFreezeT;child.abilityFreezeLayers=parent.abilityFreezeLayers-1;}
   child.abilitySlowT=parent.abilitySlowT;child.abilitySlowMult=parent.abilitySlowMult;
   if(child.abilityFreezeT>0||child.abilitySlowT>0)ensureFreezeMarker(child);
-  if(parent.glueT>0&&parent.glueLayers>1){
-   child.glueT=parent.glueT;child.glueSlow=parent.glueSlow;child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glueDps=parent.glueDps;child.glueSource=parent.glueSource;child.glueLayers=parent.glueLayers-1;
+  if(parent.glueCoatings){
+   child.glueCoatings=parent.glueCoatings.filter(coat=>coat.remaining>0&&coat.layers>1).map(coat=>({...coat,layers:coat.layers-1}));
+   syncGlueCoatings(child);if(child.glueT>0){child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glued=true;ensureGlueMarker(child);}
+  }else if(parent.glueT>0&&parent.glueLayers>1){
+   child.glueT=parent.glueT;child.glueSlow=parent.glueSlow;child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glueDps=parent.glueDps;child.glueSource=parent.glueSource;child.glueLayers=parent.glueLayers-1;child.glueLevel=parent.glueLevel||1;child.gluePriority=parent.gluePriority||1;
    child.glued=true;ensureGlueMarker(child);
   }
   if(parent.permafrostLayers>1){child.permafrostLayers=parent.permafrostLayers-1;child.permafrostSlow=parent.permafrostSlow;}
@@ -1319,6 +1328,33 @@ function updateIcicleContacts(dt){
   if(state.remaining<=0||state.pierceLeft<=0){host.icicles=null;clearIcicles(host);}
  }
 }
+// Keep independent coatings; the latest active coating determines movement slow.
+function syncGlueCoatings(e){
+ const coats=e.glueCoatings||[],last=coats.at(-1);
+ e.glueT=0;e.gluePriority=0;e.glueLayers=0;e.glueDps=0;e.glueSlow=e.type==='BAD'?1:(last?.slow??1);
+ for(const coat of coats){
+  e.glueT=Math.max(e.glueT,coat.remaining);e.gluePriority=Math.max(e.gluePriority,coat.priority);e.glueLayers=Math.max(e.glueLayers,coat.layers);
+  if(coat.dps>=e.glueDps){e.glueDps=coat.dps;e.glueSource=coat.source;}
+ }
+ e.glueLevel=last?1:0;
+}
+function applyGlueCoating(e,fx){
+ const t=fx.tower,priority=t?.type==='glue'?gluePriority(t):1;
+ const key=t?.type==='glue'?`${t.paths?.[0]||0}:${t.paths?.[2]||0}:${fx.damageAmp?'ability':'shot'}`:'external';
+ e.glueCoatings=(e.glueCoatings||[]).filter(coat=>coat.key!==key&&coat.remaining>0);
+ e.glueCoatings.push({key,priority,remaining:fx.slowDuration||2.8,slow:fx.slow??1,layers:fx.glueLayers||3,dps:fx.glueDps||0,source:sourceTowerForDamage(t)});
+ syncGlueCoatings(e);
+}
+function updateGlueCoatings(e,dt){
+ let left=dt;
+ while(left>0&&e.glueCoatings.length&&e.alive){
+  const step=Math.min(left,...e.glueCoatings.map(coat=>coat.remaining));
+  e.glueCarry=(e.glueCarry||0)+step*e.glueDps;const damage=Math.floor(e.glueCarry+1e-9);e.glueCarry-=damage;
+  if(damage>0)hitEnemy(e,damage,{tower:e.glueSource,ignoreGlueAmp:true});
+  for(const coat of e.glueCoatings)coat.remaining=Math.max(0,coat.remaining-step);
+  left-=step;e.glueCoatings=e.glueCoatings.filter(coat=>coat.remaining>0);syncGlueCoatings(e);
+ }
+}
 function moveEnemies(dt){
  for(const e of enemies){
   if(!e.alive)continue;
@@ -1331,16 +1367,17 @@ function moveEnemies(dt){
    while(e.shredTick>=1&&e.alive){e.shredTick-=1;hitEnemy(e,100,{tower:e.shredSource,ignoreGlueAmp:true})}
    if(!e.alive)continue;
   }
-  const gluedDt=Math.min(dt,e.glueT);
-  e.glueT=Math.max(0,e.glueT-dt);
   e.glueAmpT=Math.max(0,e.glueAmpT-dt);if(e.glueAmpT<=0)e.glueDamageAmp=0;
-  if(gluedDt>0&&e.glueDps>0){
-   e.glueCarry+=gluedDt*e.glueDps;
-   const damage=Math.floor(e.glueCarry);e.glueCarry-=damage;
-   if(damage>0)hitEnemy(e,damage,{ignoreGlueAmp:true,tower:e.glueSource});
-   if(!e.alive)continue;
+  if(e.glueCoatings){updateGlueCoatings(e,dt);if(!e.alive)continue;}
+  else{
+   const gluedDt=Math.min(dt,e.glueT);e.glueT=Math.max(0,e.glueT-dt);
+   if(gluedDt>0&&e.glueDps>0){
+    e.glueCarry+=gluedDt*e.glueDps;const damage=Math.floor(e.glueCarry);e.glueCarry-=damage;
+    if(damage>0)hitEnemy(e,damage,{ignoreGlueAmp:true,tower:e.glueSource});
+    if(!e.alive)continue;
+   }
   }
-  if(e.glueT<=0&&e.glued){e.glued=false;e.glueSlow=1;e.glueDamageAmp=0;e.glueAmpT=0;e.glueDps=0;e.glueCarry=0;clearGlueMarker(e)}
+  if(e.glueT<=0&&e.glued){e.glued=false;e.gluePriority=0;e.glueLevel=0;e.glueLayers=0;e.glueSlow=1;e.glueDamageAmp=0;e.glueAmpT=0;e.glueDps=0;e.glueCarry=0;clearGlueMarker(e)}
   e.abilityFreezeT=Math.max(0,e.abilityFreezeT-dt);e.abilitySlowT=Math.max(0,e.abilitySlowT-dt);
   if(e.abilitySlowT<=0)e.abilitySlowMult=1;
   e.brittleT=Math.max(0,(e.brittleT||0)-dt);if(e.brittleT<=0)e.brittleDamage=0;
@@ -1371,7 +1408,24 @@ function moveEnemies(dt){
  updateIcicleContacts(dt);
  let write=0;for(const enemy of enemies)if(enemy.alive)enemies[write++]=enemy;enemies.length=write;updateUI()
 }
+// Ranking follows the supplied newer prioritization diagram, including crosspaths.
+function gluePriority(t){
+ const [top,,bottom]=t.paths||[0,0,0],corrosive=top>=2;
+ if(bottom>=5&&!corrosive)return 9;
+ if(bottom>=4&&!corrosive)return 8;
+ if(bottom>=5&&corrosive||top>=5)return 7;
+ if(bottom>=3&&!corrosive)return 6;
+ if(top>=4)return 5;
+ if(top>=3)return 4;
+ if(bottom>=3&&corrosive)return 2;
+ if(corrosive)return 3;
+ return 1;
+}
 function towerCanDamage(t,e){
+ if(t.type==='glue'){
+  if(e.isBoss||e.boss||e.isBlimp&&!t.moabGlue)return false;
+  if(e.glueT>0&&(e.gluePriority||1)>=gluePriority(t))return false;
+ }
  const n=e.isBlimp?e.type:layerNames[e.layer];
  if(t.type==='ice'&&e.isBlimp&&!t.canHitBlimps)return false;
  const brittle=e.brittleT>0;
@@ -1432,12 +1486,9 @@ function hitEnemy(e,dmg,fx={}){
  if(!e||!e.alive)return;
  if(dmg>0){e.regrowTimer=0;e.hitFlash=.16;}
  if(fx.glue&&(!e.isBlimp||fx.allowBlimpSlow)){
-  e.glueT=Math.max(e.glueT,fx.slowDuration||2.8);
-  e.glueSlow=e.type==='BAD'?1:Math.min(e.glueSlow,fx.slow||1);
-  if(fx.damageAmp){e.glueDamageAmp=Math.max(e.glueDamageAmp,fx.damageAmp);e.glueAmpT=Math.max(e.glueAmpT,fx.ampDuration||fx.slowDuration||2.8)}
-  if((fx.glueDps||0)>0&&(fx.glueDps||0)>=e.glueDps)e.glueSource=sourceTowerForDamage(fx.tower);
-  e.glueDps=Math.max(e.glueDps,fx.glueDps||0);
-  e.glueLayers=Math.max(e.glueLayers,fx.glueLayers||3);e.glued=true;ensureGlueMarker(e);
+  applyGlueCoating(e,fx);
+  if(fx.damageAmp){e.glueDamageAmp=Math.max(e.glueDamageAmp||0,fx.damageAmp);e.glueAmpT=Math.max(e.glueAmpT||0,fx.ampDuration||fx.slowDuration||2.8)}
+  e.glued=true;ensureGlueMarker(e);
  }else if(fx.slow&&e.type!=='BAD'&&(!e.isBlimp||fx.allowBlimpSlow)){
   e.slowT=Math.max(e.slowT,fx.slowDuration||2.8);e.slowMult=Math.min(e.slowMult,fx.slow);
  }
@@ -1674,6 +1725,11 @@ function updateRicochet(p,dt){
 }
 
 function fireProjectile(t,target,damage=t.damage,extra={}){
+ if(t.type==='glue'&&!extra.cosmetic){
+  const origin=glueMuzzleOrigin(t),angle=Math.atan2(target.mesh.position.z-origin.z,target.mesh.position.x-origin.x);
+  const attack={...t,paths:[...t.paths],sourceTower:sourceTowerForDamage(t)};
+  fireLinearProjectile(attack,angle,{visualType:'glue',cosmetic:false,damage,pierce:t.pierce,speed:t.projSpeed,life:t.projectileLife,radius:t.projectileRadius,slow:t.slow,slowDuration:t.slowDuration,origin});return;
+ }
  if(t.type==='ice'&&t.cryo&&!extra.cosmetic){fireIceProjectile(t,target);return;}
  let critical=false;
  if(t.type==='dart'&&t.critEvery&&!extra.cosmetic&&!extra.visualType){
@@ -1967,7 +2023,7 @@ function updateTowers(dt){
  for(const t of towers){
   const combatDt=roundActive?dt:0;
   updateTowerAbility(t,combatDt);
-  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else animateTower(t,dt);
+  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else animateTower(t,dt);
   if(t.type==='hero'){
    t.rapidCd=Math.max(0,(t.rapidCd||0)-combatDt);t.rapidTimer=Math.max(0,(t.rapidTimer||0)-combatDt);t.stormCd=Math.max(0,(t.stormCd||0)-combatDt);t.stormTimer=Math.max(0,(t.stormTimer||0)-combatDt);
    if(t.stormTimer>0&&combatDt>0){t.stormTick-=combatDt;if(t.stormTick<=0){t.stormTick=.05;const chance=t.level>=20?.10:t.level>=18?.075:.05;const stormDamage=t.level>=20?10:6;for(const e of enemies){if(!e.alive)continue;if(Math.random()>Math.min(1,chance*3))continue;const d=stormDamage+(e.isBlimp?(t.level>=20?10:6):0);spawnArrowRainVisual(e);hitEnemy(e,d,{tower:t});}}}
@@ -2234,15 +2290,15 @@ function updateProjectiles(dt){
   if(p.visualType==='plasma')p.mesh.rotation.z+=dt*8;
   if(p.mode==='linear'){
    const realTack=p.type==='tack'&&!p.cosmetic;
-   const travelDt=p.type==='dart'||p.type==='iceShard'||p.visualType==='bombFrag'||realTack?Math.min(dt,Math.max(0,p.life)):dt;
+   const travelDt=p.type==='glue'||p.type==='dart'||p.type==='iceShard'||p.visualType==='bombFrag'||realTack?Math.min(dt,Math.max(0,p.life)):dt;
    p.life-=dt;
    const previous={x:p.mesh.position.x,z:p.mesh.position.z};
    p.mesh.position.x+=p.vx*travelDt;
    p.mesh.position.z+=p.vz*travelDt;
-   if(p.mesh.children?.length&&p.type!=='dart')p.mesh.rotation.y+=dt*14;
+   if(p.mesh.children?.length&&p.type!=='dart'&&p.type!=='glue')p.mesh.rotation.y+=dt*14;
    if(!p.cosmetic){
     const bounds=projectileBounds(previous,p.mesh.position,p.radius||.45);
-    const collisionEnemies=realTack?enemies.filter(e=>e.alive&&inProjectileBounds(e,bounds)).sort((a,b)=>Math.hypot(a.mesh.position.x-previous.x,a.mesh.position.z-previous.z)-Math.hypot(b.mesh.position.x-previous.x,b.mesh.position.z-previous.z)):enemies;
+    const collisionEnemies=realTack||p.type==='glue'?enemies.filter(e=>e.alive&&inProjectileBounds(e,bounds)).sort((a,b)=>Math.hypot(a.mesh.position.x-previous.x,a.mesh.position.z-previous.z)-Math.hypot(b.mesh.position.x-previous.x,b.mesh.position.z-previous.z)):enemies;
     for(const e of collisionEnemies){
      if(p.pierceLeft<=0)break;
      if(!e.alive||!inProjectileBounds(e,bounds)||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;

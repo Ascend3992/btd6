@@ -9,7 +9,7 @@ function game(){
  const context={RANGE_SCALE:.32,meadowDepthScale:1,towers:[],enemies:[],projectiles:[],roundActive:true,gameEnded:false,selectedTower:null,
   round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
   updateTowerAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
-  iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
+  glueMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),animateGlue(){},iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
   animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
   updateUI(){},ensureGlueMarker(){},destroyEnemyAndSpawnChildren(e){e.alive=false},
   PATH:Array.from({length:10},()=>({distanceTo:()=>10})),
@@ -45,7 +45,7 @@ function game(){
  include('function updateRegrow(','function towerCanDamage(');
  include('function tierFiveTaken(','function refreshSelected(');
  include('function applyBallKnockback(','function updateRicochet(');
- include('function towerCanDamage(','function ensureGlueMarker(');
+ include('function gluePriority(','function ensureGlueMarker(');
  include('function moveEnemyBackward(','function makeProjectileMesh(');
  include('function fireProjectile(','function fireLinearProjectile(');
  include('function fireLinearProjectile(','function spawnTackVolleyVisual(');
