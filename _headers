@@ -24,3 +24,8 @@
 
 /bloon-visuals.js
   Cache-Control: no-cache
+
+/tower-ui.js
+  Cache-Control: no-cache
+/upgrade-icons.js
+  Cache-Control: no-cache

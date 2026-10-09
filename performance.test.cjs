@@ -21,8 +21,8 @@ test('bulk damage preserves hp, pop income, damage credit and excess damage for 
 
 test('many hits coalesce their HUD updates into one frame',()=>{
  const source=fs.readFileSync(path.join(__dirname,'..','game.js'),'utf8');let writes=0;
- const el=()=>({set textContent(value){writes++;}}),button={dataset:{tower:'dart'},set disabled(value){writes++;}};
- const context={lives:100,cash:650,round:98,heroPlaced:false,livesEl:el(),cashEl:el(),roundEl:el(),shopBtns:[button],towerDefs:{dart:{cost:200}},formatCash:String};vm.createContext(context);
+ const el=()=>({set textContent(value){writes++;}}),button={dataset:{tower:'dart'},classList:{toggle(){}},setAttribute(){},set disabled(value){writes++;}};
+ const context={lives:100,cash:650,round:98,heroPlaced:false,selectedType:null,autoStart:false,speed:1,gameEnded:false,roundActive:false,startBtn:{dataset:{},textContent:'Start Round',setAttribute(){}},autoBtn:{dataset:{},textContent:'Auto Start: Off',setAttribute(){}},speedBtn:{dataset:{},textContent:'Speed ×1'},livesEl:el(),cashEl:el(),roundEl:el(),shopBtns:[button],towerDefs:{dart:{name:'Dart Monkey',cost:200}},formatCash:String};vm.createContext(context);
  vm.runInContext(source.slice(source.indexOf('let uiDirty='),source.indexOf('function selectShop(')),context);
  for(let i=0;i<3200;i++)context.updateUI();assert.equal(writes,0);context.flushUI();assert.equal(writes,4);context.flushUI();assert.equal(writes,4);
 });

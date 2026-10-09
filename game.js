@@ -8,6 +8,7 @@ const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTa
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
+const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -23,6 +24,9 @@ const targetBtn=document.getElementById('targetBtn'),sellBtn=document.getElement
 const toast=document.getElementById('toast'),endScreen=document.getElementById('endScreen'),endTitle=document.getElementById('endTitle'),endText=document.getElementById('endText');
 const abilityBar=document.getElementById('abilityBar'),abilityButtons=document.getElementById('abilityButtons'),towerAbilityBtn=document.getElementById('towerAbilityBtn');
 const abilityNodes=new Map();
+const gameWrap=document.getElementById('gameWrap'),settingsDialog=document.getElementById('settingsDialog');
+const selectedPortrait=document.getElementById('selectedPortrait'),towerDetails=document.getElementById('towerDetails'),towerInfoBtn=document.getElementById('towerInfoBtn');
+let placementPreview=null;
 let nextTowerId=1,abilityUiTimer=0;
 
 let lives=100,cash=650,round=1,speed=1,roundActive=false,autoStart=false,autoStartTimer=0,spawnQueue=[],spawnTimer=0,selectedType=null,selectedTower=null,selectedUpgradePath=null,heroPlaced=false,gameEnded=false;
@@ -35,7 +39,7 @@ const layerColors=[0xe43c36,0x3387ff,0x39b855,0xffe33d,0xef72bb,0x25282d,0xf5f5f
 const layerIndex=Object.fromEntries(layerNames.map((n,i)=>[n,i]));
 const blimpStats={MOAB:{hp:200,speed:'MOAB',leak:200,color:0x4b83c3,scale:[1.15,1.2,2.1]},BFB:{hp:700,speed:'BFB',leak:700,color:0xc43c3c,scale:[1.45,1.5,2.65]},ZOMG:{hp:4000,speed:'ZOMG',leak:4000,color:0x4d8357,scale:[1.75,1.8,3.2]},DDT:{hp:400,speed:'DDT',leak:400,color:0x303239,scale:[1.25,1.3,2.3]},BAD:{hp:28000,speed:'BAD',leak:28000,color:0xa34f9f,scale:[2.05,2.05,3.75]}};
 function cashPerPop(r){return r>60?.2:r>50?.5:1}
-function formatCash(v){const n=Math.round(v*10)/10;return Number.isInteger(n)?String(n):n.toFixed(1)}
+function formatCash(v){return (Math.round(v*10)/10).toLocaleString('en-US',{maximumFractionDigits:1})}
 
 
 const exactRoundData={"1":[[20,"Red"]],"2":[[35,"Red"]],"3":[[25,"Red"],[5,"Blue"]],"4":[[35,"Red"],[18,"Blue"]],"5":[[5,"Red"],[27,"Blue"]],"6":[[15,"Red"],[15,"Blue"],[4,"Green"]],"7":[[20,"Red"],[20,"Blue"],[8,"Green"]],"8":[[10,"Red"],[20,"Blue"],[14,"Green"]],"9":[[30,"Blue"],[18,"Green"]],"10":[[102,"Red"],[30,"Blue"]],"11":[[10,"Red"],[10,"Blue"],[12,"Green"],[4,"Yellow"]],"12":[[15,"Red"],[10,"Blue"],[5,"Green"],[16,"Yellow"]],"13":[[50,"Red"],[23,"Blue"],[10,"Green"]],"14":[[49,"Red"],[15,"Blue"],[24,"Green"],[10,"Yellow"]],"15":[[20,"Red"],[15,"Blue"],[12,"Green"],[5,"Yellow"],[3,"Pink"]],"16":[[20,"Red"],[15,"Blue"],[10,"Green"],[18,"Yellow"]],"17":[[12,"Yellow"],[8,"Pink"]],"18":[[80,"Red"],[12,"Green"],[4,"Yellow"]],"19":[[10,"Blue"],[7,"Green"],[9,"Yellow"],[15,"Pink"]],"20":[[40,"Blue"],[6,"Black"]],"21":[[40,"Red"],[14,"Green"],[14,"Yellow"],[2,"Black"]],"22":[[16,"White"]],"23":[[16,"Black"],[16,"White"]],"24":[[1,"Camo Green"]],"25":[[25,"Purple"],[4,"Camo Red"]],"26":[[10,"Blue"],[12,"Pink"],[4,"Zebra"]],"27":[[100,"Red"],[60,"Blue"],[12,"Green"],[8,"Yellow"]],"28":[[6,"Lead"]],"29":[[50,"Yellow"],[15,"Regrow Yellow"]],"30":[[40,"Red"],[30,"Yellow"],[8,"Multi-Colored"],[4,"Zebra"]],"31":[[20,"Zebra"],[10,"Regrow Zebra"],[4,"Camo Regrow Red"]],"32":[[15,"Yellow"],[20,"Pink"],[10,"White"],[8,"Black"]],"33":[[20,"Camo Red"],[13,"Camo Yellow"]],"34":[[140,"Yellow"],[6,"Zebra"]],"35":[[35,"Pink"],[30,"Black"],[25,"White"],[5,"Rainbow"]],"36":[[140,"Pink"],[20,"Camo Regrow Green"],[2,"Regrow Lead"]],"37":[[25,"White"],[20,"Black"],[15,"Zebra"],[14,"Lead"],[4,"Camo White"]],"38":[[42,"White"],[28,"Lead"],[2,"Ceramic"]],"39":[[10,"Zebra"],[10,"Rainbow"],[20,"Black"],[20,"White"],[2,"Regrow Lead"],[2,"Camo Blue"]],"40":[[1,"MOAB"]],"41":[[60,"Black"],[60,"Zebra"],[2,"Ceramic"]],"42":[[6,"Camo Rainbow"],[5,"Camo Red"],[5,"Camo Green"],[2,"Camo Blue"]],"43":[[10,"Rainbow"],[10,"Blue"],[7,"Zebra"],[5,"Ceramic"]],"44":[[50,"Zebra"],[30,"Camo Zebra"]],"45":[[4,"Fortified Lead"],[20,"Camo Purple"],[40,"Pink"],[4,"Camo Rainbow"]],"46":[[6,"Fortified Ceramic"],[5,"Ceramic"]],"47":[[70,"Pink"],[12,"Camo Pink"],[40,"Camo Red"]],"48":[[40,"Red"],[30,"Blue"],[40,"Fortified Purple"],[15,"Rainbow"],[2,"Camo Ceramic"]],"49":[[300,"Green"],[30,"Zebra"],[15,"Rainbow"],[1,"Ceramic"]],"50":[[20,"Fortified Red"],[2,"MOAB"],[16,"Fortified Lead"],[18,"Ceramic"]],"51":[[10,"Camo Ceramic"],[5,"Camo Rainbow"]],"52":[[2,"MOAB"],[15,"Rainbow"]],"53":[[2,"MOAB"],[80,"Pink"],[3,"Camo Wood/Camo Ceramic"]],"54":[[2,"MOAB"],[35,"Ceramic"]],"55":[[1,"MOAB"],[45,"Ceramic"],[30,"Zebra"]],"56":[[1,"MOAB"],[40,"Rainbow"]],"57":[[4,"MOAB"],[40,"Fortified Lead"]],"58":[[1,"BFB"],[10,"Ceramic"]],"59":[[50,"Camo Lead"],[30,"Regrow Zebra"],[30,"Regrow Rainbow"]],"60":[[1,"BFB"]],"61":[[5,"MOAB"],[150,"Regrow Zebra"],[5,"Zebra"]],"62":[[2,"BFB"],[150,"Purple"],[10,"Camo Rainbow"]],"63":[[122,"Ceramic"],[75,"Lead"]],"64":[[6,"MOAB"],[2,"BFB"]],"65":[[3,"BFB"],[100,"Regrow Zebra"],[70,"Rainbow"],[3,"Camo Rainbow"]],"66":[[2,"MOAB"],[8,"Fortified MOAB"]],"67":[[8,"MOAB"],[3,"BFB"],[15,"Fortified Ceramic"]],"68":[[1,"BFB"],[4,"MOAB"],[8,"Fortified Ceramic"]],"69":[[70,"Regrow Lead"],[50,"Fortified Lead"],[40,"Regrow Ceramic"]],"70":[[4,"BFB"],[120,"White"],[60,"Camo White"]],"71":[[2,"BFB"],[30,"MOAB"]],"72":[[2,"BFB"],[38,"MOAB"]],"73":[[8,"BFB"],[4,"MOAB"]],"74":[[1,"BFB"],[48,"MOAB"],[85,"Ceramic"]],"75":[[3,"BFB"],[2,"Fortified BFB"],[14,"MOAB"]],"76":[[60,"Regrow Ceramic"]],"77":[[11,"BFB"],[5,"MOAB"]],"78":[[140,"Ceramic"],[75,"Camo Ceramic"],[1,"BFB"]],"79":[[4,"BFB"],[2,"Fortified BFB"],[500,"Regrow Rainbow"]],"80":[[1,"ZOMG"]],"81":[[17,"MOAB"],[18,"Super Ceramic"]],"82":[[2,"BFB"],[10,"Fortified MOAB"]],"83":[[40,"Super Ceramic"],[30,"Regrow Super Ceramic"]],"84":[[2,"ZOMG"],[10,"BFB"]],"85":[[2,"ZOMG"],[12,"BFB"]],"86":[[3,"ZOMG"],[4,"Fortified BFB"]],"87":[[4,"ZOMG"],[6,"BFB"]],"88":[[2,"ZOMG"],[8,"Fortified BFB"],[4,"MOAB"]],"89":[[4,"ZOMG"],[4,"Fortified BFB"],[40,"Super Ceramic"]],"90":[[3,"DDT"]],"91":[[6,"ZOMG"],[20,"BFB"]],"92":[[4,"ZOMG"],[50,"Fortified MOAB"]],"93":[[6,"DDT"],[24,"BFB"]],"94":[[6,"ZOMG"],[45,"BFB"],[40,"MOAB"]],"95":[[30,"DDT"],[50,"Fortified MOAB"],[90,"Fortified Super Ceramic"]],"96":[[6,"ZOMG"],[40,"BFB"],[30,"MOAB"]],"97":[[2,"Fortified ZOMG"]],"98":[[8,"ZOMG"],[30,"Fortified BFB"],[40,"Super Ceramic"]],"99":[[4,"Fortified DDT"],[8,"Fortified MOAB"]],"100":[[1,"BAD"]]};
@@ -239,25 +243,40 @@ sun.shadow.normalBias=.03;sun.shadow.bias=-.0001;
 const PATH=createMeadowPath();
 const {ground,obstacles:ballObstacles}=createMeadowMap(scene);
 
-const rangeRing=new THREE.Mesh(new THREE.RingGeometry(.98,1,64),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.23,side:THREE.DoubleSide,depthWrite:false}));
+const rangeRing=new THREE.Mesh(new THREE.CircleGeometry(1,64),new THREE.MeshBasicMaterial({color:0x263c26,transparent:true,opacity:.24,side:THREE.DoubleSide,depthWrite:false}));
 rangeRing.rotation.x=-Math.PI/2;rangeRing.visible=false;scene.add(rangeRing);
 
 function resize(){
  const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);
- // Fit the whole reference meadow beside the shop, including its entry and exit.
- const aspect=r.width/r.height,shop=document.getElementById('shop'),shopWidth=shop?shop.getBoundingClientRect().width+24:0;
- const playableWidth=Math.max(r.width*.40,r.width-shopWidth);
- const halfH=Math.max(23.3,35/(playableWidth/r.height));
+ // The canvas excludes the shop; pointer projection and rendering use its real size.
+ const aspect=r.width/r.height,halfH=Math.max(23.3,35/aspect);
  camera.left=-halfH*aspect;camera.right=halfH*aspect;camera.top=halfH;camera.bottom=-halfH;
- const centerShift=halfH*shopWidth/r.height;
- camera.position.set(centerShift,68,36);camera.lookAt(centerShift,0,0);camera.updateProjectionMatrix();
+ camera.position.set(0,68,36);camera.lookAt(0,0,0);camera.updateProjectionMatrix();
 }
 addEventListener('resize',resize);resize();
 function toastMsg(s){toast.textContent=s;toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),1200)}
 let uiDirty=true;
 function updateUI(){uiDirty=true;}
-function flushUI(){if(!uiDirty)return;uiDirty=false;livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=cash<d.cost||(d.hero&&heroPlaced)})}
-function selectShop(type){selectedType=type;selectedTower=null;rangeRing.visible=false;selPanel.classList.add('hidden');shopBtns.forEach(b=>b.classList.toggle('active',b.dataset.tower===type))}
+function syncControls(){
+ startBtn.dataset.label=gameEnded?'Finished':roundActive?'Running':'Start';startBtn.title=startBtn.textContent;startBtn.setAttribute('aria-label',startBtn.textContent);
+ autoBtn.dataset.label=autoStart?'Auto on':'Auto off';autoBtn.setAttribute('aria-pressed',String(autoStart));autoBtn.title=autoBtn.textContent;
+ speedBtn.dataset.label=speed+'×';speedBtn.title=speedBtn.textContent;
+}
+function flushUI(){if(!uiDirty)return;uiDirty=false;livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;syncControls();shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=(cash<d.cost||(d.hero&&heroPlaced))&&selectedType!==b.dataset.tower;b.classList.toggle('unaffordable',cash<d.cost);b.title=d.name+' — $'+d.cost.toLocaleString()+(d.hero&&heroPlaced?' (already placed)':'');b.setAttribute('aria-label',b.title)})}
+function clearPlacementPreview(){if(placementPreview){disposeTransientMesh(placementPreview);placementPreview=null;}}
+function clearSelection(){
+ selectedType=null;selectedTower=null;selectedUpgradePath=null;clearPlacementPreview();rangeRing.visible=false;
+ selPanel.classList.add('hidden');selPanel.classList.remove('inspecting');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');gameWrap.classList.remove('hasSelection','placing');
+ shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});document.getElementById('shopTowerName').textContent='PRIMARY MONKEYS';document.getElementById('hint').innerHTML='Pick a monkey to place.<br>Click it again to cancel.';refreshAbilityUI();updateUI();
+}
+function selectShop(type){
+ if(selectedType===type){clearSelection();return;}
+ clearSelection();selectedType=type;gameWrap.classList.add('placing');
+ shopBtns.forEach(b=>{const active=b.dataset.tower===type;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ document.getElementById('shopTowerName').textContent=towerDefs[type].name.toUpperCase();document.getElementById('hint').textContent='Click the meadow to place. Click this monkey again to cancel.';
+ placementPreview=makeTowerMesh(type);placementPreview.name='placement-preview';placementPreview.visible=false;placementPreview.traverse(o=>{if(o.material){const materials=Array.isArray(o.material)?o.material:[o.material];for(const material of materials){material.transparent=true;material.opacity=.55;}o.castShadow=false;}});scene.add(placementPreview);updateUI();
+}
+
 shopBtns.forEach(b=>b.addEventListener('click',()=>selectShop(b.dataset.tower)));
 
 function mat(color){return new THREE.MeshStandardMaterial({flatShading:true,color,roughness:.65,metalness:.02})}
@@ -941,9 +960,10 @@ function surfacePlacement(type,x,z){
  const source=surface==='water'&&!native?frozenWaterSource(x,z):null;
  return {allowed:native||!!source,surface,frozenBy:source?.id??null};
 }
-function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType],edgeClearance=d.footprintRadius??1;if(Math.abs(x)>MAP_W/2-edgeClearance||Math.abs(z)>MAP_H/2-edgeClearance)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z,d.footprintRadius??.25))return toastMsg('Cannot place on the path');if(towerFootprintsOverlap(selectedType,x,z))return toastMsg('Too close to another tower');const placement=surfacePlacement(selectedType,x,z);if(!placement.allowed)return toastMsg('Place this tower on land or frozen water');cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
+function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType],edgeClearance=d.footprintRadius??1;if(Math.abs(x)>MAP_W/2-edgeClearance||Math.abs(z)>MAP_H/2-edgeClearance)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z,d.footprintRadius??.25))return toastMsg('Cannot place on the path');if(towerFootprintsOverlap(selectedType,x,z))return toastMsg('Too close to another tower');const placement=surfacePlacement(selectedType,x,z);if(!placement.allowed)return toastMsg('Place this tower on land or frozen water');cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;clearPlacementPreview();selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
 
-function selectTower(t){selectedTower=t;selectedUpgradePath=null;selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected()}
+function selectTower(t){clearPlacementPreview();selectedTower=t;selectedUpgradePath=null;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected()}
+
 // Preserve the elements under the pointer between pointerdown and click.
 // Replacing innerHTML during the periodic panel refresh can swallow that click.
 function setUpgradeLabel(button,title,detail){
@@ -996,7 +1016,7 @@ function refreshSelected(){
  changeHandsBtn.classList.toggle('hidden',t.type!=='boomer');changeHandsBtn.textContent='Change Hands: '+(t.throwHand===-1?'Left':'Right');
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
- targetBtn.textContent='Target: '+t.target[0].toUpperCase()+t.target.slice(1);sellBtn.textContent='Sell $'+Math.floor(t.invest*.7);refreshAbilityUI()
+ targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label','Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,selectedUpgradePath,tierFiveTaken);refreshAbilityUI()
 }
 function syncDartStats(t){
  const [top,middle,bottom]=t.paths;
@@ -1125,15 +1145,28 @@ function applyUpgrade(t,p,tier){
  }
  updateTowerAppearance(t);
 }
-upgradeBtns.forEach((b,p)=>b.addEventListener('click',()=>{const t=selectedTower;if(!t||b.disabled)return;if(towerDefs[t.type].hero){activateTowerAbility(t,p===0?'rapid':'storm');return;}selectedUpgradePath=p;refreshSelected()}));
+upgradeBtns.forEach((b,p)=>b.addEventListener('click',()=>{const t=selectedTower;if(!t||b.disabled)return;if(towerDefs[t.type].hero){activateTowerAbility(t,p===0?'rapid':'storm');return;}selectedUpgradePath=p;towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');refreshSelected()}));
 buyUpgradeBtn.addEventListener('click',()=>{const t=selectedTower,p=selectedUpgradePath;if(!t||p===null||towerDefs[t.type].hero)return;const tier=t.paths[p],u=upgradeData[t.type][p][tier];if(tierFiveTaken(t,p)){toastMsg('Only one of this Tier 5 at a time');refreshSelected();return}if(!u||cash<u[1]||upgradeBtns[p].disabled)return;cash-=u[1];t.paths[p]++;applyUpgrade(t,p,tier);selectedUpgradePath=null;refreshSelected();updateUI()});
 changeHandsBtn.addEventListener('click',()=>{if(selectedTower?.type!=='boomer')return;selectedTower.throwHand=selectedTower.throwHand===-1?1:-1;selectedTower.mesh.scale.x=selectedTower.throwHand;refreshSelected()});
 camoPriorityBtn.addEventListener('click',()=>{if(selectedTower?.type==='dart'&&selectedTower.paths[2]>=2){selectedTower.camoPriority=!selectedTower.camoPriority;refreshSelected();}});
-targetBtn.addEventListener('click',()=>{if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+1)%modes.length];refreshSelected()});
-sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;selectedTower=null;selectedUpgradePath=null;rangeRing.visible=false;selPanel.classList.add('hidden');updateUI()});closeSel.addEventListener('click',()=>{selectedTower=null;selectedUpgradePath=null;rangeRing.visible=false;selPanel.classList.add('hidden')});
+function cycleTarget(direction){if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+direction+modes.length)%modes.length];refreshSelected();}
+ targetBtn.addEventListener('click',()=>cycleTarget(1));document.getElementById('targetNextBtn').addEventListener('click',()=>cycleTarget(1));document.getElementById('targetPrevBtn').addEventListener('click',()=>cycleTarget(-1));
+ sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI()});closeSel.addEventListener('click',clearSelection);
+ towerInfoBtn.addEventListener('click',()=>{const show=towerDetails.classList.contains('hidden');towerDetails.classList.toggle('hidden',!show);towerInfoBtn.setAttribute('aria-expanded',String(show));selectedUpgradePath=null;refreshSelected();});document.getElementById('closeTowerInfo').addEventListener('click',()=>{towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false')});
+ document.getElementById('closeUpgradeInfo').addEventListener('click',()=>{selectedUpgradePath=null;refreshSelected()});
+ document.getElementById('settingsBtn').addEventListener('click',()=>settingsDialog.showModal());document.getElementById('closeSettingsBtn').addEventListener('click',()=>settingsDialog.close());
+ addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!settingsDialog.open)clearSelection()});
 
 function pointerGround(ev){const r=canvas.getBoundingClientRect();pointer.x=((ev.clientX-r.left)/r.width)*2-1;pointer.y=-((ev.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObject(ground);return hits[0]?.point||null}
-canvas.addEventListener('pointerdown',ev=>{const p=pointerGround(ev);if(!p)return;if(selectedType){placeTower(p.x,p.z);return}let nearest=null,nd=2.1;for(const t of towers){const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<nd){nd=d;nearest=t}}if(nearest)selectTower(nearest);else{selectedTower=null;rangeRing.visible=false;selPanel.classList.add('hidden')}});
+function previewPlacement(ev){
+ if(!selectedType||!placementPreview)return;const p=pointerGround(ev);if(!p){placementPreview.visible=false;rangeRing.visible=false;return;}
+ const d=towerDefs[selectedType],edge=d.footprintRadius??1;
+ const valid=cash>=d.cost&&(!d.hero||!heroPlaced)&&Math.abs(p.x)<=MAP_W/2-edge&&Math.abs(p.z)<=MAP_H/2-edge&&!onPath(p.x,p.z,d.footprintRadius??.25)&&!towerFootprintsOverlap(selectedType,p.x,p.z)&&surfacePlacement(selectedType,p.x,p.z).allowed;
+ placementPreview.visible=true;placementPreview.position.set(p.x,.66,p.z);rangeRing.visible=true;rangeRing.position.set(p.x,.7,p.z);rangeRing.scale.setScalar(d.range);rangeRing.material.color.setHex(valid?0x287a34:0xe2391e);gameWrap.dataset.placement=valid?'valid':'blocked';
+}
+ canvas.addEventListener('pointermove',previewPlacement);canvas.addEventListener('pointerleave',()=>{if(selectedType){if(placementPreview)placementPreview.visible=false;rangeRing.visible=false;}});
+ canvas.addEventListener('pointerdown',ev=>{if(gameEnded)return;const p=pointerGround(ev);if(!p)return;if(selectedType){placeTower(p.x,p.z);return;}let nearest=null,nd=2.1;for(const t of towers){const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<nd){nd=d;nearest=t;}}if(nearest&&nearest!==selectedTower)selectTower(nearest);else clearSelection();});
+
 
 const bloonRenderer=new BloonRenderer(scene,makeBloonTemplate);
 function makeBloonMesh(layer,opts={}){return bloonRenderer.create(layer,opts);}
@@ -2604,7 +2637,7 @@ function buildRound(n){
  groups.forEach(([count,name],i)=>addGroup(count,name,i));
  return q;
 }
-function beginRound(){if(roundActive||gameEnded)return;autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI()}
+function beginRound(){if(roundActive||gameEnded)return;autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
 function spawnStep(dt){
  if(!roundActive){
   if(autoStart&&autoStartTimer>0&&!gameEnded){autoStartTimer-=dt;if(autoStartTimer<=0)beginRound()}
@@ -2620,12 +2653,12 @@ function spawnStep(dt){
  }
 }
 startBtn.addEventListener('click',beginRound);
-autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0});
-speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed});
+autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls()});
+speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls()});
 restartBtn.addEventListener('click',()=>location.reload());
 function endGame(win){gameEnded=true;roundActive=false;endScreen.classList.remove('hidden');endTitle.textContent=win?'Round 100 cleared!':'Game Over';endText.textContent=win?'You survived all 100 rounds.':'The balloons made it through the meadow.';refreshAbilityUI()}
 
-let last=performance.now();function loop(now){const dt=Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
+let last=performance.now();function loop(now){const dt=settingsDialog.open?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded&&!settingsDialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
 updateUI();flushUI();refreshAbilityUI();requestAnimationFrame(loop);
 } catch (err) {
  console.error(err);

@@ -1,75 +1,38 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Meadow Balloon Defense 3D</title>
-  <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="style.css?v=34" />
-</head>
-<body>
-  <div id="gameWrap">
-    <canvas id="game"></canvas>
-    <div id="topbar">
-      <div class="pill">❤️ <span id="lives">100</span></div>
-      <div class="pill">💰 <span id="cash">650</span></div>
-      <div class="pill">Round <span id="round">1</span>/100</div>
-      <button id="startBtn">Start Round</button>
-      <button id="autoBtn">Auto Start: Off</button>
-      <button id="speedBtn">Speed ×1</button>
-      <button id="restartBtn">Restart</button>
-    </div>
-
-    <aside id="shop">
-      <h2>Primary Towers</h2>
-      <button class="towerBtn" data-tower="dart"><b>Dart Monkey</b><span>$200</span><small>Cheap, reliable darts</small></button>
-      <button class="towerBtn" data-tower="boomer"><b>Boomerang Monkey</b><span>$325</span><small>Curved multi-hit attacks</small></button>
-      <button class="towerBtn" data-tower="bomb"><b>Bomb Shooter</b><span>$600</span><small>Explosive splash damage</small></button>
-      <button class="towerBtn" data-tower="tack"><b>Tack Shooter</b><span>$260</span><small>Radial close-range attacks</small></button>
-      <button class="towerBtn" data-tower="ice"><b>Ice Monkey</b><span>$400</span><small>Freezes groups of balloons</small></button>
-      <button class="towerBtn" data-tower="glue"><b>Glue Gunner</b><span>$270</span><small>Slows balloons with glue</small></button>
-      <hr>
-      <h2>Hero</h2>
-      <button class="towerBtn hero" data-tower="hero"><b>Quincy</b><span>$540</span><small>Archer hero; levels every 5 rounds</small></button>
-      <div id="hint">Pick a tower, then click the 3D meadow to place it.</div>
-    </aside>
-
-    <section id="selectedPanel" class="hidden">
-      <div class="selHeader">
-        <h3 id="selName"></h3>
-        <button id="closeSel" aria-label="Close tower panel">×</button>
-      </div>
-      <div id="selStats"></div>
-      <div id="upgradeGrid">
-        <button class="upgradePath top" id="upgrade0"></button>
-        <button class="upgradePath middle" id="upgrade1"></button>
-        <button class="upgradePath bottom" id="upgrade2"></button>
-      </div>
-      <div id="upgradeInfo" class="upgradeInfo">Click an upgrade to read what it does.</div>
-      <button id="buyUpgradeBtn" class="buyUpgradeBtn" disabled>Buy selected upgrade</button>
-      <button id="towerAbilityBtn" class="towerAbilityBtn hidden" type="button"></button>
-      <div class="selActions">
-        <button id="changeHandsBtn" class="hidden" type="button">Change Hands: Right</button>
-        <button id="camoPriorityBtn" class="hidden" type="button" aria-pressed="false">Prioritize Camo: Off</button>
-        <button id="targetBtn">Target: First</button>
-        <button id="sellBtn">Sell</button>
-      </div>
-    </section>
-
-    <section id="abilityBar" class="hidden" aria-label="Tower abilities">
-      <div class="abilityTitle">Abilities <small>Unlock with upgrades or hero levels</small></div>
-      <div id="abilityButtons"></div>
-    </section>
-
-    <div id="toast"></div>
-    <div id="endScreen" class="hidden">
-      <div class="endCard">
-        <h1 id="endTitle">Game Over</h1>
-        <p id="endText"></p>
-        <button onclick="location.reload()">Restart</button>
-      </div>
-    </div>
-  </div>
-  <script src="game.js?v=59"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=60"></head>
+<body><div id="gameWrap">
+<canvas id="game" aria-label="Meadow game map"></canvas>
+<header id="topbar" aria-label="Game status">
+<div class="hudStat" aria-label="Lives"><svg aria-hidden="true"><use href="assets/ui/interface.svg#heart"/></svg><span id="lives">100</span></div>
+<div class="hudStat cashHud" aria-label="Cash"><svg aria-hidden="true"><use href="assets/ui/interface.svg#coins"/></svg><span>$<span id="cash">650</span></span></div>
+<div class="roundHud"><small>ROUND</small><strong><span id="round">1</span>/100</strong></div>
+<button id="settingsBtn" type="button" aria-label="Settings"><svg aria-hidden="true"><use href="assets/ui/interface.svg#gear"/></svg></button>
+</header>
+<aside id="shop" aria-label="Tower shop"><div class="shopTitle">UPGRADES</div><div id="shopTowerName" class="shopCategory">PRIMARY MONKEYS</div><div class="towerGrid">
+<button class="towerBtn" data-tower="dart" aria-pressed="false"><img src="assets/ui/towers/dart.png" alt=""><b>Dart Monkey</b><span>$200</span><small>Cheap, reliable darts</small></button>
+<button class="towerBtn" data-tower="boomer" aria-pressed="false"><img src="assets/ui/towers/boomer.png" alt=""><b>Boomerang Monkey</b><span>$325</span><small>Curved multi-hit attacks</small></button>
+<button class="towerBtn" data-tower="bomb" aria-pressed="false"><img src="assets/ui/towers/bomb.png" alt=""><b>Bomb Shooter</b><span>$600</span><small>Explosive splash damage</small></button>
+<button class="towerBtn" data-tower="tack" aria-pressed="false"><img src="assets/ui/towers/tack.png" alt=""><b>Tack Shooter</b><span>$260</span><small>Radial close-range attacks</small></button>
+<button class="towerBtn" data-tower="ice" aria-pressed="false"><img src="assets/ui/towers/ice.png" alt=""><b>Ice Monkey</b><span>$400</span><small>Freezes groups of Bloons</small></button>
+<button class="towerBtn" data-tower="glue" aria-pressed="false"><img src="assets/ui/towers/glue.png" alt=""><b>Glue Gunner</b><span>$270</span><small>Slows Bloons with glue</small></button>
+<button class="towerBtn hero" data-tower="hero" aria-pressed="false"><img src="assets/ui/towers/hero.png" alt=""><b>Quincy</b><span>$540</span><small>Archer hero</small></button>
+</div><div id="hint">Pick a monkey to place.<br>Click it again to cancel.</div>
+<div class="roundControls" aria-label="Round controls"><button id="autoBtn" type="button" data-label="Auto off" aria-pressed="false">Auto Start: Off</button><button id="startBtn" type="button" data-label="Start">Start Round</button><button id="speedBtn" type="button" data-label="1×">Speed ×1</button></div></aside>
+<section id="selectedPanel" class="hidden" aria-label="Selected monkey upgrades">
+<div class="selHeader"><h3 id="selName"></h3><button id="closeSel" type="button" aria-label="Close tower panel">×</button></div>
+<div class="damageCounter" title="Total damage dealt"><svg aria-hidden="true"><use href="assets/ui/interface.svg#pop"/></svg><span id="damageDealt">0</span></div>
+<div class="panelBody"><div class="towerPortrait"><button id="towerInfoBtn" type="button" aria-label="Show tower stats" aria-expanded="false">i</button><img id="selectedPortrait" alt="">
+<div class="targetControls"><button id="targetPrevBtn" type="button" aria-label="Previous targeting mode">◀</button><button id="targetBtn" type="button">First</button><button id="targetNextBtn" type="button" aria-label="Next targeting mode">▶</button></div></div>
+<div id="upgradeGrid">
+<div class="upgradeRow" data-path="0"><div class="tierMarkers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="ownedUpgrade"><b>NOT UPGRADED</b><span class="upgradeArt"></span><strong></strong></div><button class="upgradePath top" id="upgrade0" type="button"><b></b><span class="upgradeArt"></span><small></small></button></div>
+<div class="upgradeRow" data-path="1"><div class="tierMarkers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="ownedUpgrade"><b>NOT UPGRADED</b><span class="upgradeArt"></span><strong></strong></div><button class="upgradePath middle" id="upgrade1" type="button"><b></b><span class="upgradeArt"></span><small></small></button></div>
+<div class="upgradeRow" data-path="2"><div class="tierMarkers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="ownedUpgrade"><b>NOT UPGRADED</b><span class="upgradeArt"></span><strong></strong></div><button class="upgradePath bottom" id="upgrade2" type="button"><b></b><span class="upgradeArt"></span><small></small></button></div>
+</div><button id="towerAbilityBtn" class="towerAbilityBtn hidden" type="button"></button><div class="selActions"><button id="changeHandsBtn" class="hidden" type="button">Change Hands: Right</button><button id="camoPriorityBtn" class="hidden" type="button" aria-pressed="false">Prioritize Camo: Off</button></div></div>
+<div class="sellBar"><span><svg aria-hidden="true"><use href="assets/ui/interface.svg#coins"/></svg>$<span id="sellValue">0</span></span><button id="sellBtn" type="button">SELL</button></div>
+<div id="upgradeInspector" class="upgradeInspector"><button id="closeUpgradeInfo" class="popoverClose" type="button" aria-label="Close upgrade details">×</button><div id="upgradeInfo" class="upgradeInfo">Select an upgrade to see its details.</div><button id="buyUpgradeBtn" class="buyUpgradeBtn" disabled>Buy selected upgrade</button></div>
+<div id="towerDetails" class="towerDetails hidden"><button id="closeTowerInfo" class="popoverClose" type="button" aria-label="Close tower stats">×</button><h4>TOWER STATS</h4><div id="selStats"></div></div>
+</section>
+<section id="abilityBar" class="hidden" aria-label="Tower abilities"><div class="abilityTitle">ABILITIES</div><div id="abilityButtons"></div></section>
+<dialog id="settingsDialog"><h2>GAME PAUSED</h2><p>Choose a monkey, then click the meadow to place it. Click the shop monkey again or press Escape to cancel.</p><button id="restartBtn" type="button">Restart game</button><button id="closeSettingsBtn" type="button">Continue</button></dialog>
+<div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><button onclick="location.reload()">Restart</button></div></div>
+</div><script src="game.js?v=60"></script></body></html>
