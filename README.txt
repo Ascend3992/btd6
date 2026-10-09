@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v53 Glue Gunner top-path stats, timed corrosion and acid puddles
+Meadow Balloon Defense 3D - v54 Glue Gunner middle-path stats, Glue Strike and Glue Storm
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -223,7 +223,7 @@ Late-round performance
 
 Verification
 ------------
-The development checkout's regression tests pass across 24 test files, covering tower stats, abilities, child damage, immunities, income, targeting, animations, model disposal, Ice freezing/shards/brittle effects, middle-path abilities and speed boosts, snowball blast pierce, icicle swept contacts, blimp freezing and rendering batches, Round 81 boundaries, single-child families and Regrow timing. Browser checks verify the actual upgrade models, casts, child freezing, DDT vulnerability, crosspath selection and cleanup. The downloadable ZIP includes the playable runtime assets; tests remain in the development checkout.
+The regression tests pass across 28 test files, covering tower stats, abilities, child damage, immunities, income, targeting, animations, model disposal, Ice freezing/shards/brittle effects, middle-path abilities and speed boosts, snowball blast pierce, icicle swept contacts, blimp freezing and rendering batches, Round 81 boundaries, single-child families, Regrow timing, glue prioritization, corrosion, acid puddles, Glue Strike vulnerability and Glue Storm timing. Browser checks verify actual upgrade models and ability buttons, casts, child freezing, DDT vulnerability, crosspath selection and cleanup. The downloadable ZIP includes the playable runtime assets and regression sources; run bash scripts/test.sh to generate the test directory and execute them.
 
 Visual previews:
   docs/boomerang-upgrades.png
@@ -254,3 +254,13 @@ Glue Gunner top path v53
 Puddle references (explicit user overrides above take priority):
   https://bloons.fandom.com/wiki/The_Bloon_Solver
   https://bloons.fandom.com/wiki/Bloon_Liquefier_(BTD6)
+
+Glue Gunner middle path v54
+--------------------------
+- All five middle upgrades retain the supplied difficulty prices and XP metadata. Normal prices: $100 / $970 / $1,950 / $4,000 / $16,000. XP: 120 / 900 / 2,500 / 8,500 / 25,000. The existing game uses Normal prices and does not have an XP unlock system.
+- Bigger Globs adds 1 projectile pierce. Glue Splatter uses a splash attack coating up to 5 eligible Bloons, following the supplied Effect row rather than its conflicting 6-Bloon description. Splash radius retains the existing top-path tuning of 12 display units. Middle crosspaths also raise acid puddle pierce, including Solver's supplied 5-2-0 value of 7.
+- Glue Hose divides attack cooldown by 3 and combines with top-path attack-speed upgrades. Normal shots retain their ordinary coating duration; Glue Storm's double lifespan applies to ability glue only.
+- Glue Strike coats all on-screen Bloons, including Camo and blimps. Its coating adds +2 damage per damaging instance from all sources, including corrosion and puddles, without repeatedly adding the bonus to damage spilling through child layers. Non-damaging glue shots remain non-damaging.
+- Strike temporarily suppresses Lead and Frozen attack immunities while its coating lasts. Existing movement freezing continues, and unrelated Camo, White/Zebra, Black and Purple immunities remain. Ordinary child layers inherit eligible coatings; blimp shells do not pass glue to their children.
+- Glue Storm activates for 20 seconds, with an immediate pulse and one pulse each second through second 19. Each pulse includes newly arrived Bloons. Its coating lasts 24 seconds, twice Strike's retained 12-second duration. Both retain the existing 30-second cooldown because the supplied table did not specify a replacement.
+- Ability vulnerability expires with its own coating even if a longer normal coating remains. All 28 regression files pass. Chromium browser checks verified 5-Bloon splash limits, actual ability buttons, Lead/Frozen vulnerability and restoration, newly arriving Camo Bloons, pulse cadence, duration and no runtime errors.

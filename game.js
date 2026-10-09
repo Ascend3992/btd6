@@ -46,6 +46,11 @@ const upgradeData={
  ice:[[['Permafrost',150],['Cold Snap',350],['Ice Shards',1500],['Embrittlement',2300],['Super Brittle',28000]],[['Enhanced Freeze',200],['Deep Freeze',300],['Arctic Wind',2750],['Snowstorm',4000],['Absolute Zero',21000]],[['Larger Radius',150],['Re-Freeze',200],['Cryo Cannon',1900],['Icicles',2750],['Icicle Impale',30000]]],
  glue:[[['Glue Soak',200],['Corrosive Glue',300],['Bloon Dissolver',2000],['Bloon Liquefier',5000],['The Bloon Solver',22500]],[['Bigger Globs',100],['Glue Splatter',970],['Glue Hose',1950],['Glue Strike',4000],['Glue Storm',16000]],[['Stickier Glue',280],['Stronger Glue',400],['MOAB Glue',3600],['Relentless Glue',4000],['Super Glue',24000]]]
 };
+const glueMiddleUpgradeMetadata=[
+ {prices:[85,100,110,120],xp:120},{prices:[825,970,1050,1165],xp:900},
+ {prices:[1655,1950,2105,2340],xp:2500},{prices:[3400,4000,4320,4800],xp:8500},
+ {prices:[13600,16000,17280,19200],xp:25000}
+];
 const glueTopUpgradeMetadata=[
  {prices:[170,200,215,240],xp:150},{prices:[255,300,325,360],xp:550},
  {prices:[1700,2000,2160,2400],xp:2500},{prices:[4250,5000,5400,6000],xp:9000},
@@ -94,7 +99,7 @@ const upgradeDescriptions={
  ],
  glue:[
   ['Soaks every non-blimp layer; cannot carry glue through blimp shells.','Deals 1 corrosion damage every 2s. Can glue blimps for half duration without slowing them.','Deals 1 damage every 0.5s, or 2 to Ceramics; +1 pierce and attacks twice as fast.','Deals 1 damage every 0.1s, or 3 to Ceramics. Directly glued Bloons leave acid puddles when popped.','Deals 8 damage per 0.1s to Ceramics and 6 to blimps. Twin splatters have 5 pierce each, stronger acid puddles and twice-as-fast attacks.'],
-  ['Fires larger glue blobs.','Glue splashes onto several nearby bloons.','Sprays glue very quickly.','Unlocks an ability that coats bloons across the map.','A stronger global glue ability with better coverage and effects.'],
+  ['Coats one extra Bloon per shot: +1 pierce.','Splash attacks coat up to 5 Bloons per shot and improve secondary-effect pierce.','Attacks 3 times as fast.','Ability glues every Bloon on screen, adds +2 damage per hit from all sources, and temporarily suppresses Lead and Frozen properties.','Ability coats the screen every 1s for 20s. Ability glue lasts twice as long and retains Strike vulnerability.'],
   ['Glue remains sticky for longer.','Glue slows bloons more strongly.','Special glue can slow MOAB-class bloons.','Glued bloons leave sticky traps when popped.','Extremely strong glue that can heavily slow powerful bloons.']
  ]
 };
@@ -143,8 +148,8 @@ const primaryAbilities={
   {kind:'snowstorm',name:'Absolute Zero',cooldown:25,duration:0,freezeDuration:10,specialFreezeDuration:10,freezeLayers:8,color:0xc4f8ff,description:'Freeze all materials for 10s, including blimps (except BADs). Soaks eight regular layers. All Ice Monkeys attack 50% faster for 10s.'}
  ],
  glue:[
-  {kind:'glueStorm',name:'Glue Strike',cooldown:30,duration:0,coatDuration:12,color:0xffe550,description:'Glue all bloons, including Camo and blimps, for 12s. Glued targets take +2 damage per hit. BADs cannot be slowed.'},
-  {kind:'glueStorm',name:'Glue Storm',cooldown:30,duration:15,tick:.5,coatDuration:15,color:0xfff27a,description:'For 15s, repeatedly glue the whole map, including newly arriving bloons. Glued targets take +2 damage per hit. BADs cannot be slowed.'}
+  {kind:'glueStorm',name:'Glue Strike',cooldown:30,duration:0,coatDuration:12,color:0xffe550,description:'Glue every Bloon on screen for 12s, including Camo and blimps. Coats add +2 damage per hit and suppress Lead/Frozen properties. BADs cannot be slowed.'},
+  {kind:'glueStorm',name:'Glue Storm',cooldown:30,duration:20,tick:1,coatDuration:24,color:0xfff27a,description:'For 20s, coat every Bloon on screen once per second, including new arrivals. Coats last 24s, add +2 damage per hit and suppress Lead/Frozen properties. BADs cannot be slowed.'}
  ]
 };
 
@@ -808,7 +813,7 @@ function coatMapWithGlue(t,ability){
  for(const e of enemies){
   if(!e.alive)continue;
   const slow=e.isBlimp?Math.max(.75,t.slow||.5):(t.slow||.5);
-  hitEnemy(e,0,{tower:t,glue:true,slow,slowDuration:ability.coatDuration,allowBlimpSlow:true,damageAmp:2,glueLayers:99,glueDps:t.glueDps||0});
+  hitEnemy(e,0,{tower:t,glue:true,slow,slowDuration:ability.coatDuration,allowBlimpSlow:true,damageAmp:2,suppressGlueProperties:true,glueLayers:99,glueDps:t.glueDps||0});
  }
 }
 function applyMapIceFreeze(t,ability){
@@ -866,7 +871,8 @@ function updateTowerAbility(t,dt){
   t.abilityTimer=Math.max(0,t.abilityTimer-dt);
   if(ability?.tick&&activeDt>0){
    t.abilityTick-=activeDt;
-   while(t.abilityTick<=0){
+   while(t.abilityTick<=1e-9){
+    if(ability.kind==='glueStorm'&&t.abilityTimer<=0&&t.abilityTick>=-1e-9){t.abilityTick+=ability.tick;break;}
     if(ability.kind==='maelstrom')emitMaelstrom(t,ability);
     else if(ability.kind==='glueStorm')coatMapWithGlue(t,ability);
     const tick=ability.kind==='maelstrom'?primaryAbilities.tack[ability.tier>=5?1:0].tick*Math.pow(.85,Math.min(2,t.paths[0])):ability.tick;
@@ -1032,10 +1038,10 @@ function syncIceStats(t){
 function syncGlueStats(t){
  const [top,middle,bottom]=t.paths,d=towerDefs.glue;
  t.glueLayers=top>=1?99:3;t.canGlueBlimps=top>=2||bottom>=3;t.moabGlue=bottom>=3;
- t.slow=bottom>=5?.05:bottom>=2?.25:d.slow;t.slowDuration=(bottom>=1?24:d.slowDuration)*(middle>=5?2:1);
+ t.slow=bottom>=5?.05:bottom>=2?.25:d.slow;t.slowDuration=bottom>=1?24:d.slowDuration;
  t.rate=d.rate*(top>=3?.5:1)*(top>=5?.5:1)/(middle>=3?3:1);
  t.pierce=1+(top>=3?1:0)+(middle>=1?1:0);if(middle>=2||top>=5)t.pierce=Math.max(5,t.pierce);if(bottom>=5)t.pierce+=6;
- t.shots=top>=5?2:1;t.glueSplash=top>=5?glueTopTuning.splatterRadius:0;
+ t.shots=top>=5?2:1;t.glueSplash=top>=5||middle>=2?glueTopTuning.splatterRadius:0;
  t.corrosionInterval=top>=4?.1:top>=3?.5:top>=2?2:0;t.corrosionDamage=top>=2?1:0;
  t.corrosionCeramicDamage=top>=5?8:top>=4?3:top>=3?2:t.corrosionDamage;t.corrosionMoabDamage=top>=5?6:t.corrosionDamage;
  t.glueDps=t.corrosionInterval?t.corrosionDamage/t.corrosionInterval:0;t.gluePuddleTier=top>=4?top:0;
@@ -1241,7 +1247,7 @@ function spawnEnemy(spec,trackState=null){
  const layer=isBlimp?null:(layerIndex[o.type]??0);
  const mesh=isBlimp?makeBlimpMesh(o.type,o):makeBloonMesh(layer,o);scene.add(mesh);
  const hp=enemyBaseHp(o.type,o)*(o.fort?2:1);
- const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueDps:0,glueCarry:0,glueLayers:0,glueLevel:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
+ const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueStrikeDamageAmp:0,glueVulnerableT:0,glueDps:0,glueCarry:0,glueLayers:0,glueLevel:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
  enemies.push(e);placeEnemyOnTrack(e);return e;
 }
 function childProps(parent,type,regrowStack){
@@ -1259,7 +1265,7 @@ function spawnChildSet(parent,types){
   if(child.abilityFreezeT>0||child.abilitySlowT>0)ensureFreezeMarker(child);
   if(parent.glueCoatings&&!parent.isBlimp){
    child.glueCoatings=parent.glueCoatings.filter(coat=>coat.remaining>0&&coat.layers>1).map(coat=>({...coat,layers:coat.layers-1,direct:false}));
-   syncGlueCoatings(child);if(child.glueT>0){child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glued=true;ensureGlueMarker(child);}
+   syncGlueCoatings(child);if(child.glueT>0){child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glueStrikeDamageAmp=parent.glueStrikeDamageAmp;child.glueVulnerableT=parent.glueVulnerableT;child.glued=true;ensureGlueMarker(child);}
   }else if(!parent.isBlimp&&parent.glueT>0&&parent.glueLayers>1){
    child.glueT=parent.glueT;child.glueSlow=parent.glueSlow;child.glueDamageAmp=parent.glueDamageAmp;child.glueAmpT=parent.glueAmpT;child.glueDps=parent.glueDps;child.glueSource=parent.glueSource;child.glueLayers=parent.glueLayers-1;child.glueLevel=parent.glueLevel||1;child.gluePriority=parent.gluePriority||1;
    child.glued=true;ensureGlueMarker(child);
@@ -1321,7 +1327,7 @@ function updateRegrow(e,dt){
 }
 function damageIcicleFamily(state,e,damage,initial=true){
  if(!e.alive)return;state.hitEnemies.add(e);
- const result=hitEnemy(e,damage,{tower:state.attack,ignoreGlueAmp:!initial});
+ const result=hitEnemy(e,damage,{tower:state.attack,ignoreGlueAmp:!initial,suppressGlueStrikeAmp:!initial});
  for(const child of result?.children||[]){state.hitEnemies.add(child);if(result.remainingDamage>0)damageIcicleFamily(state,child,result.remainingDamage,false);}
 }
 function updateIcicleContacts(dt){
@@ -1362,7 +1368,11 @@ function syncGlueCoatings(e){
   const dps=coat.interval?glueCorrosionDamage(coat,e)/coat.interval:0;
   if(dps>=e.glueDps){e.glueDps=dps;e.glueSource=coat.source;}
  }
- e.glueLevel=last?1:0;
+ e.glueLevel=last?1:0;e.glueDamageAmp=0;e.glueAmpT=0;e.glueStrikeDamageAmp=0;e.glueVulnerableT=0;
+ for(const coat of coats){
+  if(coat.damageAmp){e.glueDamageAmp=Math.max(e.glueDamageAmp,coat.damageAmp);e.glueAmpT=Math.max(e.glueAmpT,coat.remaining);}
+  if(coat.suppressProperties){e.glueVulnerableT=Math.max(e.glueVulnerableT,coat.remaining);e.glueStrikeDamageAmp=Math.max(e.glueStrikeDamageAmp,coat.damageAmp||0);}
+ }
 }
 function applyGlueCoating(e,fx){
  const t=fx.tower,priority=t?.type==='glue'?gluePriority(t):1;
@@ -1373,13 +1383,13 @@ function applyGlueCoating(e,fx){
  const slow=e.isBlimp&&!t?.moabGlue&&!fx.damageAmp?1:(fx.slow??1);
  e.glueCoatings.push({key,priority,remaining:duration,slow,layers:fx.glueLayers||3,interval,tick:0,damage:corrosion?(t?.corrosionDamage||1):0,
   ceramicDamage:t?.corrosionCeramicDamage,moabDamage:t?.corrosionMoabDamage,source:sourceTowerForDamage(t),
-  direct:!!fx.directGlue,puddleTier:t?.gluePuddleTier||0,puddleSettings:t?.gluePuddleSettings?{...t.gluePuddleSettings}:null,camoDetect:!!t?.camoDetect});
+  damageAmp:fx.damageAmp||0,suppressProperties:!!fx.suppressGlueProperties,direct:!!fx.directGlue,puddleTier:t?.gluePuddleTier||0,puddleSettings:t?.gluePuddleSettings?{...t.gluePuddleSettings}:null,camoDetect:!!t?.camoDetect});
  syncGlueCoatings(e);
 }
-function damageGlueFamily(coat,e,damage){
+function damageGlueFamily(coat,e,damage,initial=true){
  if(!e.alive)return;
- const result=hitEnemy(e,damage,{tower:coat.source,ignoreGlueAmp:true});
- for(const child of result?.children||[])if(result.remainingDamage>0)damageGlueFamily(coat,child,Math.min(result.remainingDamage,coat.damage));
+ const result=hitEnemy(e,damage,{tower:coat.source,ignoreGlueAmp:true,suppressGlueStrikeAmp:!initial});
+ for(const child of result?.children||[])if(result.remainingDamage>0)damageGlueFamily(coat,child,Math.min(result.remainingDamage,coat.damage),false);
 }
 function updateGlueCoatings(e,dt){
  let left=dt;
@@ -1407,10 +1417,10 @@ function spawnAcidPuddle(e,coat){
  acidPuddles.push({mesh,x:e.mesh.position.x,z:e.mesh.position.z,radius:stats.radius,life:stats.life,totalLife:stats.life,pierceLeft:stats.pierce,damage:stats.damage,roundCarry:stats.roundCarry,
   attack:{type:'acidPuddle',damageType:'Acid',camoDetect:coat.camoDetect,sourceTower:coat.source},hitEnemies:new Set()});
 }
-function damageAcidPuddleFamily(p,e,damage){
+function damageAcidPuddleFamily(p,e,damage,initial=true){
  if(!e.alive)return;p.hitEnemies.add(e);
- const result=hitEnemy(e,damage,{tower:p.attack,ignoreGlueAmp:true});
- for(const child of result?.children||[]){p.hitEnemies.add(child);if(result.remainingDamage>0)damageAcidPuddleFamily(p,child,result.remainingDamage);}
+ const result=hitEnemy(e,damage,{tower:p.attack,ignoreGlueAmp:true,suppressGlueStrikeAmp:!initial});
+ for(const child of result?.children||[]){p.hitEnemies.add(child);if(result.remainingDamage>0)damageAcidPuddleFamily(p,child,result.remainingDamage,false);}
 }
 function updateAcidPuddles(dt){
  if(!roundActive||dt<=0||!acidPuddles.length)return;
@@ -1444,7 +1454,7 @@ function moveEnemies(dt){
    while(e.shredTick>=1&&e.alive){e.shredTick-=1;hitEnemy(e,100,{tower:e.shredSource,ignoreGlueAmp:true})}
    if(!e.alive)continue;
   }
-  e.glueAmpT=Math.max(0,e.glueAmpT-dt);if(e.glueAmpT<=0)e.glueDamageAmp=0;
+  if(!e.glueCoatings){e.glueAmpT=Math.max(0,e.glueAmpT-dt);e.glueVulnerableT=Math.max(0,(e.glueVulnerableT||0)-dt);if(e.glueAmpT<=0){e.glueDamageAmp=0;e.glueStrikeDamageAmp=0;}}
   if(e.glueCoatings){updateGlueCoatings(e,dt);if(!e.alive)continue;}
   else{
    const gluedDt=Math.min(dt,e.glueT);e.glueT=Math.max(0,e.glueT-dt);
@@ -1454,7 +1464,7 @@ function moveEnemies(dt){
     if(!e.alive)continue;
    }
   }
-  if(e.glueT<=0&&e.glued){e.glued=false;e.gluePriority=0;e.glueLevel=0;e.glueLayers=0;e.glueSlow=1;e.glueDamageAmp=0;e.glueAmpT=0;e.glueDps=0;e.glueCarry=0;clearGlueMarker(e)}
+  if(e.glueT<=0&&e.glued){e.glued=false;e.gluePriority=0;e.glueLevel=0;e.glueLayers=0;e.glueSlow=1;e.glueDamageAmp=0;e.glueAmpT=0;e.glueStrikeDamageAmp=0;e.glueVulnerableT=0;e.glueDps=0;e.glueCarry=0;clearGlueMarker(e)}
   e.abilityFreezeT=Math.max(0,e.abilityFreezeT-dt);e.abilitySlowT=Math.max(0,e.abilitySlowT-dt);
   if(e.abilitySlowT<=0)e.abilitySlowMult=1;
   e.brittleT=Math.max(0,(e.brittleT||0)-dt);if(e.brittleT<=0)e.brittleDamage=0;
@@ -1505,16 +1515,16 @@ function towerCanDamage(t,e){
  }
  const n=e.isBlimp?e.type:layerNames[e.layer];
  if(t.type==='ice'&&e.isBlimp&&!t.canHitBlimps)return false;
- const brittle=e.brittleT>0;
- if(t.type==='ice'&&!t.refreeze&&!brittle&&!e.isBlimp&&(e.freezeT>0||e.abilityFreezeT>0))return false;
+ const brittle=e.brittleT>0,glueVulnerable=e.glueVulnerableT>0;
+ if(t.type==='ice'&&!t.refreeze&&!brittle&&!glueVulnerable&&!e.isBlimp&&(e.freezeT>0||e.abilityFreezeT>0))return false;
  if(e.camo&&!t.camoDetect&&t.type!=='hero')return false;
  if(t.type==='hero'&&t.level<5&&e.camo)return false;
  // DDTs carry Camo + Lead + Black properties. Camo is checked above; material immunities are checked here.
  if(t.damageType==='Explosion'&&(n==='Black'||n==='Zebra'||n==='DDT'))return false;
- if(!brittle&&t.damageType==='Cold'&&(n==='White'||n==='Zebra'||n==='Lead'||n==='DDT'))return false;
- if(!brittle&&!t.brittle&&t.damageType==='Cold Snap'&&(n==='White'||n==='Zebra'||(n==='DDT'&&!t.canHitBlimps)))return false;
- if(!brittle&&t.damageType==='Sharp'&&(n==='Lead'||n==='DDT'||(!e.isBlimp&&(e.freezeT>0||e.abilityFreezeT>0))))return false;
- if(!brittle&&t.damageType==='Shatter'&&(n==='Lead'||n==='DDT'))return false;
+ if(!brittle&&t.damageType==='Cold'&&(n==='White'||n==='Zebra'||(!glueVulnerable&&(n==='Lead'||n==='DDT'))))return false;
+ if(!brittle&&!t.brittle&&t.damageType==='Cold Snap'&&(n==='White'||n==='Zebra'||(n==='DDT'&&!t.canHitBlimps&&!glueVulnerable)))return false;
+ if(!brittle&&t.damageType==='Sharp'&&!glueVulnerable&&(n==='Lead'||n==='DDT'||(!e.isBlimp&&(e.freezeT>0||e.abilityFreezeT>0))))return false;
+ if(!brittle&&t.damageType==='Shatter'&&!glueVulnerable&&(n==='Lead'||n==='DDT'))return false;
  if(t.damageType==='Plasma'&&n==='Purple')return false;
  if(t.damageType==='Flame'&&n==='Purple')return false;
  return true;
@@ -1578,7 +1588,7 @@ function hitEnemy(e,dmg,fx={}){
  if(ice?.stripIceProperties){e.camo=false;e.regrow=false;e.regrowStack=[];e.mesh.userData?.bloonInstance?.renderer.restyle(e.mesh,e.layer,e);}
  if(ice&&e.type==='Ceramic')dmg+=ice.iceCeramicBonus||0;
  let dealt=0,children=[];
- let left=dmg>0?Math.max(0,Math.floor(dmg+(fx.ignoreGlueAmp?0:(e.glueDamageAmp||0)+(e.brittleT>0?e.brittleDamage||0:0)))):0;
+ let left=dmg>0?Math.max(0,Math.floor(dmg+(fx.ignoreGlueAmp?(fx.suppressGlueStrikeAmp?0:e.glueStrikeDamageAmp||0):(e.glueDamageAmp||0)+(e.brittleT>0?e.brittleDamage||0:0)))):0;
  if(left>0&&e.alive){
   const taken=Math.min(left,e.hp);if(!e.isBlimp)cash+=taken*cashPerPop(round);
   e.hp-=taken;left-=taken;dealt=taken;
@@ -1772,7 +1782,7 @@ function applyBallKnockback(p,e){
 }
 function damageBallFamily(p,e,damage,initial=true){
  if(!e.alive)return;p.hitEnemies.add(e);
- const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial});
+ const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial,suppressGlueStrikeAmp:!initial});
  if(e.alive)applyBallKnockback(p,e);
  for(const child of result?.children||[]){p.hitEnemies.add(child);if(result.remainingDamage>0)damageBallFamily(p,child,result.remainingDamage,false);else applyBallKnockback(p,child);}
 }
@@ -1891,7 +1901,7 @@ function fireIceProjectile(t,target){
 }
 function damageIceFamily(attack,e,damage,initial=true){
  if(!e.alive)return;
- const result=hitEnemy(e,damage,{tower:attack,freeze:attack.freeze,ignoreGlueAmp:!initial});
+ const result=hitEnemy(e,damage,{tower:attack,freeze:attack.freeze,ignoreGlueAmp:!initial,suppressGlueStrikeAmp:!initial});
  for(const child of result?.children||[])if(result.remainingDamage>0)damageIceFamily(attack,child,Math.min(result.remainingDamage,attack.damage+(child.isBlimp?attack.bonusMoab:0)),false);
 }
 function explodeIceProjectile(p,position){
@@ -2015,7 +2025,7 @@ function updateMOABPress(t,dt){
 }
 function damageTackFamily(p,e,damage,initial=true){
  if(!e.alive||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))return;
- p.hitEnemies.add(e);const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial});
+ p.hitEnemies.add(e);const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial,suppressGlueStrikeAmp:!initial});
  for(const child of result?.children||[]){
   p.hitEnemies.add(child);
   if(result.remainingDamage>0){
@@ -2307,7 +2317,7 @@ function damageBombFamily(p,e,damage,initial=true){
  if(p.clusterStage===2&&(p.thirdHitLedger.get(e)||0)>=bombClusterTuning.maxThirdStageHits)return;
  p.hitEnemies.add(e);
  if(p.clusterStage===2)p.thirdHitLedger.set(e,(p.thirdHitLedger.get(e)||0)+1);
- const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial});
+ const result=hitEnemy(e,damage,{tower:p.tower,ignoreGlueAmp:!initial,suppressGlueStrikeAmp:!initial});
  if(e.alive)applyBombControl(p.tower,e);
  for(const child of result?.children||[]){
   if(result.remainingDamage>0)damageBombFamily(p,child,Math.min(result.remainingDamage,bombHitDamage(p,child)),false);

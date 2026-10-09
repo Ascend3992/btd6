@@ -35,6 +35,7 @@ function game(){
  include('function setFanBoostTier(','function strongestBlimp(');
  include('function strongestBlimp(','function emitMaelstrom(');
  include('function emitMaelstrom(','function coatMapWithGlue(');
+ include('function coatMapWithGlue(','function applyMapIceFreeze(');
  include('function applyMapIceFreeze(','function loseLives(');
  include('function loseLives(','function pointSegDist(');
  include('function syncDartStats(','function applyUpgrade(');

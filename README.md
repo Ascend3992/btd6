@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v53**. Includes the reference meadow and route, updated tower models and upgrades, Round 81 health scaling, and distinct Camo/Fortified/Regrow bloons. The Glue Gunner now has the supplied base stats, reference model with idle/attack animation, and coating prioritization with crosspath exceptions. Its full top path now includes timed corrosion, Ceramic/MOAB bonuses, twin Solver splatters and acid puddles.
+Latest version: **v54**. Adds the supplied Glue Gunner middle-path stats: Bigger Globs pierce, 5-Bloon Glue Splatter, 3x Glue Hose speed, Glue Strike's +2 damage and temporary Lead/Frozen vulnerability, and Glue Storm's 20-second ability with one pulse per second and doubled ability-coating lifespan. Includes the reference meadow and route, animated tower models, Round 81 health scaling, distinct Camo/Fortified/Regrow bloons, Glue Gunner prioritization and top-path corrosion/acid puddles.
 
-[Download v53 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v53.zip)
+[Download v54 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v54.zip)
 
 ## Play online
 
@@ -14,6 +14,6 @@ Serve this folder with `python -m http.server 8000`, then open http://localhost:
 
 All required Three.js files and licenses are bundled in `assets/vendor/`. See [README.txt](README.txt) for game rules, tuning values and verification details.
 
-[Top-path combat preview](docs/glue-top-combat.png) · [Glue Gunner preview](docs/glue-base-model.png) · [Map preview](docs/meadow-map-preview.png) · [Bloon variants](docs/bloon-variants-preview.png)
+[Middle-path combat preview](docs/glue-middle-combat.png) · [Top-path combat preview](docs/glue-top-combat.png) · [Glue Gunner preview](docs/glue-base-model.png) · [Map preview](docs/meadow-map-preview.png) · [Bloon variants](docs/bloon-variants-preview.png)
 
 Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
