@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v54 Glue Gunner middle-path stats, Glue Strike and Glue Storm
+Meadow Balloon Defense 3D - v55 Glue Gunner bottom-path stats, Relentless pop stuns and Super Glue
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -223,7 +223,7 @@ Late-round performance
 
 Verification
 ------------
-The regression tests pass across 28 test files, covering tower stats, abilities, child damage, immunities, income, targeting, animations, model disposal, Ice freezing/shards/brittle effects, middle-path abilities and speed boosts, snowball blast pierce, icicle swept contacts, blimp freezing and rendering batches, Round 81 boundaries, single-child families, Regrow timing, glue prioritization, corrosion, acid puddles, Glue Strike vulnerability and Glue Storm timing. Browser checks verify actual upgrade models and ability buttons, casts, child freezing, DDT vulnerability, crosspath selection and cleanup. The downloadable ZIP includes the playable runtime assets and regression sources; run bash scripts/test.sh to generate the test directory and execute them.
+The regression tests pass across 29 test files, covering tower stats, abilities, child damage, immunities, income, targeting, animations, model disposal, Ice freezing/shards/brittle effects, middle-path abilities and speed boosts, snowball blast pierce, icicle swept contacts, blimp freezing and rendering batches, Round 81 boundaries, single-child families, Regrow timing, glue prioritization, corrosion, acid puddles, Glue Strike vulnerability, Glue Storm timing, Relentless pop stuns and Super Glue reapplication. Browser checks verify actual upgrade models and ability buttons, casts, child freezing, DDT vulnerability, crosspath selection and cleanup. The downloadable ZIP includes the playable runtime assets and regression sources; run bash scripts/test.sh to generate the test directory and execute them.
 
 Visual previews:
   docs/boomerang-upgrades.png
@@ -264,3 +264,19 @@ Glue Gunner middle path v54
 - Strike temporarily suppresses Lead and Frozen attack immunities while its coating lasts. Existing movement freezing continues, and unrelated Camo, White/Zebra, Black and Purple immunities remain. Ordinary child layers inherit eligible coatings; blimp shells do not pass glue to their children.
 - Glue Storm activates for 20 seconds, with an immediate pulse and one pulse each second through second 19. Each pulse includes newly arrived Bloons. Its coating lasts 24 seconds, twice Strike's retained 12-second duration. Both retain the existing 30-second cooldown because the supplied table did not specify a replacement.
 - Ability vulnerability expires with its own coating even if a longer normal coating remains. All 28 regression files pass. Chromium browser checks verified 5-Bloon splash limits, actual ability buttons, Lead/Frozen vulnerability and restoration, newly arriving Camo Bloons, pulse cadence, duration and no runtime errors.
+
+Glue Gunner bottom path v55
+--------------------------
+- Supplied difficulty prices and XP are stored for all five upgrades. Normal prices remain $280 / $400 / $3,600 / $4,000 / $24,000; XP metadata is 130 / 600 / 2,500 / 8,000 / 30,000. The game uses Normal prices and does not implement an XP unlock system.
+- Stickier Glue lasts 24 seconds; Stronger Glue slows ordinary Bloons by 75%. MOAB Glue slows blimps by 37.5% for the full 24 seconds, including with Corrosive Glue. This user instruction overrides the wiki's shorter blimp duration. BADs retain their slowing immunity, and bosses remain excluded.
+- Missing numerical values use the linked wiki statistics blocks, as approved by the user: Relentless pop stuns have radius 12, pierce 6/7/9 with no middle crosspath / Bigger Globs / Glue Splatter, and last 1 second on ordinary Bloons or 0.25 seconds on MOABs and visible DDTs. They do not stun BFBs or ZOMGs until Super Glue. Camo targets require detection or prior Camo removal.
+- Super Glue deals 30 impact damage to blimps and 20 corrosion damage every 2 seconds; ordinary targets take no impact damage. The wiki statistics block's Corrosive Glue crosspath uses 21 corrosion damage every 1.8 seconds. Damage ticks retain their elapsed time when the same coating is refreshed, preventing repeated shots from postponing corrosion indefinitely.
+- Super Glue's initial control stops ordinary Bloons for their 24-second coating, stops MOABs/DDTs for 5 seconds, slows BFBs by 95% for 2.5 seconds and ZOMGs by 90% for 0.75 seconds. Blimps return to 37.5% slowdown for the remaining coating duration. Reapplication refreshes the coating and initial control. Equal Super Glue coatings may be reapplied; higher-ranked glue and equal Solver coatings still follow the supplied priority diagram.
+- The supplied +6 pierce is additive: 0-0-5 has 7, 0-1-5 has 8, and 0-2-5 has an 11-target splash. This overrides the wiki's different projectile pierce. Super Glue pop stuns have pierce 11/12/14, last 1 second on ordinary Bloons and MOAB-class including BFB/ZOMG, and preserve Camo visibility and BAD/boss immunity.
+- Pop stuns follow eligible inherited ordinary glue layers and stop when their coating expires. They do not create sticky track traps or make Bloons immune to Sharp attacks. Glue never carries through a blimp shell; the pop stun may affect nearby newly spawned children.
+- Stun queries build a spatial index on demand and keep its occupied cells current as Bloons move, pop or spawn children. Queries stop at the stun pierce limit, avoiding a full-screen scan per pop. Existing visual-effect limits throttle cosmetic effects only; no live Bloons, children or round spawns are removed or capped.
+- All 29 regression test files pass. Chromium verified real projectiles, class-specific slow and expiry, full blimp coating duration, repeated Super Glue impact/corrosion, pop-stun visibility and zero runtime errors. A scene containing 2,006 live Bloons after 200 pop-stun triggers preserved all 2,000 added Ceramics.
+
+Bottom-path references (user overrides and the explicitly selected statistics blocks take priority):
+  https://bloons.fandom.com/wiki/Relentless_Glue
+  https://bloons.fandom.com/wiki/Super_Glue

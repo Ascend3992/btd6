@@ -31,7 +31,8 @@ test('every ranking and crosspath combination in the newer diagram obeys the pre
   const t={...g.createTower('glue',0,0),paths,moabGlue:paths[2]>=3};assert.equal(g.gluePriority(t),rank,paths.toString());
   for(const [otherPaths,otherRank] of cases){
    const e=g.spawnEnemy('Red'),other={...t,paths:otherPaths};g.hitEnemy(e,0,{tower:other,glue:true,slow:.5,slowDuration:11,glueLayers:3});
-   assert.equal(g.towerCanDamage(t,e),rank>otherRank,`${paths} over ${otherPaths}`);
+   const sameSuper=paths[2]>=5&&otherPaths[2]>=5&&rank===otherRank;
+   assert.equal(g.towerCanDamage(t,e),rank>otherRank||sameSuper,`${paths} over ${otherPaths}`);
   }
  }
 });

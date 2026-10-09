@@ -46,6 +46,11 @@ const upgradeData={
  ice:[[['Permafrost',150],['Cold Snap',350],['Ice Shards',1500],['Embrittlement',2300],['Super Brittle',28000]],[['Enhanced Freeze',200],['Deep Freeze',300],['Arctic Wind',2750],['Snowstorm',4000],['Absolute Zero',21000]],[['Larger Radius',150],['Re-Freeze',200],['Cryo Cannon',1900],['Icicles',2750],['Icicle Impale',30000]]],
  glue:[[['Glue Soak',200],['Corrosive Glue',300],['Bloon Dissolver',2000],['Bloon Liquefier',5000],['The Bloon Solver',22500]],[['Bigger Globs',100],['Glue Splatter',970],['Glue Hose',1950],['Glue Strike',4000],['Glue Storm',16000]],[['Stickier Glue',280],['Stronger Glue',400],['MOAB Glue',3600],['Relentless Glue',4000],['Super Glue',24000]]]
 };
+const glueBottomUpgradeMetadata=[
+ {prices:[240,280,300,335],xp:130},{prices:[340,400,430,480],xp:600},
+ {prices:[3060,3600,3890,4320],xp:2500},{prices:[3400,4000,4320,4800],xp:8000},
+ {prices:[20400,24000,25920,28800],xp:30000}
+];
 const glueMiddleUpgradeMetadata=[
  {prices:[85,100,110,120],xp:120},{prices:[825,970,1050,1165],xp:900},
  {prices:[1655,1950,2105,2340],xp:2500},{prices:[3400,4000,4320,4800],xp:8500},
@@ -100,7 +105,7 @@ const upgradeDescriptions={
  glue:[
   ['Soaks every non-blimp layer; cannot carry glue through blimp shells.','Deals 1 corrosion damage every 2s. Can glue blimps for half duration without slowing them.','Deals 1 damage every 0.5s, or 2 to Ceramics; +1 pierce and attacks twice as fast.','Deals 1 damage every 0.1s, or 3 to Ceramics. Directly glued Bloons leave acid puddles when popped.','Deals 8 damage per 0.1s to Ceramics and 6 to blimps. Twin splatters have 5 pierce each, stronger acid puddles and twice-as-fast attacks.'],
   ['Coats one extra Bloon per shot: +1 pierce.','Splash attacks coat up to 5 Bloons per shot and improve secondary-effect pierce.','Attacks 3 times as fast.','Ability glues every Bloon on screen, adds +2 damage per hit from all sources, and temporarily suppresses Lead and Frozen properties.','Ability coats the screen every 1s for 20s. Ability glue lasts twice as long and retains Strike vulnerability.'],
-  ['Glue remains sticky for longer.','Glue slows bloons more strongly.','Special glue can slow MOAB-class bloons.','Glued bloons leave sticky traps when popped.','Extremely strong glue that can heavily slow powerful bloons.']
+  ['Glue lasts 24s instead of 11s.','Slows ordinary Bloons by 75% instead of 50%.','Can glue blimps, slowing them by 37.5% for the full 24s. BADs resist slowing.','Popped glued layers stun nearby ordinary Bloons, MOABs and visible DDTs.','Adds 6 pierce and can rehit its own glued targets. Immobilizes ordinary Bloons and MOABs/DDTs; briefly slows BFBs by 95% and ZOMGs by 90%. Deals blimp impact damage and corrosion. Pop stuns also affect BFBs and ZOMGs.']
  ]
 };
 const RANGE_SCALE=.32;
@@ -110,6 +115,12 @@ const RANGE_SCALE=.32;
 const glueTopTuning={splatterRadius:12*RANGE_SCALE,
  liquefierPuddle:{damage:4,pierceByMiddle:[3,4,5],radius:4*RANGE_SCALE,life:7.7},
  solverPuddle:{damage:15,pierceByMiddle:[3,4,7],radius:4*RANGE_SCALE,life:7.7}};
+// User-supplied full-duration MOAB glue and +6 Super Glue pierce override wiki differences.
+// Missing damage/stun values use the linked wiki statistics, as requested.
+const glueBottomTuning={moabSlow:.625,stunRadius:12*RANGE_SCALE,regularStun:1,moabStun:.25,
+ relentlessPierce:[6,7,9],superStunPierce:[11,12,14],superMoabDamage:30,superDotDamage:20,superDotInterval:2,
+ superCorrosiveDamage:21,superCorrosiveInterval:1.8,superStuck:{MOAB:[0,5],DDT:[0,5],BFB:[.05,2.5],ZOMG:[.1,.75]}};
+let glueStunGrid=null;
 const iceTopTuning={brittleDuration:3,shardDamage:1,superShardDamage:6,shardPierce:3,superShardPierce:6,shardSpeed:28,shardLife:.65,superCeramicBonus:2};
 const iceMiddleTuning={secondaryFreeze:.3};
 const iceBottomTuning={cryoCooldown:1,iciclesCooldown:.5,projectileSpeed:32,projectileLife:3,impaleFreeze:1.2,contactRadius:.85};
@@ -934,6 +945,11 @@ function refreshSelected(){
  }
  if(t.type==='ice'&&t.cryo)selStats.innerHTML+=`<br>Blast radius 20 • Blimp damage ${t.damage+t.bonusMoab}${t.icicles?' • Icicles: 3 damage / 3 contacts / 2s':''}${t.canFreezeBlimps?' • Blimp freeze '+t.blimpFreeze+'s':''}`;
  if(t.type==='ice')selStats.innerHTML+=`<br>${d.towerClass} • Freeze ${t.freeze}s • ${t.freezeLayers||1} frozen layer${(t.freezeLayers||1)>1?'s':''}${t.auraSlow?' • Aura: 40% slower':''}${absoluteZeroBuffT>0?' • Absolute Zero: +50% attack speed':''}`;
+ if(t.type==='glue'){
+  selStats.innerHTML+=`<br>Glue lasts ${t.slowDuration}s • ${t.superGlue?'Ordinary Bloons immobilized':Math.round((1-t.slow)*100)+'% ordinary slow'}${t.moabGlue?' • 37.5% blimp slow':''}`;
+  if(t.superGlue)selStats.innerHTML+=`<br>Blimp impact damage ${t.bonusMoab} • Corrosion ${t.corrosionDamage} / ${t.corrosionInterval}s`;
+  if(t.relentless)selStats.innerHTML+=`<br>Pop stuns: 1s${t.superGlue?' (Bloons & blimps)':' / 0.25s (MOAB & visible DDT)'}`;
+ }
  if(t.type==='bomb')selStats.innerHTML+=`<br>Blast radius ${Math.round(attack.splash/RANGE_SCALE*10)/10}${attack.stun?' • '+attack.stun+'s stun'+(attack.stunBlimps?' (bloons & blimps)':' (regular bloons)'):''}${attack.bombKnockback?' • 20-unit bloon knockback':''}${attack.bombMoabKnockback?' • 5-unit blimp knockback':''}`;
  if(t.type==='bomb'&&t.paths[1]>=2)selStats.innerHTML+=`<br>Missile speed ${attack.projSpeed}${attack.bonusMoab?' • Blimp damage '+(attack.damage+attack.bonusMoab):''}${attack.ceramicBonus?' • Ceramic damage '+(attack.damage+attack.ceramicBonus):''}`;
  if(t.type==='bomb'&&t.paths[2]>=3)selStats.innerHTML+=`<br>8 secondary bombs • 8 pierce each${t.paths[2]>=4?' • Recursive '+(t.paths[2]>=5?'every shot':'every second shot')+' (max 17 hits/target)':''}`;
@@ -1038,16 +1054,17 @@ function syncIceStats(t){
 function syncGlueStats(t){
  const [top,middle,bottom]=t.paths,d=towerDefs.glue;
  t.glueLayers=top>=1?99:3;t.canGlueBlimps=top>=2||bottom>=3;t.moabGlue=bottom>=3;
- t.slow=bottom>=5?.05:bottom>=2?.25:d.slow;t.slowDuration=bottom>=1?24:d.slowDuration;
+ t.slow=bottom>=2?.25:d.slow;t.slowDuration=bottom>=1?24:d.slowDuration;
  t.rate=d.rate*(top>=3?.5:1)*(top>=5?.5:1)/(middle>=3?3:1);
  t.pierce=1+(top>=3?1:0)+(middle>=1?1:0);if(middle>=2||top>=5)t.pierce=Math.max(5,t.pierce);if(bottom>=5)t.pierce+=6;
  t.shots=top>=5?2:1;t.glueSplash=top>=5||middle>=2?glueTopTuning.splatterRadius:0;
  t.corrosionInterval=top>=4?.1:top>=3?.5:top>=2?2:0;t.corrosionDamage=top>=2?1:0;
  t.corrosionCeramicDamage=top>=5?8:top>=4?3:top>=3?2:t.corrosionDamage;t.corrosionMoabDamage=top>=5?6:t.corrosionDamage;
+ if(bottom>=5){t.corrosionInterval=top>=2?glueBottomTuning.superCorrosiveInterval:glueBottomTuning.superDotInterval;t.corrosionDamage=top>=2?glueBottomTuning.superCorrosiveDamage:glueBottomTuning.superDotDamage;t.corrosionCeramicDamage=t.corrosionDamage;t.corrosionMoabDamage=t.corrosionDamage;}
  t.glueDps=t.corrosionInterval?t.corrosionDamage/t.corrosionInterval:0;t.gluePuddleTier=top>=4?top:0;
  const puddle=top>=5?glueTopTuning.solverPuddle:top>=4?glueTopTuning.liquefierPuddle:null;
  t.gluePuddleSettings=puddle?.radius&&puddle.life?{...puddle,pierce:puddle.pierceByMiddle?.[Math.min(2,middle)]??puddle.pierce,life:Math.round((puddle.life+((top>=5?bottom>=1:bottom>=2)?9.1:0))*10)/10,roundCarry:bottom>=1?1:0}:null;
- t.damage=bottom>=5?2:0;t.damageAmp=middle>=4?2:0;t.relentless=bottom>=4;t.superGlue=bottom>=5;
+ t.damage=0;t.bonusMoab=bottom>=5?glueBottomTuning.superMoabDamage:0;t.damageAmp=middle>=4?2:0;t.relentless=bottom>=4;t.superGlue=bottom>=5;
  t.gluePriority=gluePriority(t);t.notes=top>=2?'Timed corrosion; blimp coats last half duration; no native Camo detection':d.notes;
 }
 function applyUpgrade(t,p,tier){
@@ -1231,11 +1248,28 @@ function enemyBaseHp(type,opts={}){
  if(type==='Ceramic')return opts.superCeramic||spawnRound>=81?60:10;
  return 1;
 }
+// Build once on demand and update occupied cells as Bloons move or split.
+function trackGlueStunEnemy(e){
+ if(!glueStunGrid)return;
+ const p=e.mesh.position,key=e.alive?`${Math.floor(p.x/4)},${Math.floor(p.z/4)}`:null;
+ if(key===e.glueStunCell&&glueStunGrid.get(key)?.has(e))return;
+ const old=glueStunGrid.get(e.glueStunCell);if(old){old.delete(e);if(!old.size)glueStunGrid.delete(e.glueStunCell);}
+ if(!e.alive)return;
+ if(!glueStunGrid.has(key))glueStunGrid.set(key,new Set());glueStunGrid.get(key).add(e);e.glueStunCell=key;
+}
+function* nearbyGlueStunEnemies(position,radius){
+ if(!glueStunGrid){glueStunGrid=new Map();for(const e of enemies)trackGlueStunEnemy(e);}
+ const r2=radius*radius;
+ for(let x=Math.floor((position.x-radius)/4);x<=Math.floor((position.x+radius)/4);x++)for(let z=Math.floor((position.z-radius)/4);z<=Math.floor((position.z+radius)/4);z++){
+  for(const e of glueStunGrid.get(`${x},${z}`)||[])if(e.alive&&(e.mesh.position.x-position.x)**2+(e.mesh.position.z-position.z)**2<=r2)yield e;
+ }
+}
 function placeEnemyOnTrack(e){
  const a=PATH[e.seg]||PATH[0],b=PATH[e.seg+1]||a,l=a.distanceTo(b)||1,t=Math.max(0,Math.min(1,e.dist/l));
  const x=THREE.MathUtils.lerp(a.x,b.x,t),z=THREE.MathUtils.lerp(a.z,b.z,t);
  const dx=(b.x-a.x)/l,dz=(b.z-a.z)/l;
  e.mesh.position.set(x-dz*(e.laneOffset||0),.65,z+dx*(e.laneOffset||0));
+ trackGlueStunEnemy(e);
 }
 function spawnEnemy(spec,trackState=null){
  const o=typeof spec==='string'?normalizeSpawnName(spec):{...spec};
@@ -1288,10 +1322,15 @@ function destroyEnemyAndSpawnChildren(e){
  if(!e.alive)return[];
  if(e.freezeT>0&&e.iceShards)releaseIceShards(e);
  const acid=e.glueCoatings?.find(coat=>coat.direct&&coat.puddleTier>=4);if(acid)spawnAcidPuddle(e,acid);
+ const stunCoat=e.glueCoatings?.filter(coat=>coat.remaining>0&&coat.relentlessTier>=4).sort((a,b)=>b.relentlessTier-a.relentlessTier||b.stunPierce-a.stunPierce)[0];
+ const popPosition=stunCoat?{x:e.mesh.position.x,z:e.mesh.position.z}:null;
  spawnPopVisual(e);e.alive=false;disposeTransientMesh(e.mesh);
+ trackGlueStunEnemy(e);
  const normalKids=regularChildren[e.type];
  const kids=e.isBlimp?blimpChildren[e.type]:e.superCeramic?normalKids?.slice(0,1):normalKids;
- return kids?spawnChildSet(e,kids):[];
+ const children=kids?spawnChildSet(e,kids):[];
+ if(stunCoat)applyGluePopStun(stunCoat,popPosition);
+ return children;
 }
 // Distance along the whole track stays monotonic across corners.
 const trackDistances=[0];for(let i=1;i<PATH.length;i++)trackDistances[i]=trackDistances[i-1]+PATH[i-1].distanceTo(PATH[i]);
@@ -1360,6 +1399,21 @@ function updateIcicleContacts(dt){
 }
 // Keep independent coatings; the latest active coating determines movement slow.
 function glueCorrosionDamage(coat,e){return e.isBlimp?(coat.moabDamage??coat.damage):e.type==='Ceramic'?(coat.ceramicDamage??coat.damage):coat.damage;}
+function applyGluePopStun(coat,position){
+ let left=coat.stunPierce;
+ for(const e of nearbyGlueStunEnemies(position,glueBottomTuning.stunRadius)){
+  if(left<=0)break;
+  if(e.type==='BAD'||e.isBoss||e.boss||e.camo&&!coat.camoDetect)continue;
+  if(e.isBlimp&&coat.relentlessTier<5&&e.type!=='MOAB'&&e.type!=='DDT')continue;
+  const duration=e.isBlimp&&coat.relentlessTier<5?glueBottomTuning.moabStun:glueBottomTuning.regularStun;
+  e.glueStunT=Math.max(e.glueStunT||0,duration);left--;
+ }
+ if(visualEffects.length<80)spawnAbilityPulse(position.x,position.z,coat.relentlessTier>=5?0xef86d6:0xc29ff0,glueBottomTuning.stunRadius);
+}
+function glueStunMotionDt(e,dt){
+ const stopped=e.type==='BAD'?0:Math.min(dt,e.glueStunT||0);
+ e.glueStunT=Math.max(0,(e.glueStunT||0)-dt);return dt-stopped;
+}
 function syncGlueCoatings(e){
  const coats=e.glueCoatings||[],last=coats.at(-1);
  e.glueT=0;e.gluePriority=0;e.glueLayers=0;e.glueDps=0;e.glueSlow=e.type==='BAD'?1:(last?.slow??1);
@@ -1367,6 +1421,7 @@ function syncGlueCoatings(e){
   e.glueT=Math.max(e.glueT,coat.remaining);e.gluePriority=Math.max(e.gluePriority,coat.priority);e.glueLayers=Math.max(e.glueLayers,coat.layers);
   const dps=coat.interval?glueCorrosionDamage(coat,e)/coat.interval:0;
   if(dps>=e.glueDps){e.glueDps=dps;e.glueSource=coat.source;}
+  if(e.type!=='BAD'&&coat.stuckRemaining>1e-9)e.glueSlow=Math.min(e.glueSlow,coat.stuckSlow);
  }
  e.glueLevel=last?1:0;e.glueDamageAmp=0;e.glueAmpT=0;e.glueStrikeDamageAmp=0;e.glueVulnerableT=0;
  for(const coat of coats){
@@ -1377,11 +1432,15 @@ function syncGlueCoatings(e){
 function applyGlueCoating(e,fx){
  const t=fx.tower,priority=t?.type==='glue'?gluePriority(t):1;
  const key=t?.type==='glue'?`${t.paths?.[0]||0}:${t.paths?.[2]||0}:${fx.damageAmp?'ability':'shot'}`:'external';
+ const superGlue=!!(t?.superGlue||t?.paths?.[2]>=5),previous=e.glueCoatings?.find(coat=>coat.key===key&&coat.remaining>0);
  e.glueCoatings=(e.glueCoatings||[]).filter(coat=>coat.key!==key&&coat.remaining>0);
  const corrosion=(fx.glueDps||0)>0,interval=corrosion?(t?.corrosionInterval||1/fx.glueDps):0;
- const duration=(fx.slowDuration||2.8)*(e.isBlimp&&!fx.damageAmp&&t?.paths?.[0]>=2?.5:1);
- const slow=e.isBlimp&&!t?.moabGlue&&!fx.damageAmp?1:(fx.slow??1);
- e.glueCoatings.push({key,priority,remaining:duration,slow,layers:fx.glueLayers||3,interval,tick:0,damage:corrosion?(t?.corrosionDamage||1):0,
+ const duration=(fx.slowDuration||2.8)*(e.isBlimp&&!fx.damageAmp&&!t?.moabGlue&&t?.paths?.[0]>=2?.5:1);
+ const slow=e.isBlimp&&!fx.damageAmp?(t?.moabGlue?glueBottomTuning.moabSlow:1):(fx.slow??1);
+ const stuck=superGlue&&e.type!=='BAD'?(e.isBlimp?glueBottomTuning.superStuck[e.type]:[0,duration]):null;
+ const relentlessTier=t?.paths?.[2]>=4?t.paths[2]:0,stunPierce=(superGlue?glueBottomTuning.superStunPierce:glueBottomTuning.relentlessPierce)[Math.min(2,t?.paths?.[1]||0)];
+ e.glueCoatings.push({key,priority,remaining:duration,slow,layers:fx.glueLayers||3,interval,tick:superGlue?(previous?.tick||0):0,damage:corrosion?(t?.corrosionDamage||1):0,
+  superGlue,stuckSlow:stuck?.[0]??1,stuckRemaining:stuck?.[1]||0,relentlessTier,stunPierce,
   ceramicDamage:t?.corrosionCeramicDamage,moabDamage:t?.corrosionMoabDamage,source:sourceTowerForDamage(t),
   damageAmp:fx.damageAmp||0,suppressProperties:!!fx.suppressGlueProperties,direct:!!fx.directGlue,puddleTier:t?.gluePuddleTier||0,puddleSettings:t?.gluePuddleSettings?{...t.gluePuddleSettings}:null,camoDetect:!!t?.camoDetect});
  syncGlueCoatings(e);
@@ -1397,14 +1456,14 @@ function updateGlueCoatings(e,dt){
   let best=null,bestDps=0;
   for(const coat of e.glueCoatings){const dps=coat.interval?glueCorrosionDamage(coat,e)/coat.interval:0;if(dps>bestDps){bestDps=dps;best=coat;}}
   const step=Math.min(left,...e.glueCoatings.map(coat=>coat.remaining),best?Math.max(0,best.interval-best.tick):Infinity);
-  for(const coat of e.glueCoatings){coat.remaining=Math.max(0,coat.remaining-step);if(coat.interval){coat.tick+=step;if(coat!==best&&coat.tick>=coat.interval)coat.tick%=coat.interval;}}
+  for(const coat of e.glueCoatings){coat.remaining=Math.max(0,coat.remaining-step);coat.stuckRemaining=Math.max(0,(coat.stuckRemaining||0)-step);if(coat.interval){coat.tick+=step;if(coat!==best&&coat.tick>=coat.interval)coat.tick%=coat.interval;}}
   left-=step;
   if(best&&best.tick+1e-9>=best.interval){best.tick=Math.max(0,best.tick-best.interval);damageGlueFamily(best,e,glueCorrosionDamage(best,e));}
   e.glueCoatings=e.glueCoatings.filter(coat=>coat.remaining>1e-9);syncGlueCoatings(e);
  }
 }
 function hitGlueTarget(t,e){
- return hitEnemy(e,t.damage,{tower:t,glue:true,directGlue:true,slow:t.slow,slowDuration:t.slowDuration,glueLayers:t.glueLayers,glueDps:t.glueDps,allowBlimpSlow:!!(t.canGlueBlimps||t.moabGlue)});
+ return hitEnemy(e,t.damage+(e.isBlimp?t.bonusMoab||0:0),{tower:t,glue:true,directGlue:true,slow:t.slow,slowDuration:t.slowDuration,glueLayers:t.glueLayers,glueDps:t.glueDps,allowBlimpSlow:!!(t.canGlueBlimps||t.moabGlue)});
 }
 function explodeGlueSplatter(p,position){
  const targets=enemies.filter(e=>e.alive&&towerCanDamage(p.tower,e)&&(e.mesh.position.x-position.x)**2+(e.mesh.position.z-position.z)**2<=p.glueSplash*p.glueSplash);
@@ -1443,6 +1502,7 @@ function endRoundAcidPuddles(){
  let write=0;for(const p of acidPuddles){if(p.roundCarry>0){p.roundCarry--;acidPuddles[write++]=p;}else disposeTransientMesh(p.mesh);}acidPuddles.length=write;
 }
 function moveEnemies(dt){
+ glueStunGrid=null;
  for(const e of enemies){
   if(!e.alive)continue;
   e.previousX=e.mesh.position.x;e.previousZ=e.mesh.position.z;
@@ -1479,7 +1539,7 @@ function moveEnemies(dt){
    }
   }
   if(e.slowT<=0)e.slowMult=1;
-  const motionDt=bombStunMotionDt(e,dt);
+  const motionDt=Math.min(bombStunMotionDt(e,dt),glueStunMotionDt(e,dt));
   const knockDt=e.isBlimp?0:Math.min(motionDt,e.knockbackT||0);e.knockbackT=Math.max(0,(e.knockbackT||0)-dt);
   if(knockDt>0)retreatEnemy(e,e.knockbackSpeed*knockDt);
   let move=enemySpeed(e)*Math.min(motionDt-knockDt,dt-frozenDt);
@@ -1511,7 +1571,10 @@ function gluePriority(t){
 function towerCanDamage(t,e){
  if(t.type==='glue'){
   if(e.isBoss||e.boss||e.isBlimp&&!(t.canGlueBlimps||t.moabGlue))return false;
-  if(e.glueT>0&&(e.gluePriority||1)>=gluePriority(t))return false;
+  if(e.glueT>0&&(e.gluePriority||1)>=gluePriority(t)){
+   const rehit=(t.paths?.[2]||0)>=5&&e.gluePriority===gluePriority(t)&&e.glueCoatings?.some(coat=>coat.remaining>0&&coat.superGlue&&coat.priority===gluePriority(t));
+   if(!rehit)return false;
+  }
  }
  const n=e.isBlimp?e.type:layerNames[e.layer];
  if(t.type==='ice'&&e.isBlimp&&!t.canHitBlimps)return false;

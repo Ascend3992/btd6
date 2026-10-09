@@ -26,7 +26,7 @@ test('corrosive glue targets blimps without slowing, halves duration and cannot 
  coat(g,t,moab);assert.equal(moab.glueT,5.5);assert.equal(moab.glueSlow,1);g.updateGlueCoatings(moab,5.5);assert.equal(moab.hp,198);assert.equal(moab.glueT,0);
  coat(g,t,moab);const children=g.destroyEnemyAndSpawnChildren(moab);assert.equal(children.length,4);assert(children.every(e=>e.glueT===0&&e.glueLayers===0));
  const zebra=g.spawnEnemy('Zebra');coat(g,t,zebra);const regular=g.destroyEnemyAndSpawnChildren(zebra);assert(regular.every(e=>e.glueT===11&&e.glueLayers===98));
- const cross=tower(g,2,0,3),bfb=g.spawnEnemy('BFB');coat(g,cross,bfb);assert.equal(bfb.glueSlow,.25);assert.equal(bfb.glueT,12);
+ const cross=tower(g,2,0,3),bfb=g.spawnEnemy('BFB');coat(g,cross,bfb);assert.equal(bfb.glueSlow,.625);assert.equal(bfb.glueT,24);
 });
 test('Ceramic corrosion bonuses do not spill into descendant damage',()=>{
  const g=simulation();g.round=81;const t=tower(g,5),e=g.spawnEnemy('Ceramic');e.hp=1;coat(g,t,e);g.updateGlueCoatings(e,.1);
