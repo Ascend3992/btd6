@@ -12,6 +12,24 @@ test('reference Glue Gunner holds its gun, idles, blinks and recoils with statio
  t.glueIdleTime=4.8;v.animateGlue(t,.03);assert(rig.eyes.every(eye=>eye.scale.y===.1));v.animateGlue(t,.2);assert(rig.eyes.every(eye=>eye.scale.y===1));
 });
 
+test('bottom references retain their visors, twin guns, yellow/pink drips and planted feet through idle and recoil',async()=>{
+ const v=await import('../glue-visuals.js'),THREE=await import('../assets/vendor/three.module.js');
+ const features=[['yellow-sticky-head-splat','green-stickier-glue-cannon','pointed-brown-hair'],['magenta-stronger-glue-hood','bronze-stronger-glue-goggle','gray-stronger-glue-sprayer'],['white-moab-glue-hood','wide-black-moab-glue-visor','black-moab-glue-vest','pink-moab-glue-backpack','moab-glue-double-barrel'],['blue-relentless-glue-helmet','bolted-armored-visor-frame','relentless-glue-cannon','pink-reservoir-spill'],['dark-super-glue-helmet','super-glue-heavy-cannon','yellow-super-glue-boot-cuff','red-super-glue-pressure-wheel']];
+ for(let tier=1;tier<=5;tier++){
+  const t={id:0,type:'glue',paths:[0,0,tier],x:2,z:-3,mesh:v.makeGlueBottomTowerMesh(tier),damage:0,pierce:tier===5?7:1,rate:1,shots:1,abilityCd:17,fireAnim:0};t.mesh.position.set(t.x,.66,t.z);t.mesh.rotation.y=.35;
+  const rig=t.mesh.userData.glueRig,anchor=t.mesh.position.clone(),feet=rig.feet.map(f=>f.getWorldPosition(new THREE.Vector3())),stats=JSON.stringify([t.paths,t.damage,t.pierce,t.rate,t.shots,t.abilityCd]);
+  assert.equal(t.mesh.userData.glueModelPath,2);assert.equal(t.mesh.userData.glueModelTier,tier);for(const name of features[tier-1])assert(t.mesh.getObjectByName(name),name);
+  assert(!rig.respirator);assert(!rig.steam);assert.equal(rig.muzzles.length,tier>=3?2:1);assert.equal(rig.glueMaterial.color.getHex(),tier>=3?0xff6cc7:0xffdf16);assert.equal(!!t.mesh.getObjectByName('dark-bottom-visor-pane'),tier>=3);assert.equal(!!t.mesh.getObjectByName('bright-green-goggle-lens'),tier===2);
+  const size=new THREE.Box3().setFromObject(t.mesh).getSize(new THREE.Vector3());assert(size.x<4&&size.y<3.8&&size.z<4,JSON.stringify({tier,size}));assert.equal(t.mesh.children.length,1);
+  const geometries=[];t.mesh.traverse(o=>{if(o.geometry)geometries.push(o.geometry)});v.animateGlue(t,.1);const idle=rig.pose.position.y;v.animateGlue(t,.4);assert.notEqual(rig.pose.position.y,idle);assert(rig.sprays.every(s=>!s.visible));
+  const rest=t.mesh.userData.weapon.position.clone(),hands=rig.arms.map(a=>a.getWorldPosition(new THREE.Vector3()));t.fireAnim=.24;v.animateGlue(t,.12);assert(t.mesh.userData.weapon.position.z<rest.z-.1);assert(rig.sprays.every(s=>s.visible));assert(rig.arms.every((a,i)=>a.getWorldPosition(new THREE.Vector3()).distanceTo(hands[i])>.05));
+  for(let i=0;i<rig.muzzles.length;i++){t.glueMuzzleIndex=i;assert(v.glueMuzzleOrigin(t).distanceTo(rig.muzzles[i].getWorldPosition(new THREE.Vector3()))<1e-10);}
+  v.animateGlue(t,.5);assert(t.mesh.userData.weapon.position.equals(rest));assert(rig.sprays.every(s=>!s.visible));assert(rig.droplets.every(d=>d.scale.y>.10));
+  assert(t.mesh.position.equals(anchor));assert.equal(t.mesh.rotation.y,.35);assert(rig.feet.every((f,i)=>f.getWorldPosition(new THREE.Vector3()).equals(feet[i])));assert.equal(JSON.stringify([t.paths,t.damage,t.pierce,t.rate,t.shots,t.abilityCd]),stats);
+  const after=[];t.mesh.traverse(o=>{if(o.geometry)after.push(o.geometry)});assert.deepEqual(after,geometries);
+ }
+});
+
 test('middle reference gear shoots and casts with planted feet and four reusable animated Storm hoses',async()=>{
  const v=await import('../glue-visuals.js'),THREE=await import('../assets/vendor/three.module.js');
  const features=[['pointed-brown-hair','green-bigger-globs-cannon','oversized-orange-nozzle'],['orange-splatter-hood','bronze-splatter-goggle','oversized-orange-nozzle'],['yellow-hose-hood','black-hazmat-goggle','wide-glue-hose-cannon'],['yellow-strike-hood','twin-dark-glue-reservoirs','twin-reservoir-carry-handle','long-glue-strike-cannon'],['orange-storm-hood','heavy-glue-storm-cannon','storm-auxiliary-nozzle']];
@@ -52,7 +70,7 @@ test('five reference top models have distinct gear, planted feet and attached id
 
 test('real upgrade appearance swaps dispose old models, preserve state, avoid duplicate rebuilding and follow dominant paths',async()=>{
  const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),v=await import('../glue-visuals.js'),THREE=await import('../assets/vendor/three.module.js');
- const source=fs.readFileSync(path.join(__dirname,'..','game.js'),'utf8'),g={THREE,makeBaseGlueTowerMesh:v.makeBaseGlueTowerMesh,makeGlueTopTowerMesh:v.makeGlueTopTowerMesh,makeGlueMiddleTowerMesh:v.makeGlueMiddleTowerMesh,mat:color=>new THREE.MeshStandardMaterial({color})};vm.createContext(g);
+ const source=fs.readFileSync(path.join(__dirname,'..','game.js'),'utf8'),g={THREE,makeBaseGlueTowerMesh:v.makeBaseGlueTowerMesh,makeGlueTopTowerMesh:v.makeGlueTopTowerMesh,makeGlueMiddleTowerMesh:v.makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh:v.makeGlueBottomTowerMesh,mat:color=>new THREE.MeshStandardMaterial({color})};vm.createContext(g);
  for(const [start,end] of [['function disposeTransientMesh(','function spawnAbilityPulse('],['function replaceTowerBody(','function makeDartTopMesh('],['function updateWeaponAppearance(','function removeUpgradeVisuals('],['function removeUpgradeVisuals(','function updateHeroAppearance(']])vm.runInContext(source.slice(source.indexOf(start),source.indexOf(end)),g);
  const t={id:77,type:'glue',paths:[0,0,0],mesh:v.makeBaseGlueTowerMesh(),cool:.4,abilityCd:15,invest:5000,damageDealt:123,fireAnim:0};t.mesh.position.set(2,.66,-3);t.mesh.rotation.y=.4;
  const root=t.mesh,state=JSON.stringify([t.id,t.cool,t.abilityCd,t.invest,t.damageDealt]),anchor=root.position.clone();
@@ -62,5 +80,5 @@ test('real upgrade appearance swaps dispose old models, preserve state, avoid du
   const body=t.mesh.userData.body;g.updateTowerAppearance(t);assert.equal(t.mesh.userData.body,body);assert.equal(t.mesh.children.length,1);
  }
  t.paths=[5,2,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,5);t.paths=[5,0,2];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,5);
- t.paths=[2,3,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,3);assert.equal(t.mesh.userData.glueModelPath,1);const middle=t.mesh.userData.body;t.paths=[0,3,2];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.body,middle);t.paths=[3,2,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,3);assert.equal(t.mesh.userData.glueModelPath,0);assert.notEqual(t.mesh.userData.body,middle);t.paths=[2,0,3];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,0);t.paths=[2,2,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,2);assert.equal(t.mesh.children.length,1);
+ t.paths=[2,3,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,3);assert.equal(t.mesh.userData.glueModelPath,1);const middle=t.mesh.userData.body;t.paths=[0,3,2];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.body,middle);t.paths=[3,2,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,3);assert.equal(t.mesh.userData.glueModelPath,0);assert.notEqual(t.mesh.userData.body,middle);t.paths=[2,0,3];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,3);assert.equal(t.mesh.userData.glueModelPath,2);t.paths=[2,2,0];g.updateTowerAppearance(t);assert.equal(t.mesh.userData.glueModelTier,2);assert.equal(t.mesh.children.length,1);
 });

@@ -4,26 +4,34 @@ import * as THREE from './assets/vendor/three.module.js';
 export function makeBaseGlueTowerMesh(){return makeGlueModel(0);}
 export function makeGlueTopTowerMesh(tier){return makeGlueModel(Math.max(1,Math.min(5,tier)));}
 export function makeGlueMiddleTowerMesh(tier){return makeGlueModel(Math.max(1,Math.min(5,tier)),true);}
-function makeGlueModel(tier,middle=false){
+export function makeGlueBottomTowerMesh(tier){return makeGlueModel(Math.max(1,Math.min(5,tier)),false,true);}
+function makeGlueModel(tier,middle=false,bottom=false){
  const root=new THREE.Group(),body=new THREE.Group(),pose=new THREE.Group(),weapon=new THREE.Group();root.add(body);body.add(pose);pose.add(weapon);
- root.name=tier?'reference-glue-'+(middle?'middle-':'top-')+tier:'reference-glue-gunner';
+ root.name=tier?'reference-glue-'+(bottom?'bottom-':middle?'middle-':'top-')+tier:'reference-glue-gunner';
  const material=color=>new THREE.MeshStandardMaterial({color,roughness:.75,flatShading:true});
- const suitColors=middle?[0x8e421d,0x8e421d,0xff4a08,0xffdc08,0xffdc08,0xff9708]:[0x8e421d,0x8e421d,0x8119be,0x1475c6,0x163f50,0x79a816];
+ const suitColors=bottom?[0x8e421d,0x8e421d,0xe80087,0xf9eaf1,0xa3c4e9,0x303846]:middle?[0x8e421d,0x8e421d,0xff4a08,0xffdc08,0xffdc08,0xff9708]:[0x8e421d,0x8e421d,0x8119be,0x1475c6,0x163f50,0x79a816];
  const fur=material(suitColors[tier]),hair=material(0x6b2b13),skin=material(tier===5?0x434d4c:0xf4bd65),cream=material(0xffe5a2),green=material(0x3f841c),dark=material(0x293321),steel=material(tier>=2?0x627c84:0x69725c),glue=material(tier>=3?0x79f336:0xf0cf25),white=material(0xfffbdf);
  const graphite=material(0x2d3c40),rimMat=material(tier===2?0x896118:0x8a9699);
  const orange=material(0xff7809),packMat=material(0x303c51),bootMat=material(0x19252e),hoseSteel=material(0x526f7b);
  if(middle){steel.color.setHex(0x627d89);glue.color.setHex(0xffde12);rimMat.color.setHex(tier===2?0x896118:0x29353b);}
+ if(bottom){steel.color.setHex(0x657887);glue.color.setHex(tier>=3?0xff6cc7:0xffdf16);rimMat.color.setHex(tier===2?0x896118:0x3c4850);skin.color.setHex(0xf4bd65);}
+ const yellow=bottom?material(0xf7d524):glue,pink=bottom?material(0xee58b5):glue,visorMat=bottom?material(tier===3?0x444b5f:0x151f25):graphite;
  const lensMat=new THREE.MeshStandardMaterial({color:0x59e900,emissive:0x2b7900,emissiveIntensity:.16,roughness:.22,flatShading:true});
  const fluids=[],sprays=[],capsules=[];
  const part=(parent,name,geometry,mat,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geometry,mat);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;};
  const oval=(parent,name,mat,x,y,z,sx,sy,sz)=>{const m=part(parent,name,new THREE.SphereGeometry(1,12,8),mat,x,y,z);m.scale.set(sx,sy,sz);return m;};
  const box=(parent,name,mat,x,y,z,w,h,d)=>part(parent,name,new THREE.BoxGeometry(w,h,d),mat,x,y,z);
  const tube=(parent,name,mat,points,radius)=>part(parent,name,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),16,radius,6,false),mat);
+ const roundedPanel=(parent,name,mat,x,y,z,w,h,r)=>{
+  const s=new THREE.Shape(),a=-w/2,b=-h/2;s.moveTo(a+r,b);s.lineTo(a+w-r,b);s.quadraticCurveTo(a+w,b,a+w,b+r);s.lineTo(a+w,b+h-r);s.quadraticCurveTo(a+w,b+h,a+w-r,b+h);s.lineTo(a+r,b+h);s.quadraticCurveTo(a,b+h,a,b+h-r);s.lineTo(a,b+r);s.quadraticCurveTo(a,b,a+r,b);
+  return part(parent,name,new THREE.ExtrudeGeometry(s,{depth:.035,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.025,bevelThickness:.015,curveSegments:5}),mat,x,y,z);
+ };
  const feet=[];
  for(const side of [-1,1]){
   oval(pose,'brown-leg',fur,side*.27,.49,.06,.19,.34,.21);
-  const foot=oval(body,tier>=3?'planted-protective-boot':'planted-brown-foot',middle?(tier>=3?bootMat:skin):tier>=4?graphite:tier>=2?skin:fur,side*.29,.18,.22,.24,.15,.38);feet.push(foot);
-  for(let i=0;i<3;i++)box(body,'foot-toe',middle&&tier>=3?bootMat:tier>=4?steel:skin,side*.29+(i-1)*.10,.16,.51,.065,.08,.10);
+  const foot=oval(body,tier>=3?'planted-protective-boot':'planted-brown-foot',bottom?(tier>=4?bootMat:skin):middle?(tier>=3?bootMat:skin):tier>=4?graphite:tier>=2?skin:fur,side*.29,.18,.22,.24,.15,.38);feet.push(foot);
+  for(let i=0;i<3;i++)box(body,'foot-toe',bottom?(tier>=4?steel:skin):middle&&tier>=3?bootMat:tier>=4?steel:skin,side*.29+(i-1)*.10,.16,.51,.065,.08,.10);
+  if(bottom&&tier>=4)part(body,tier===5?'yellow-super-glue-boot-cuff':'blue-relentless-boot-cuff',new THREE.CylinderGeometry(.205,.225,.22,8),tier===5?yellow:steel,side*.27,.37,.05);
  }
  oval(pose,'brown-monkey-body',fur,0,1.05,0,.48,.62,.37);
  if(tier<2)oval(pose,'tan-belly',skin,0,.99,.31,.29,.35,.08);
@@ -32,12 +40,14 @@ function makeGlueModel(tier,middle=false){
   const belt=part(pose,'gray-utility-belt',new THREE.TorusGeometry(.45,.065,5,12),graphite,0,.82,0);belt.rotation.x=Math.PI/2;belt.scale.y=.8;
   box(pose,'belt-buckle',steel,0,.83,.39,.14,.14,.06);
  }
+ if(bottom&&tier===3){for(const side of [-1,1])box(pose,'black-moab-glue-vest',graphite,side*.22,1.15,.34,.29,.53,.075);}
+ if(bottom&&tier===5){oval(pose,'slate-super-glue-body-armor',steel,0,1.06,.02,.49,.48,.38);box(pose,'super-glue-armor-neck',graphite,0,1.54,.10,.33,.23,.37);}
  const head=new THREE.Group();head.position.set(0,2.13,.02);pose.add(head);
- oval(head,middle?['','brown-bigger-globs-head','orange-splatter-hood','yellow-hose-hood','yellow-strike-hood','orange-storm-hood'][tier]:tier===2?'purple-corrosive-hood':tier===3?'blue-dissolver-hood':tier===4?'navy-liquefier-hood':tier===5?'green-solver-hood':'brown-monkey-head',fur,0,0,0,.73,.76,.57);
+ oval(head,bottom?['','brown-stickier-glue-head','magenta-stronger-glue-hood','white-moab-glue-hood','blue-relentless-glue-helmet','dark-super-glue-helmet'][tier]:middle?['','brown-bigger-globs-head','orange-splatter-hood','yellow-hose-hood','yellow-strike-hood','orange-storm-hood'][tier]:tier===2?'purple-corrosive-hood':tier===3?'blue-dissolver-hood':tier===4?'navy-liquefier-hood':tier===5?'green-solver-hood':'brown-monkey-head',fur,0,0,0,.73,.76,.57);
  const eyes=[];
  for(const side of [-1,1]){
-  oval(head,'round-monkey-ear',fur,side*.70,-.03,-.03,.24,.30,.15);
-  oval(head,'tan-inner-ear',middle&&tier>=3?orange:tier>=3?steel:skin,side*.73,-.03,.09,.14,.20,.07);
+  if(!bottom||tier<4){oval(head,'round-monkey-ear',fur,side*.70,-.03,-.03,.24,.30,.15);
+  oval(head,'tan-inner-ear',bottom?skin:middle&&tier>=3?orange:tier>=3?steel:skin,side*.73,-.03,.09,.14,.20,.07);}
   if(tier<2){
    oval(head,'tan-eye-mask',skin,side*.24,.02,.46,.32,.39,.11);
    const eye=new THREE.Group();eye.position.set(side*.25,.06,.54);head.add(eye);eyes.push(eye);
@@ -52,27 +62,41 @@ function makeGlueModel(tier,middle=false){
   oval(head,'brown-nose',hair,0,-.29,.65,.061,.046,.030);
   tube(head,'monkey-smile',hair,[[-.13,-.45,.60],[0,-.50,.63],[.16,-.44,.60]],.018);
  }
- if(!tier||middle&&tier===1)for(const [x,y,z,tilt] of [[-.12,.73,-.09,-.35],[ -.35,.66,-.11,-.75],[.07,.68,-.16,.15]]){const tuft=part(head,'pointed-brown-hair',new THREE.ConeGeometry(.18,.49,5),hair,x,y,z);tuft.rotation.z=tilt;}
- if(tier===1&&!middle){
+ if(!tier||(middle||bottom)&&tier===1)for(const [x,y,z,tilt] of [[-.12,.73,-.09,-.35],[ -.35,.66,-.11,-.75],[.07,.68,-.16,.15]]){const tuft=part(head,'pointed-brown-hair',new THREE.ConeGeometry(.18,.49,5),hair,x,y,z);tuft.rotation.z=tilt;}
+ if(bottom&&tier===1){
+  oval(head,'yellow-sticky-head-splat',glue,-.24,.51,.32,.40,.16,.25);
+  for(const [x,y,z,sx,sy] of [[-.49,.37,.45,.15,.21],[-.22,.31,.55,.14,.20],[.02,.42,.47,.13,.16]])oval(head,'sticky-splat-drip',glue,x,y,z,sx,sy,.065);
+  oval(head,'sticky-splat-highlight',white,-.28,.62,.44,.12,.025,.045);
+ }
+ if(tier===1&&!middle&&!bottom){
   const cap=part(head,'gray-glue-soak-cap',new THREE.SphereGeometry(.76,10,6,0,Math.PI*2,0,Math.PI/2),graphite,0,.50,-.035);cap.scale.set(1,.48,.88);
   oval(head,'gray-cap-brim',steel,0,.50,.28,.77,.045,.51);
   for(const x of [-.33,.33])tube(head,'cap-panel-seam',steel,[[x,.52,.45],[x*.65,.77,.20],[0,.87,-.03],[x*.65,.73,-.43],[x,.51,-.59]],.012);
  }
  let respirator=null;
- if(tier>=2){
-  if(tier>=3&&!middle)oval(head,'gray-respirator-faceplate',graphite,0,-.03,.48,.62,.61,.12);
+ if(tier>=2&&!(bottom&&tier>=3)){
+  if(tier>=3&&!middle&&!bottom)oval(head,'gray-respirator-faceplate',graphite,0,-.03,.48,.62,.61,.12);
   for(const side of [-1,1]){
-   part(head,middle?(tier===2?'bronze-splatter-goggle':'black-hazmat-goggle'):tier===2?'bronze-corrosive-goggle':'gray-protective-goggle',new THREE.TorusGeometry(.285,.062,6,12),rimMat,side*.29,.06,.61);
+   part(head,bottom?'bronze-stronger-glue-goggle':middle?(tier===2?'bronze-splatter-goggle':'black-hazmat-goggle'):tier===2?'bronze-corrosive-goggle':'gray-protective-goggle',new THREE.TorusGeometry(.285,.062,6,12),rimMat,side*.29,.06,.61);
    oval(head,'bright-green-goggle-lens',lensMat,side*.29,.06,.62,.253,.259,.08);
    const shine=box(head,'green-lens-reflection',glue,side*.29-.045,.12,.699,.038,.24,.009);shine.rotation.z=-.6;
   }
   box(head,'goggle-bridge',rimMat,0,.08,.65,.15,.07,.055);
   tube(head,'goggle-head-strap',graphite,[[-.59,.07,.43],[-.76,.06,.03],[-.48,.07,-.49],[0,.07,-.60],[.48,.07,-.49],[.76,.06,.03],[.59,.07,.43]],.054);
-  if(tier>=3&&!middle){
+  if(tier>=3&&!middle&&!bottom){
    respirator=new THREE.Group();respirator.name='perforated-gray-respirator';respirator.position.set(0,-.36,.69);head.add(respirator);
    const filter=part(respirator,'round-respirator-filter',new THREE.CylinderGeometry(.22,.25,.14,12),steel);filter.rotation.x=Math.PI/2;
    for(let i=0;i<7;i++){const a=i*Math.PI/3,r=i===6?0:.12;part(respirator,'dark-respirator-vent',new THREE.CircleGeometry(.035,6),graphite,Math.cos(a)*r,Math.sin(a)*r,.073);}
    for(const side of [-1,1])box(head,'respirator-side-latch',steel,side*.24,-.35,.64,.10,.13,.08);
+  }
+ }
+ if(bottom&&tier>=3){
+  roundedPanel(head,tier===3?'wide-black-moab-glue-visor':'bolted-armored-visor-frame',tier===3?bootMat:rimMat,0,-.04,.52,1.38,.77,tier===3?.27:.13);
+  roundedPanel(head,'dark-bottom-visor-pane',visorMat,0,-.04,.58,1.17,.57,tier===3?.21:.085);
+  for(const x of [-.29,.20]){const reflection=box(head,'visor-reflection',steel,x,-.04,.645,.08,.49,.01);reflection.rotation.z=-.55;}
+  if(tier>=4){
+   for(const x of [-.57,.57])for(const y of [-.32,.23])oval(head,'visor-frame-bolt',steel,x,y,.61,.047,.047,.028);
+   tube(head,'armored-helmet-center-seam',tier===5?bootMat:steel,[[0,-.71,.20],[0,-.48,.46],[0,.45,.43],[0,.74,.07],[0,.54,-.43]],.023);
   }
  }
  const tail=tube(pose,'curled-brown-tail',fur,[[0,.88,-.28],[-.44,.83,-.62],[-.74,1.1,-.61],[-.68,1.37,-.56],[-.46,1.33,-.55]],.115);
@@ -86,7 +110,18 @@ function makeGlueModel(tier,middle=false){
   return group;
  }
  let tank;
- if(middle){
+ if(bottom&&tier>=3){
+  tank=new THREE.Group();tank.name=tier===3?'pink-moab-glue-backpack':tier===4?'pink-spilled-relentless-tank':'white-super-glue-pressure-tank';pose.add(tank);
+  part(tank,'bottom-pressure-reservoir',new THREE.CylinderGeometry(.39,.39,1.12,10),tier===3?pink:tier===4?steel:white,-.36,1.45,-.55);
+  for(const y of [1.01,1.88])part(tank,'bottom-reservoir-steel-band',new THREE.CylinderGeometry(.405,.405,.16,10),graphite,-.36,y,-.55);
+  part(tank,'bottom-tank-filler-cap',new THREE.CylinderGeometry(.20,.22,.17,10),steel,-.36,2.10,-.55);
+  if(tier===4){oval(tank,'pink-reservoir-spill',pink,-.45,1.91,-.25,.25,.12,.09);tube(tank,'pink-tank-spill-drip',pink,[[-.55,1.92,-.25],[-.61,1.60,-.25],[-.51,1.45,-.25]],.045);}
+  if(tier===5){
+   const valve=new THREE.Group();valve.name='red-super-glue-pressure-wheel';valve.position.set(-.36,2.30,-.55);tank.add(valve);const red=material(0xe71d20);
+   const wheel=part(valve,'red-valve-rim',new THREE.TorusGeometry(.28,.045,6,12),red);wheel.rotation.x=Math.PI/2;
+   for(let i=0;i<3;i++){const spoke=box(valve,'red-valve-spoke',red,0,0,0,.48,.04,.045);spoke.rotation.y=i*Math.PI/3;}
+  }
+ }else if(middle){
   tank=new THREE.Group();tank.name=tier>=4?'twin-dark-glue-reservoirs':'dark-middle-glue-backpack';pose.add(tank);
   box(tank,'gray-backpack-frame',steel,0,1.30,-.43,.83,.72,.18);
   const centers=tier>=4?[-.34,.34]:[-.40];
@@ -113,8 +148,9 @@ function makeGlueModel(tier,middle=false){
  // Hands stay attached to the gun during recoil.
  weapon.position.set(.25,1.36,.39);weapon.userData.rest=weapon.position.clone();
  for(const side of [-1,1]){
-  const arm=tube(weapon,'brown-gun-arm',fur,[[side*.44,.12,-.35],[side*.48,-.18,-.10],[side*.24,-.17,.30]],.14);arms.push(arm);
-  oval(weapon,'gun-gripping-hand',middle&&tier>=3?bootMat:skin,side*.23,-.16,.33,.16,.14,.18);
+  const handX=bottom&&tier>=4?side*.78:side*.23;
+  const arm=tube(weapon,'brown-gun-arm',fur,[[side*.44,.12,-.35],[side*(bottom&&tier>=4?.73:.48),-.18,-.10],[handX,-.17,.30]],.14);arms.push(arm);
+  oval(weapon,'gun-gripping-hand',bottom&&tier>=4||middle&&tier>=3?bootMat:skin,handX,-.16,.33,.16,.14,.18);
  }
  if(!tier){
  box(weapon,'yellow-glue-gun-body',glue,0,.03,.35,.45,.32,.92);
@@ -127,7 +163,22 @@ function makeGlueModel(tier,middle=false){
  part(weapon,'dark-nozzle-opening',new THREE.CircleGeometry(.095,10),dark,0,.03,1.205);
  }
  let muzzleZ=1.25;
- if(middle){
+ const muzzles=[];
+ if(bottom){
+  if(tier>=4)weapon.position.x=0;weapon.userData.rest=weapon.position.clone();
+  const centers=tier===3?[-.20,.20]:tier>=4?[-.78,.78]:[0],r=tier>=4?.34:tier===3?.18:.25,length=tier>=3?1.22:1.05;muzzleZ=length+.09;
+  for(const [i,x] of centers.entries()){
+   const cannon=new THREE.Group();cannon.name=tier>=4?'bottom-twin-cannon':tier===3?'moab-glue-twin-barrel':'bottom-glue-sprayer';cannon.position.set(x,0,0);weapon.add(cannon);
+   const barrel=part(cannon,['','green-stickier-glue-cannon','gray-stronger-glue-sprayer','moab-glue-double-barrel','relentless-glue-cannon','super-glue-heavy-cannon'][tier],new THREE.CylinderGeometry(r,r*1.13,length,12),tier===1?green:steel,0,.03,length*.5-.04);barrel.rotation.x=Math.PI/2;
+   for(const z of [.06,length-.28])part(cannon,'bottom-cannon-pressure-band',new THREE.TorusGeometry(r*1.06,.042,5,12),tier===3?pink:graphite,0,.03,z);
+   part(cannon,'bottom-nozzle-rim',new THREE.TorusGeometry(r,.04,5,12),tier>=4?pink:tier===1?green:steel,0,.03,muzzleZ-.02);
+   part(cannon,'bottom-nozzle-opening',new THREE.CircleGeometry(r*.90,12),tier>=4?material(0x9e216b):bootMat,0,.03,muzzleZ-.012);
+   for(let n=0;n<5;n++){const a=n*Math.PI*2/5;box(cannon,'bottom-barrel-panel',tier===1?glue:hoseSteel,Math.cos(a)*r*.94,.03+Math.sin(a)*r*.94,length*.53,.029,.029,length*.74);}
+   const outlet=new THREE.Object3D();outlet.name='bottom-projectile-muzzle-'+i;outlet.position.set(0,.03,muzzleZ);cannon.add(outlet);muzzles.push(outlet);
+   if(tier>=4){oval(cannon,'pink-nozzle-glue-spill',glue,-.10,-.18,muzzleZ,.16,.10,.06);tube(cannon,'hanging-pink-nozzle-glue',glue,[[-.10,-.20,muzzleZ],[-.08,-.42,muzzleZ+.04],[-.13,-.59,muzzleZ+.03]],.047);}
+  }
+  box(weapon,'bottom-trigger-grip',graphite,0,-.24,.11,.20,.32,.22);
+ }else if(middle){
   const radius=tier===1?.26:tier===2?.29:tier===3?.40:tier===4?.43:.48,length=tier>=4?1.40:1.08;
   const chamber=part(weapon,['','green-bigger-globs-cannon','gray-glue-splatter-sprayer','wide-glue-hose-cannon','long-glue-strike-cannon','heavy-glue-storm-cannon'][tier],new THREE.CylinderGeometry(radius,radius*1.12,length,12),tier===1?green:steel,0,.03,length*.5-.07);chamber.rotation.x=Math.PI/2;
   box(weapon,'dark-trigger-grip',graphite,0,-.25,.08,.18,.38,.19);
@@ -158,13 +209,16 @@ function makeGlueModel(tier,middle=false){
    part(weapon,'solver-black-nozzle-opening',new THREE.CircleGeometry(.24,10),graphite,0,.02,1.505);muzzleZ=1.53;
   }
  }
- const muzzle=new THREE.Object3D();muzzle.name='glue-projectile-muzzle';muzzle.position.set(0,.03,muzzleZ);weapon.add(muzzle);
- const droplet=oval(weapon,'yellow-muzzle-droplet',glue,0,-.15,muzzleZ-.04,.055,.13,.055);droplet.userData.restScale=droplet.scale.clone();
- tube(pose,'green-tank-feed-hose',middle?(tier<=2?green:hoseSteel):tier>=3?glue:tier?green:dark,[[-.43,.87,-.47],[-.70,.61,-.10],[-.65,.87,.43],[-.15,1.25,.52]],tier?.073:.055);
+ const muzzle=muzzles[0]||new THREE.Object3D();if(!muzzles.length){muzzle.name='glue-projectile-muzzle';muzzle.position.set(0,.03,muzzleZ);weapon.add(muzzle);muzzles.push(muzzle);}
+ const droplets=[];
+ for(const outlet of muzzles){const drop=oval(outlet,'yellow-muzzle-droplet',glue,0,-.18,-.04,.055,.13,.055);drop.userData.restScale=drop.scale.clone();droplets.push(drop);}
+ const droplet=droplets[0];
+ tube(pose,'green-tank-feed-hose',bottom?(tier>=3?yellow:green):middle?(tier<=2?green:hoseSteel):tier>=3?glue:tier?green:dark,[[-.43,.87,-.47],[-.70,.61,-.10],[-.65,.87,.43],[-.15,1.25,.52]],tier?.073:.055);
+ if(bottom&&tier>=4)tube(pose,'yellow-secondary-glue-feed',yellow,[[.21,1.22,-.48],[.66,.88,-.13],[.86,1.03,.25],[.77,1.32,.52]],.08);
  if(tier){
-  for(let i=0;i<3;i++){const spray=oval(muzzle,'shooting-glue-spray',glue,(i-1)*.075,.02,.16+i*.12,.035,.035,.14);spray.visible=false;spray.userData.index=i;spray.userData.rest=spray.position.clone();sprays.push(spray);}
+  for(const outlet of muzzles)for(let i=0;i<3;i++){const spray=oval(outlet,'shooting-glue-spray',glue,(i-1)*.075,.02,.16+i*.12,.035,.035,.14);spray.visible=false;spray.userData.index=i;spray.userData.rest=spray.position.clone();sprays.push(spray);}
  }
- const steam=tier>=3&&!middle?tube(muzzle,'green-atomizer-vapor',glue,[[0,.07,.10],[.045,.20,.14],[-.05,.34,.13],[.03,.44,.10]],.026):null;
+ const steam=tier>=3&&!middle&&!bottom?tube(muzzle,'green-atomizer-vapor',glue,[[0,.07,.10],[.045,.20,.14],[-.05,.34,.13],[.03,.44,.10]],.026):null;
  const stormHoses=[];
  if(middle&&tier===5){
   // Fixed geometry on pivots: articulated idle/cast motion without rebuilding tubes.
@@ -183,11 +237,11 @@ function makeGlueModel(tier,middle=false){
    stormHoses.push({pivot,drip,jet,index:i});
   }
  }
- Object.assign(root.userData,{body,weapon,glueModelPath:tier?(middle?1:0):-1,glueModelTier:tier,glueRig:{pose,head,eyes,feet,arms,tail,tank,muzzle,droplet,glueMaterial:glue,respirator,fluids,capsules,sprays,steam,stormHoses,middleTier:middle?tier:0,topTier:middle?0:tier}});
+ Object.assign(root.userData,{body,weapon,glueModelPath:tier?(bottom?2:middle?1:0):-1,glueModelTier:tier,glueRig:{pose,head,eyes,feet,arms,tail,tank,muzzle,muzzles,droplet,droplets,glueMaterial:glue,respirator,fluids,capsules,sprays,steam,stormHoses,bottomTier:bottom?tier:0,middleTier:middle?tier:0,topTier:middle||bottom?0:tier}});
  return root;
 }
 export function glueMuzzleOrigin(t){
- const muzzle=t.mesh.userData.glueRig?.muzzle;
+ const rig=t.mesh.userData.glueRig,muzzle=rig?.muzzles?.[t.glueMuzzleIndex||0]||rig?.muzzle;
  if(!muzzle)return {x:t.x,y:1.8,z:t.z};
  t.mesh.updateWorldMatrix(true,true);return muzzle.getWorldPosition(new THREE.Vector3());
 }
@@ -200,7 +254,7 @@ export function animateGlue(t,dt){
  const w=t.mesh.userData.weapon;w.position.copy(w.userData.rest);w.position.z-=kick*.14;w.rotation.x=-kick*.06;
  rig.tail.rotation.y=Math.sin(time*1.7)*.07;
  const blink=time%5>4.80&&time%5<4.95;for(const eye of rig.eyes)eye.scale.y=blink?.1:1;
- rig.droplet.scale.y=(rig.droplet.userData.restScale?.y??.13)*(1+Math.sin(time*3)*.12+kick*.8);
+ for(const [i,drop] of (rig.droplets||[rig.droplet]).entries())drop.scale.y=(drop.userData.restScale?.y??.13)*(1+Math.sin(time*3+i)*.12+kick*.8);
  for(const [i,fluid] of (rig.fluids||[]).entries())fluid.position.y=fluid.userData.restY+Math.sin(time*2.3+i)*.016;
  for(const spray of rig.sprays||[]){spray.visible=t.fireAnim>0||cast>0;const i=spray.userData.index;spray.position.copy(spray.userData.rest);spray.position.z+=kick*(.18+i*.055);spray.scale.z=.14*(.6+kick*1.4);}
  for(const hose of rig.stormHoses||[]){const phase=time*1.8+hose.index;hose.pivot.rotation.z=Math.sin(phase)*.035+cast*(hose.index%2?-.10:.10);hose.pivot.rotation.y=Math.sin(phase*.8)*.045;hose.drip.scale.y=.16*(1+Math.sin(phase*1.6)*.15+cast*.8);hose.jet.visible=cast>0;hose.jet.position.z=.48+cast*.28;hose.jet.scale.z=.25*(.7+cast*1.7);}

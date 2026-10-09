@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v57**. Adds all five reference-based Glue Gunner middle-path models, from Bigger Globs' orange nozzle to Glue Storm's orange protective suit, giant cannon and four articulated hoses. Every tier has idle motion, planted feet, attached hand/gun recoil and nozzle spray. Glue Strike casts and Glue Storm's repeating ability pulses animate the cannon and hose jets. Includes the existing top-path models, all supplied Glue Gunner stats, reference meadow and route, Round 81 health scaling and distinct Camo/Fortified/Regrow bloons.
+Latest version: **v58**. Adds all five reference-based Glue Gunner bottom-path models, from Stickier Glue's yellow head splat and Stronger Glue's magenta suit to MOAB Glue's white visor gear, Relentless Glue's blue helmet and Super Glue's dark armor, twin cannons and red pressure valve. Each has idle motion, planted feet, attached gun/hand recoil and yellow or pink glue drips/spray. Real projectiles and impacts match the model's glue color; twin barrels alternate the existing shots without adding damage or projectiles. Includes all three Glue Gunner model paths and the existing supplied gameplay stats, abilities, map and Bloon variants.
 
-[Download v57 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v57.zip)
+[Download v58 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v58.zip)
 
 ## Play online
 
@@ -14,6 +14,6 @@ Serve this folder with `python -m http.server 8000`, then open http://localhost:
 
 All required Three.js files and licenses are bundled in `assets/vendor/`. See [README.txt](README.txt) for game rules, tuning values and verification details.
 
-[Middle-path models](docs/glue-middle-models.png) · [Middle-path shooting](docs/glue-middle-models-shooting.png) · [Ability poses](docs/glue-middle-models-ability.png) · [Top-path models](docs/glue-top-models.png) · [Shooting poses](docs/glue-top-models-shooting.png) · [Models in combat](docs/glue-top-models-combat.png) · [Bottom-path combat preview](docs/glue-bottom-combat.png) · [Middle-path combat preview](docs/glue-middle-combat.png) · [Map preview](docs/meadow-map-preview.png) · [Bloon variants](docs/bloon-variants-preview.png)
+[Bottom-path models](docs/glue-bottom-models.png) · [Bottom-path shooting](docs/glue-bottom-models-shooting.png) · [Bottom models in combat](docs/glue-bottom-models-combat.png) · [Middle-path models](docs/glue-middle-models.png) · [Middle-path shooting](docs/glue-middle-models-shooting.png) · [Ability poses](docs/glue-middle-models-ability.png) · [Top-path models](docs/glue-top-models.png) · [Shooting poses](docs/glue-top-models-shooting.png) · [Models in combat](docs/glue-top-models-combat.png) · [Bottom-path combat preview](docs/glue-bottom-combat.png) · [Middle-path combat preview](docs/glue-middle-combat.png) · [Map preview](docs/meadow-map-preview.png) · [Bloon variants](docs/bloon-variants-preview.png)
 
 Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.

@@ -6,7 +6,7 @@ const {makeBoomerangTowerMesh,updateBoomerangAppearance,makeBoomerangWeapon,boom
 const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBombBottomTowerMesh,makeBombMissileProjectile,animateBomb}=await import('./bomb-visuals.js?v=4');
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
-const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=3');
+const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -574,8 +574,8 @@ function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,
 function updateTowerAppearance(t){
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
  if(t.type==='glue'){
-  const highest=Math.max(...t.paths),dominant=t.paths.indexOf(highest),tier=dominant<2?highest:0,path=tier?dominant:-1;
-  if(t.mesh.userData.glueModelTier!==tier||t.mesh.userData.glueModelPath!==path)replaceTowerBody(t,tier?(path===0?makeGlueTopTowerMesh(tier):makeGlueMiddleTowerMesh(tier)):makeBaseGlueTowerMesh());
+  const tier=Math.max(...t.paths),path=tier?t.paths.indexOf(tier):-1;
+  if(t.mesh.userData.glueModelTier!==tier||t.mesh.userData.glueModelPath!==path)replaceTowerBody(t,tier?[makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh][path](tier):makeBaseGlueTowerMesh());
   if(tier)return;
  }
  if(t.type==='ice'){
@@ -1887,6 +1887,7 @@ function updateRicochet(p,dt){
 
 function fireProjectile(t,target,damage=t.damage,extra={}){
  if(t.type==='glue'&&!extra.cosmetic){
+  const muzzles=t.mesh.userData.glueRig?.muzzles;t.glueMuzzleIndex=muzzles?.length>1?(t.shotCounter||0)%muzzles.length:0;
   const origin=glueMuzzleOrigin(t),angle=Math.atan2(target.mesh.position.z-origin.z,target.mesh.position.x-origin.x);
   if(extra.visualSpread){origin.x-=Math.sin(angle)*extra.visualSpread;origin.z+=Math.cos(angle)*extra.visualSpread;}
   const attack={...t,paths:[...t.paths],sourceTower:sourceTowerForDamage(t)};
@@ -1993,11 +1994,13 @@ function updateIceProjectile(p,dt){
 function fireLinearProjectile(t,angle,extra={}){
  const kind=extra.visualType||'tack';
  const mesh=makeProjectileMesh(kind,angle);
+ const glueVisualColor=kind==='glue'?(t.mesh.userData.glueRig?.glueMaterial.color.getHex()??((t.paths?.[0]||0)>=2?0x83d961:(t.paths?.[2]||0)>=3?0xff6cc7:0xf1df32)):null;
+ if(glueVisualColor!==null)mesh.traverse(o=>{if(o.material)o.material.color.setHex(glueVisualColor);});
  mesh.position.set(extra.origin?.x??t.x,extra.origin?.y??(kind==='tack'?1.15:1.55),extra.origin?.z??t.z);
  if(t.type==='dart')mesh.rotation.y=Math.PI/2-angle;
  scene.add(mesh);
  const speed=extra.speed||34;
- projectiles.push({mesh,tower:t,damage:extra.damage??t.damage,type:t.type,cosmetic:extra.cosmetic!==false,mode:'linear',life:extra.life||Math.max(.22,t.range/(speed*1.15)),vx:Math.cos(angle)*speed,vz:Math.sin(angle)*speed,visualType:kind,glueSplash:extra.glueSplash||0,splashPierce:extra.splashPierce||0,radius:extra.radius||.45,pierceLeft:extra.pierce??1,hitEnemies:new Set(),slow:extra.slow,slowDuration:extra.slowDuration,freeze:extra.freeze});
+ projectiles.push({mesh,tower:t,damage:extra.damage??t.damage,type:t.type,cosmetic:extra.cosmetic!==false,mode:'linear',life:extra.life||Math.max(.22,t.range/(speed*1.15)),vx:Math.cos(angle)*speed,vz:Math.sin(angle)*speed,visualType:kind,glueVisualColor,glueSplash:extra.glueSplash||0,splashPierce:extra.splashPierce||0,radius:extra.radius||.45,pierceLeft:extra.pierce??1,hitEnemies:new Set(),slow:extra.slow,slowDuration:extra.slowDuration,freeze:extra.freeze});
 }
 function spawnTackVolleyVisual(t){
  t.recoil=.11;t.fireAnim=.24;
@@ -2047,7 +2050,7 @@ function spawnArrowRainVisual(e){
 function spawnImpactVisual(p,position){
  if(p.critical)spawnBurst(position,0xffd151,5,2,.3,'impact');
  const colors={bomb:0xffb657,missile:0xffb657,infernoMeteor:0xff9522,glue:0xf6dd4e,ice:0xb8f4ff,iceSnowball:0xb8f4ff,iceImpale:0x7eefff,hotBoomer:0xff7138,plasma:0xcb93ff};
- const color=p.type==='glue'?((p.tower.paths?.[0]||0)>=2?0x83d961:(p.tower.paths?.[2]||0)>=3?0xba8ce3:0xf6dd4e):p.visualType?.startsWith('bombMissile')?0xffb657:colors[p.visualType];if(color)spawnBurst(position,color,p.splash?8:4,p.splash?4:1.5,.25,'impact');
+ const color=p.type==='glue'?(p.glueVisualColor??((p.tower.paths?.[0]||0)>=2?0x83d961:(p.tower.paths?.[2]||0)>=3?0xba8ce3:0xf6dd4e)):p.visualType?.startsWith('bombMissile')?0xffb657:colors[p.visualType];if(color)spawnBurst(position,color,p.splash?8:4,p.splash?4:1.5,.25,'impact');
 }
 function updateVisualEffects(dt){
  for(const fx of visualEffects){
