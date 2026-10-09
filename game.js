@@ -6,7 +6,7 @@ const {makeBoomerangTowerMesh,updateBoomerangAppearance,makeBoomerangWeapon,boom
 const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBombBottomTowerMesh,makeBombMissileProjectile,animateBomb}=await import('./bomb-visuals.js?v=4');
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
-const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=2');
+const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=3');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -574,8 +574,8 @@ function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,
 function updateTowerAppearance(t){
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
  if(t.type==='glue'){
-  const [top,middle,bottom]=t.paths,tier=top>0&&top>=middle&&top>=bottom?top:0;
-  if(t.mesh.userData.glueModelTier!==tier)replaceTowerBody(t,tier?makeGlueTopTowerMesh(tier):makeBaseGlueTowerMesh());
+  const highest=Math.max(...t.paths),dominant=t.paths.indexOf(highest),tier=dominant<2?highest:0,path=tier?dominant:-1;
+  if(t.mesh.userData.glueModelTier!==tier||t.mesh.userData.glueModelPath!==path)replaceTowerBody(t,tier?(path===0?makeGlueTopTowerMesh(tier):makeGlueMiddleTowerMesh(tier)):makeBaseGlueTowerMesh());
   if(tier)return;
  }
  if(t.type==='ice'){
@@ -826,6 +826,7 @@ function emitMaelstrom(t,ability){
  t.recoil=.11;t.fireAnim=.24;
 }
 function coatMapWithGlue(t,ability){
+ t.glueAbilityAnim=.65;
  for(const e of enemies){
   if(!e.alive)continue;
   const slow=e.isBlimp?Math.max(.75,t.slow||.5):(t.slow||.5);
