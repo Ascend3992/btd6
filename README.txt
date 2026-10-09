@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v55 Glue Gunner bottom-path stats, Relentless pop stuns and Super Glue
+Meadow Balloon Defense 3D - v56 Glue Gunner reference top-path models, idle and shooting animations
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -14,7 +14,7 @@ Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.
 Preserved from the uploaded game
 -------------------------------
 - Rounds 1-100, six primary towers and Quincy. The meadow now follows the latest supplied map and arrow route.
-- All 15 Dart Monkey upgrade models, held weapons, idle and attack animations. Tack Shooter base and all 15 upgrades use new reference models. Ice Monkey's base and all 15 upgrades use the supplied references. Glue Gunner has a new brown monkey / yellow gun reference model with idle, blink and recoil animations. Quincy retains its existing model and animations.
+- All 15 Dart Monkey upgrade models, held weapons, idle and attack animations. Tack Shooter base and all 15 upgrades use new reference models. Ice Monkey's base and all 15 upgrades use the supplied references. Glue Gunner's base and all five top upgrades use reference models with idle and recoil animations, with blinking where eyes are uncovered. Quincy retains its existing model and animations.
 - Dart upgrade stats, prices, camo priority, crossbow critical hits, obstacle/wall ricochets and Ultra-Juggernaut splitting balls.
 - Existing tower abilities, combat effects and other tower upgrades. Bloon status models now use the latest supplied textures as references.
 
@@ -280,3 +280,12 @@ Glue Gunner bottom path v55
 Bottom-path references (user overrides and the explicitly selected statistics blocks take priority):
   https://bloons.fandom.com/wiki/Relentless_Glue
   https://bloons.fandom.com/wiki/Super_Glue
+
+Glue Gunner top-path models v56
+------------------------------
+- All five supplied references are interpreted as original faceted 3D models in glue-visuals.js. Glue Soak has brown fur, a gray segmented cap, yellow backpack and green gun. Corrosive Glue has a purple hood/suit, bronze-rimmed green goggles, yellow tank and gray sprayer. Dissolver has a blue protective suit, gray respirator, green lenses and twin green solvent tanks. Liquefier wears navy protective gear and holds a heavy cannon fed by three glass solvent vials. Solver wears green protective gear, dark boots/gloves and a larger black cannon with green pressure bands and side ampoules.
+- Each model has a body/pose/head/weapon rig. Idle animation includes breathing sway, head/tail movement, subtle solvent motion and respirator/vapor movement where present. Uncovered eyes blink; protective goggles keep their lenses rigid. Shooting animates gun recoil with both hands/arms attached, visible nozzle spray and pulsing droplets/vapor. Feet remain planted, and the tower root never moves during idle or recoil.
+- Real glue projectiles start at each upgraded model's world-space muzzle. Model swaps retain position, heading, purchased paths, combat stats, income, cooldowns and tower identity. Old mesh geometry and materials are disposed, and refreshing a model does not rebuild it.
+- The highest purchased path determines appearance, with top-path ties using the top reference. Top tier 3-5 keeps its reference body with secondary crosspaths. Dominant middle/bottom paths retain their prior models and decorative upgrade gear until their own references are supplied.
+- All 29 regression test files pass, including additional animation, feature, world-space muzzle, state preservation, crosspath selection and model-disposal checks. Chromium verifies real upgrades 1-5, projectile origins and hits, unchanged zero impact damage/coating duration, idle and shooting poses, and zero runtime errors. Mesh counts are bounded at 58 / 53 / 70 / 86 / 99 for the five tier models; no per-frame model allocation is needed for their animations.
+- Model gallery: docs/glue-top-models.png. Shooting gallery: docs/glue-top-models-shooting.png. In-game combat: docs/glue-top-models-combat.png.

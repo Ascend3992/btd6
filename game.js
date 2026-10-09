@@ -6,7 +6,7 @@ const {makeBoomerangTowerMesh,updateBoomerangAppearance,makeBoomerangWeapon,boom
 const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBombBottomTowerMesh,makeBombMissileProjectile,animateBomb}=await import('./bomb-visuals.js?v=4');
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
-const {makeBaseGlueTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=1');
+const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=2');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -573,6 +573,11 @@ function cyl(rt,rb,h,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.Cylinde
 function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,24),mat(color));o.rotation.x=Math.PI/2;o.position.y=y;return o}
 function updateTowerAppearance(t){
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
+ if(t.type==='glue'){
+  const [top,middle,bottom]=t.paths,tier=top>0&&top>=middle&&top>=bottom?top:0;
+  if(t.mesh.userData.glueModelTier!==tier)replaceTowerBody(t,tier?makeGlueTopTowerMesh(tier):makeBaseGlueTowerMesh());
+  if(tier)return;
+ }
  if(t.type==='ice'){
   const tier=Math.max(...t.paths),path=t.paths.indexOf(tier);
   if(t.mesh.userData.iceModelTier!==tier||t.mesh.userData.iceModelPath!==(tier?path:-1)){
