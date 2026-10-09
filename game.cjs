@@ -15,7 +15,7 @@ function game(){
   PATH:Array.from({length:10},()=>({distanceTo:()=>10})),
   trackDistances:Array.from({length:10},(_,i)=>i*10),
   placeEnemyOnTrack(e){e.mesh.position.x=e.seg*10+e.dist;e.mesh.position.z=0},
-  scene:{add(){}},makeTowerMesh:mesh,makeProjectileMesh:mesh};
+  scene:{add(){}},makeTowerMesh:mesh,makeProjectileMesh:mesh,makeQuincyArrowMesh:mesh,quincyMuzzleOrigin:t=>({x:t.x,y:2.15,z:t.z})};
  vm.createContext(context);
  // Use the real visual selectors and throw hooks; mock meshes simply have no rig.
  for(const [start,end] of [['export function boomerangProjectileKind','export function makeBoomerangWeapon'],['export function triggerBoomerangThrow',null]]){

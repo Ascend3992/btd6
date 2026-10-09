@@ -7,6 +7,7 @@ const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBo
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
+const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -126,6 +127,10 @@ const iceMiddleTuning={secondaryFreeze:.3};
 const iceBottomTuning={cryoCooldown:1,iciclesCooldown:.5,projectileSpeed:32,projectileLife:3,impaleFreeze:1.2,contactRadius:.85};
 let absoluteZeroBuffT=0;
 const waterRegions=[];
+const quincyLevelMetadata=[
+ [1,540,0,'Arrows bounce to 3 targets.'],[2,180,180,'Arrows bounce to 4 targets.'],[3,460,460,'Unlocks Rapid Shot.'],[4,1000,1000,'Range increases to 52.'],[5,1860,1860,'Detects Camo.'],[6,3280,3280,'Fires 2 arrows per shot.'],[7,5180,5180,'Every third shot has exploding arrows.'],[8,8320,8320,'Arrows and explosions gain +2 MOAB damage.'],[9,9380,9380,'Arrows bounce to 6 targets.'],[10,13620,13620,'Unlocks Storm of Arrows.'],[11,16380,16380,'Attack cooldown becomes 0.6s.'],[12,14400,14400,'Arrows bounce to 7 targets.'],[13,16650,16650,'Range becomes 54; Rapid Shot lasts 12s.'],[14,14940,14940,'Arrows and explosions gain +3 MOAB damage.'],[15,16380,16380,'Rapid Shot becomes 4x speed with a 45s cooldown.'],[16,17820,17820,'Attack cooldown becomes 0.4s.'],[17,19260,19260,'Arrows last 25% longer; every second shot explodes.'],[18,20700,20700,'Attack cooldown becomes 0.25s; Storm improves.'],[19,16470,16470,'Fires 3 arrows with 9 pierce each.'],[20,17280,17280,'Attack cooldown becomes 0.2s; Storm improves again.']
+].map(([level,cost,xp,description])=>({level,cost,xp,description}));
+const quincyTuning={costs:[460,540,585,650],bounceRange:50*RANGE_SCALE,explosionRadius:25.7*RANGE_SCALE,explosionPierce:10,arrowLife:1.4,stormRadius:100*RANGE_SCALE,stormDuration:3,stormFrame:1/60,stormRehit:.05};
 const towerDefs={
  dart:{name:'Dart Monkey',cost:200,range:32*RANGE_SCALE,displayRange:32,rate:.95,damage:1,projSpeed:34,color:0x8b5a2b,pierce:2,damageType:'Sharp',notes:'Cannot hit Lead or Camo natively'},
  boomer:{name:'Boomerang Monkey',cost:325,range:43*RANGE_SCALE,displayRange:43,rate:1.2,damage:1,projSpeed:31,color:0xb76a31,pierce:4,damageType:'Sharp',notes:'Cannot hit Camo natively'},
@@ -133,7 +138,7 @@ const towerDefs={
  tack:{name:'Tack Shooter',cost:260,costByDifficulty:{easy:220,medium:260,hard:280,impoppable:310},range:23*RANGE_SCALE,displayRange:23,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.12,damage:1,color:0xfa398b,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
  ice:{name:'Ice Monkey',cost:400,towerClass:'Primary',placementSurfaces:['land','water'],range:25*RANGE_SCALE,displayRange:25,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:1.5,radial:true,damageType:'Cold',notes:'Freezes bloons for 1.5s; cannot affect Lead, White, Zebra, or Camo'},
  glue:{name:'Glue Gunner',cost:270,range:46*RANGE_SCALE,displayRange:46,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1,damage:0,projSpeed:300*RANGE_SCALE,displayProjectileSpeed:300,projectileLife:.43,projectileRadius:4*RANGE_SCALE,displayProjectileRadius:4,glueLevel:1,color:0xd1b034,pierce:1,slow:.5,slowDuration:11,glueLayers:3,damageType:'Acid',notes:'50% slow for 11s; soaks 3 layers; ignores Camo, blimps and already-glued Bloons'},
- hero:{name:'Quincy',cost:540,range:50*RANGE_SCALE,displayRange:50,rate:.95,damage:1,projSpeed:44,color:0x704527,hero:true,pierce:3,camoDetect:false}
+ hero:{name:'Quincy',cost:540,costByDifficulty:{easy:460,medium:540,hard:585,impoppable:650},range:50*RANGE_SCALE,displayRange:50,rate:.95,damage:1,projSpeed:44,color:0x704527,hero:true,pierce:3,camoDetect:false,damageType:'Sharp'}
 };
 
 // Ability balance belongs to this prototype; temporary buffs never rewrite upgrade stats.
@@ -258,6 +263,7 @@ shopBtns.forEach(b=>b.addEventListener('click',()=>selectShop(b.dataset.tower)))
 function mat(color){return new THREE.MeshStandardMaterial({flatShading:true,color,roughness:.65,metalness:.02})}
 // All models are original procedural meshes; no optional model downloads are needed.
 function makeTowerMesh(type,legacyBomb=false,legacyTack=false,legacyIce=false){
+ if(type==='hero')return makeQuincyTowerMesh(1);
  if(type==='glue')return makeBaseGlueTowerMesh();
  if(type==='boomer')return makeBoomerangTowerMesh();
  if(type==='bomb'&&!legacyBomb)return makeBaseBombTowerMesh();
@@ -538,7 +544,7 @@ function updateWeaponAppearance(t){
  if(t.mesh.userData.glueRig){
   const rig=t.mesh.userData.glueRig,[a,,c]=t.paths;rig.glueMaterial.color.setHex(a>=2?0x83d961:c>=3?0xba8ce3:0xf0cf25);return;
  }
- if(t.mesh.userData.bombRig||t.mesh.userData.tackRig||t.mesh.userData.iceRig)return;
+ if(t.mesh.userData.bombRig||t.mesh.userData.tackRig||t.mesh.userData.iceRig||t.mesh.userData.quincyRig)return;
  if(t.mesh.userData.dartTopTier){buildDartTopWeapon(t);return;}
  const w=t.mesh.userData.weapon;for(const child of [...w.children])disposeTransientMesh(child);
  const add=(o)=>{w.add(o);return o};const [a,b,c]=t.paths;
@@ -572,6 +578,7 @@ function box(w,h,d,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.BoxGeomet
 function cyl(rt,rb,h,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,12),mat(color));o.position.set(x,y,z);return o}
 function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,24),mat(color));o.rotation.x=Math.PI/2;o.position.y=y;return o}
 function updateTowerAppearance(t){
+ if(t.type==='hero'){updateHeroAppearance(t);return;}
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
  if(t.type==='glue'){
   const tier=Math.max(...t.paths),path=tier?t.paths.indexOf(tier):-1;
@@ -672,13 +679,21 @@ function updateTowerAppearance(t){
  if(t.type==='hero')updateHeroAppearance(t);
 }
 function updateHeroAppearance(t){
- const g=t.mesh;removeUpgradeVisuals(g);updateWeaponAppearance(t);
- if(t.level>=5)addVisual(g,box(.95,.08,.62,0x4c713d,0,1.32,-.45));
- if(t.level>=7)addVisual(g,cyl(.55,.65,.24,0x854331,0,2.18,0));
- if(t.level>=10)addVisual(g,ring(.82,.07,0xe3bd55,2.02));
- if(t.level>=20)addVisual(g,ring(1.0,.09,0xffe89a,1.75));
+ const milestone=quincyModelLevel(t.level);
+ if(t.mesh.userData.quincyModelLevel!==milestone)replaceTowerBody(t,makeQuincyTowerMesh(milestone));
 }
-function createTower(type,x,z){const d=towerDefs[type];const mesh=makeTowerMesh(type);mesh.position.set(x,.66,z);scene.add(mesh);return{id:nextTowerId++,type,x,z,mesh,throwHand:1,damageDealt:0,abilityCd:0,blitzCd:0,abilityTimer:0,abilityTick:0,abilityAngle:0,activeAbility:null,fanBuffs:[],fanTier:0,glueLevel:d.glueLevel||0,projSpeed:d.projSpeed,projectileLife:d.projectileLife,projectileRadius:d.projectileRadius,glueLayers:d.glueLayers||0,range:d.range,rate:d.rate,damage:d.damage||0,cool:0,pressCool:0,invest:d.cost,target:'first',paths:[0,0,0],level:d.hero?1:0,pierce:d.pierce||1,splash:d.splash||0,slow:d.slow||0,slowDuration:d.slowDuration||2.8,freeze:d.freeze||0,tacks:d.tacks||8,shots:1,bonusMoab:0,shotCounter:0,rapidCd:0,rapidTimer:0,stormCd:0,stormTimer:0,stormTick:0,damageType:d.damageType||'',notes:d.notes||'',camoDetect:!!d.camoDetect,recoil:0,fireAnim:0}}
+function createTower(type,x,z){const d=towerDefs[type];const mesh=makeTowerMesh(type);mesh.position.set(x,.66,z);scene.add(mesh);const t={id:nextTowerId++,type,x,z,mesh,throwHand:1,damageDealt:0,abilityCd:0,blitzCd:0,abilityTimer:0,abilityTick:0,abilityAngle:0,activeAbility:null,fanBuffs:[],fanTier:0,glueLevel:d.glueLevel||0,projSpeed:d.projSpeed,projectileLife:d.projectileLife,projectileRadius:d.projectileRadius,glueLayers:d.glueLayers||0,range:d.range,rate:d.rate,damage:d.damage||0,cool:0,pressCool:0,invest:d.cost,target:'first',paths:[0,0,0],level:d.hero?1:0,pierce:d.pierce||1,splash:d.splash||0,slow:d.slow||0,slowDuration:d.slowDuration||2.8,freeze:d.freeze||0,tacks:d.tacks||8,shots:1,bonusMoab:0,shotCounter:0,rapidCd:0,rapidTimer:0,stormCd:0,stormTimer:0,stormTick:0,damageType:d.damageType||'',notes:d.notes||'',camoDetect:!!d.camoDetect,recoil:0,fireAnim:0};if(d.hero)syncQuincyStats(t,1);return t;}
+function syncQuincyStats(t,level){
+ level=Math.max(1,Math.min(20,Math.floor(level)));if(t.quincySyncedLevel===level)return false;
+ const previous=t.quincySyncedLevel||1;t.level=level;t.quincySyncedLevel=level;
+ t.damage=1;t.damageType='Sharp';t.pierce=level>=19?9:level>=12?7:level>=9?6:level>=2?4:3;
+ t.shots=level>=19?3:level>=6?2:1;t.rate=level>=20?.2:level>=18?.25:level>=16?.4:level>=11?.6:.95;
+ t.range=(level>=13?54:level>=4?52:50)*RANGE_SCALE;t.displayRange=level>=13?54:level>=4?52:50;
+ t.camoDetect=level>=5;t.bonusMoab=level>=14?3:level>=8?2:0;t.explosionEvery=level>=17?2:level>=7?3:0;t.projectileLifeMult=level>=17?1.25:1;
+ if(previous<3&&level>=3)t.rapidCd=16.7;if(previous<10&&level>=10)t.stormCd=23.33;
+ return true;
+}
+function quincyStormStats(level){return {chance:level>=20?.10:level>=18?.075:.05,damage:level>=20?10:6,moabBonus:level>=20?10:6,ceramicBonus:level>=20?24:level>=18?18:0,cooldown:level>=18?55:70};}
 function damageTypeNotes(t){
  if(t.type==='hero')return '';
  const camo=t.camoDetect?'Can detect Camo':'Cannot hit Camo';
@@ -698,8 +713,8 @@ function damageTypeNotes(t){
 function getTowerAbilities(t){
  if(t.type==='hero'){
   const abilities=[];
-  if(t.level>=3)abilities.push({key:'rapid',name:'Rapid Shot',description:'Temporarily increases Quincy\'s attack speed.'});
-  if(t.level>=10)abilities.push({key:'storm',name:'Storm of Arrows',description:'Rain damaging arrows over the whole track.'});
+  if(t.level>=3)abilities.push({key:'rapid',name:'Rapid Shot',description:`${t.level>=15?4:3}x attack speed for ${t.level>=13?12:8}s. Cooldown ${t.level>=15?45:60}s.`});
+  if(t.level>=10)abilities.push({key:'storm',name:'Storm of Arrows',description:'For 3s, rain arrows within 100 units of the target chosen at activation. Damage and hit chance improve at levels 18 and 20.'});
   return abilities;
  }
  const tier=t.paths[1];
@@ -852,9 +867,9 @@ function activateTowerAbility(t,key){
  const state=abilityState(t,ability);
  if(state.disabled){toastMsg(state.text);return false}
  if(key==='rapid'){
-  t.rapidTimer=t.level>=13?12:8;t.rapidCd=t.level>=15?45:60;t.cool=0;
+  t.quincyAbilityAnim=.65;t.rapidTimer=t.level>=13?12:8;t.rapidCd=t.level>=15?45:60;t.cool=0;
  }else if(key==='storm'){
-  t.stormTimer=3;t.stormTick=0;t.stormCd=t.level>=18?55:70;
+  t.quincyAbilityAnim=.65;t.stormTimer=quincyTuning.stormDuration;t.stormTick=0;t.stormClock=0;t.stormHits=new Map();const stormTarget=chooseTarget({...t,range:Infinity,damageType:'Normal'});t.stormCenter={x:stormTarget?.mesh.position.x??t.x,z:stormTarget?.mesh.position.z??t.z};t.stormAttack={type:'quincyStorm',damageType:'Normal',camoDetect:true,sourceTower:t};t.stormStats=quincyStormStats(t.level);t.stormCd=t.stormStats.cooldown;
  }else{
   t.abilityCd=ability.cooldown;t.abilityTimer=ability.duration;t.activeAbility={...ability};t.abilityTick=ability.tick||0;
   if(ability.kind==='fanClub'){
@@ -943,7 +958,9 @@ function refreshSelected(){
  const attack=getAttackTower(t);
  rangeRing.scale.setScalar(attack.range);
  const shownRange=Math.round(attack.range/RANGE_SCALE*10)/10;
- selStats.innerHTML=`<b>Damage dealt: ${Math.floor(t.damageDealt||0).toLocaleString()}</b><br>Range ${shownRange} • Cooldown ${(attack.rate/(t.type==='ice'&&absoluteZeroBuffT>0?1.5:1)).toFixed(2)}s • Damage ${attack.damage} • Pierce ${attack.pierce}<br><b>${attack.damageType||'Hero'}</b>${t.type==='hero'?'':' • '+damageTypeNotes(attack)}`;
+ const speedMultiplier=t.type==='hero'&&t.rapidTimer>0?(t.level>=15?4:3):t.type==='ice'&&absoluteZeroBuffT>0?1.5:1;
+ selStats.innerHTML=`<b>Damage dealt: ${Math.floor(t.damageDealt||0).toLocaleString()}</b><br>Range ${shownRange} • Cooldown ${(attack.rate/speedMultiplier).toFixed(2)}s • Damage ${attack.damage} • Pierce ${attack.pierce}<br><b>${attack.damageType||'Hero'}</b>${t.type==='hero'?'':' • '+damageTypeNotes(attack)}`;
+ if(t.type==='hero')selStats.innerHTML+=`<br>${t.shots} arrow${t.shots>1?'s':''} per shot • MOAB damage ${1+t.bonusMoab} • Bounce range 50${t.explosionEvery?'<br>Exploding arrows every '+t.explosionEvery+' shots • Blast radius 25.7':''}${t.level>=17?' • Arrow lifetime +25%':''}`;
  if(t.type==='tack'){
   selStats.innerHTML+=`<br>${t.paths[0]>=4?'Flame burst':t.tacks+' nearby bloons per burst'} • Footprint radius 6`;
   if(t.paths[2]>=5)selStats.innerHTML+=`<br>Tack damage to blimps: ${t.damage+(t.bonusMoab||0)}`;
@@ -966,9 +983,10 @@ function refreshSelected(){
  if(d.hero){
   const rapidState=abilityState(t,{key:'rapid'}),stormState=abilityState(t,{key:'storm'});
   upgradeBtns[0].disabled=t.level<3||rapidState.disabled;setUpgradeLabel(upgradeBtns[0],'Rapid Shot',t.level<3?'Unlocks at Lv.3':rapidState.text+' • temporary attack-speed boost');
-  upgradeBtns[1].disabled=t.level<10||stormState.disabled;setUpgradeLabel(upgradeBtns[1],'Storm of Arrows',t.level<10?'Unlocks at Lv.10':stormState.text+' • rains arrows over the track');
+  upgradeBtns[1].disabled=t.level<10||stormState.disabled;setUpgradeLabel(upgradeBtns[1],'Storm of Arrows',t.level<10?'Unlocks at Lv.10':stormState.text+' • 100-unit area at his selected target');
   upgradeBtns[2].disabled=true;setUpgradeLabel(upgradeBtns[2],`Level ${t.level}`,t.camoDetect?'Camo detection active':'Camo detection unlocks at Lv.5');
-  upgradeInfo.textContent='Quincy levels automatically. His level changes arrow count, pierce, range, attack speed, MOAB damage, and abilities.';buyUpgradeBtn.disabled=true;buyUpgradeBtn.textContent='Hero levels automatically'
+  const levelInfo=quincyLevelMetadata[t.level-1];
+  upgradeInfo.textContent=`Level ${t.level}: ${levelInfo.description} Quincy levels automatically every 5 rounds.`;buyUpgradeBtn.disabled=true;buyUpgradeBtn.textContent='Hero levels automatically'
  }
  else upgradeBtns.forEach((b,p)=>{const tier=t.paths[p];const next=upgradeData[t.type][p][tier];const otherHigh=t.paths.some((v,i)=>i!==p&&v>2);const used=t.paths.filter(v=>v>0).length;const lock=(tier>=2&&otherHigh)||(tier===0&&used>=2)||tier>=5||tierFiveTaken(t,p);b.disabled=lock||!next;b.classList.toggle('maxed',tier>=5);setUpgradeLabel(b,tier>=5?`Path ${p+1} MAX`:`${next[0]} — $${next[1]}`,tier>=5?'Tier 5 purchased':tierFiveTaken(t,p)?'Only one of this Tier 5 at a time':`Path ${p+1} • Tier ${tier+1} • Click for info`);if(selectedUpgradePath===p&&!b.disabled)b.classList.add('selectedUpgrade')});
  if(!d.hero){
@@ -1684,10 +1702,10 @@ function releaseIceShards(e){
  const attack={type:'iceShard',sourceTower:stats.tower,damage:stats.damage,range:iceTopTuning.shardSpeed*iceTopTuning.shardLife,damageType:'Sharp',camoDetect:stats.camoDetect};
  for(let i=0;i<stats.count;i++)fireLinearProjectile(attack,i*Math.PI*2/stats.count,{visualType:'ice',origin:{x:origin.x,y:origin.y+1,z:origin.z},cosmetic:false,damage:stats.damage,pierce:stats.pierce,speed:iceTopTuning.shardSpeed,life:iceTopTuning.shardLife,radius:.32});
 }
-function chooseTarget(t,candidates=enemies){
+function chooseTarget(t,candidates=enemies,canHit=towerCanDamage){
  let best=null,bestScore=-Infinity,preferCamo=false;const rangeSquared=t.range*t.range;
  for(const e of candidates){
-  if(!e.alive||!towerCanDamage(t,e))continue;
+  if(!e.alive||!canHit(t,e))continue;
   const dx=e.mesh.position.x-t.x,dz=e.mesh.position.z-t.z,distanceSquared=dx*dx+dz*dz;
   if(distanceSquared>rangeSquared)continue;
   const priority=!!(t.camoPriority&&t.camoDetect&&e.camo);
@@ -1797,13 +1815,7 @@ function makeProjectileMesh(kind,angle=0){
   const b=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),m);b.position.set(.18,.08,-.12);g.add(b);
   return g;
  }
- if(kind==='hero'){
-  const g=new THREE.Group();
-  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.8,6),new THREE.MeshStandardMaterial({flatShading:true,color:0x7a4d24,roughness:.7}));shaft.rotation.x=Math.PI/2;g.add(shaft);
-  const tip=new THREE.Mesh(new THREE.ConeGeometry(.09,.24,6),new THREE.MeshStandardMaterial({flatShading:true,color:0x3c4148,metalness:.35,roughness:.45}));tip.rotation.x=Math.PI/2;tip.position.z=.5;g.add(tip);
-  const fletch=new THREE.Mesh(new THREE.BoxGeometry(.22,.03,.18),new THREE.MeshStandardMaterial({flatShading:true,color:0xd94f3d,roughness:.6}));fletch.position.z=-.42;g.add(fletch);
-  return g;
- }
+ if(kind==='hero')return makeQuincyArrowMesh();
  return new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshBasicMaterial({color:0xf0d2a2}));
 }
 function retreatEnemy(e,distance){
@@ -1893,6 +1905,7 @@ function fireProjectile(t,target,damage=t.damage,extra={}){
   const attack={...t,paths:[...t.paths],sourceTower:sourceTowerForDamage(t)};
   fireLinearProjectile(attack,angle,{visualType:'glue',cosmetic:false,damage,pierce:t.glueSplash?1:t.pierce,speed:t.projSpeed,life:t.projectileLife,radius:t.projectileRadius,slow:t.slow,slowDuration:t.slowDuration,glueSplash:t.glueSplash,splashPierce:t.pierce,origin});return;
  }
+ if(t.type==='hero'&&!extra.cosmetic){fireQuincyArrow(t,target,damage,extra);return;}
  if(t.type==='ice'&&t.cryo&&!extra.cosmetic){fireIceProjectile(t,target);return;}
  let critical=false;
  if(t.type==='dart'&&t.critEvery&&!extra.cosmetic&&!extra.visualType){
@@ -2183,33 +2196,88 @@ function updateInfernoMeteorProjectile(p,dt){
  if(p.mesh.userData.exhaust)p.mesh.userData.exhaust.scale.setScalar(.85+.15*Math.sin(animationTime*35));
  if(p.life<=0)p.dead=true;
 }
+function quincyExplosiveShot(t){return !!t.explosionEvery&&((t.shotCounter||0)+1)%t.explosionEvery===0;}
+function quincyCanTarget(t,e){return towerCanDamage(t,e)||(quincyExplosiveShot(t)&&towerCanDamage({...t,damageType:'Explosion'},e));}
+function fireQuincyArrow(t,target,damage,extra){
+ const explosive=quincyExplosiveShot(t),attack={...t,sourceTower:sourceTowerForDamage(t),paths:[...t.paths]},mesh=makeQuincyArrowMesh(explosive),explosionAttack={...attack,damageType:'Explosion'};
+ const origin=quincyMuzzleOrigin(t);mesh.position.set(origin.x,origin.y,origin.z);scene.add(mesh);
+ const angle=Math.atan2(target.mesh.position.z-origin.z,target.mesh.position.x-origin.x)+(extra.visualSpread||0)*.55;
+ mesh.rotation.y=Math.PI/2-angle;
+ projectiles.push({mesh,tower:attack,target,damage,type:'hero',visualType:'hero',mode:'quincyArrow',speed:t.projSpeed||44,life:quincyTuning.arrowLife*(t.projectileLifeMult||1),pierceLeft:t.pierce,bounceRange:quincyTuning.bounceRange,hitEnemies:new Set(),explosive,explosionAttack,launchRemaining:.08,launchVector:{x:Math.cos(angle),z:Math.sin(angle)}});
+}
+function nextQuincyTarget(p){
+ let best=null,bestDistance=Infinity;
+ for(const e of enemies){
+  if(!e.alive||p.hitEnemies.has(e)||(!towerCanDamage(p.tower,e)&&!(p.explosive&&!p.explosionSpent&&towerCanDamage(p.explosionAttack,e))))continue;
+  const distance=Math.hypot(e.mesh.position.x-p.mesh.position.x,e.mesh.position.z-p.mesh.position.z);
+  if(distance<=p.bounceRange&&distance<bestDistance){best=e;bestDistance=distance;}
+ }
+ return best;
+}
+function explodeQuincyArrow(p,position){
+ const targets=[];
+ for(const e of enemies){if(targets.length>=quincyTuning.explosionPierce)break;if(e.alive&&towerCanDamage(p.explosionAttack,e)&&Math.hypot(e.mesh.position.x-position.x,e.mesh.position.z-position.z)<=quincyTuning.explosionRadius)targets.push(e);}
+ for(const e of targets)hitEnemy(e,1+(e.isBlimp?p.tower.bonusMoab:0),{tower:p.explosionAttack});
+ if(visualEffects.length<80)spawnAbilityPulse(position.x,position.z,0xffa34c,quincyTuning.explosionRadius);
+}
+function updateQuincyArrow(p,dt){
+ let remaining=Math.min(dt,Math.max(0,p.life));p.life-=dt;
+ const launchDt=Math.min(remaining,p.launchRemaining);p.launchRemaining-=launchDt;remaining-=launchDt;
+ p.mesh.position.x+=p.launchVector.x*p.speed*launchDt;p.mesh.position.z+=p.launchVector.z*p.speed*launchDt;
+ let budget=p.speed*remaining;
+ while(p.pierceLeft>0){
+  if(!p.target?.alive||p.hitEnemies.has(p.target)||(!towerCanDamage(p.tower,p.target)&&!(p.explosive&&!p.explosionSpent&&towerCanDamage(p.explosionAttack,p.target))))p.target=nextQuincyTarget(p);
+  if(!p.target){p.dead=true;break;}
+  const e=p.target,dx=e.mesh.position.x-p.mesh.position.x,dz=e.mesh.position.z-p.mesh.position.z,distance=Math.hypot(dx,dz);
+  p.mesh.rotation.y=Math.PI/2-Math.atan2(dz,dx);
+  if(distance>budget+.25){if(budget>0){p.mesh.position.x+=dx/distance*budget;p.mesh.position.z+=dz/distance*budget;}break;}
+  budget=Math.max(0,budget-distance);p.mesh.position.x=e.mesh.position.x;p.mesh.position.z=e.mesh.position.z;
+  p.hitEnemies.add(e);p.pierceLeft--;
+  if(towerCanDamage(p.tower,e)){const result=hitEnemy(e,p.damage+(e.isBlimp?p.tower.bonusMoab:0),{tower:p.tower});for(const child of result?.children||[])p.hitEnemies.add(child);}
+  if(p.explosive&&!p.explosionSpent){explodeQuincyArrow(p,p.mesh.position);p.explosionSpent=true;}
+  p.target=nextQuincyTarget(p);if(!p.target||p.pierceLeft<=0){p.dead=true;break;}if(budget<=0)break;
+ }
+ if(p.life<=0)p.dead=true;
+}
+function updateQuincyAbilities(t,dt){
+ t.rapidCd=Math.max(0,(t.rapidCd||0)-dt);t.rapidTimer=Math.max(0,(t.rapidTimer||0)-dt);t.stormCd=Math.max(0,(t.stormCd||0)-dt);
+ const activeDt=Math.min(dt,t.stormTimer||0);t.stormTimer=Math.max(0,(t.stormTimer||0)-dt);if(activeDt<=0)return;
+ t.stormTick+=activeDt;
+ const stats=t.stormStats||quincyStormStats(t.level),center=t.stormCenter||t,radiusSquared=quincyTuning.stormRadius**2;
+ while(t.stormTick+1e-9>=quincyTuning.stormFrame){
+  t.stormTick-=quincyTuning.stormFrame;t.stormClock=(t.stormClock||0)+quincyTuning.stormFrame;
+  const targets=[];
+  for(const e of enemies){
+   if(!e.alive||!towerCanDamage(t.stormAttack,e))continue;
+   const dx=e.mesh.position.x-center.x,dz=e.mesh.position.z-center.z;
+   if(dx*dx+dz*dz>radiusSquared||t.stormClock-(t.stormHits.get(e)??-Infinity)<quincyTuning.stormRehit-1e-9||Math.random()>=stats.chance)continue;
+   t.stormHits.set(e,t.stormClock);targets.push(e);
+  }
+  for(const e of targets){if(!e.alive)continue;spawnArrowRainVisual(e);hitEnemy(e,stats.damage+(e.isBlimp?stats.moabBonus:e.type==='Ceramic'?stats.ceramicBonus:0),{tower:t.stormAttack});}
+ }
+ if(t.stormTimer<=0){t.stormHits.clear();t.stormAttack=null;}
+}
 function updateTowers(dt){
  const iceBuffDt=roundActive?Math.min(dt,absoluteZeroBuffT):0;if(roundActive)absoluteZeroBuffT=Math.max(0,absoluteZeroBuffT-dt);
  for(const t of towers){
   const combatDt=roundActive?dt:0;
+  if(t.type==='hero'&&syncQuincyStats(t,Math.min(20,1+Math.floor((round-1)/5))))updateHeroAppearance(t);
   updateTowerAbility(t,combatDt);
-  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else animateTower(t,dt);
+  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else if(t.type==='hero'&&t.mesh.userData.quincyRig)animateQuincy(t,dt);else animateTower(t,dt);
   if(t.type==='hero'){
-   t.rapidCd=Math.max(0,(t.rapidCd||0)-combatDt);t.rapidTimer=Math.max(0,(t.rapidTimer||0)-combatDt);t.stormCd=Math.max(0,(t.stormCd||0)-combatDt);t.stormTimer=Math.max(0,(t.stormTimer||0)-combatDt);
-   if(t.stormTimer>0&&combatDt>0){t.stormTick-=combatDt;if(t.stormTick<=0){t.stormTick=.05;const chance=t.level>=20?.10:t.level>=18?.075:.05;const stormDamage=t.level>=20?10:6;for(const e of enemies){if(!e.alive)continue;if(Math.random()>Math.min(1,chance*3))continue;const d=stormDamage+(e.isBlimp?(t.level>=20?10:6):0);spawnArrowRainVisual(e);hitEnemy(e,d,{tower:t});}}}
+   updateQuincyAbilities(t,combatDt);
   }
   if(t.type==='tack')updateInfernoMeteor(t,combatDt);
-  const pausedRadial=(t.type==='tack'||t.type==='ice')&&combatDt<=0;
-  t.cool-=t.type==='ice'?combatDt+iceBuffDt*.5:t.type==='tack'?combatDt:dt;if(pausedRadial)continue;if(t.cool>0)continue;
-  if(towerDefs[t.type].hero){
-   const prev=t.level;
-   t.level=Math.min(20,1+Math.floor((round-1)/5));
-   t.damage=1;
-   t.pierce=t.level>=19?9:t.level>=12?7:t.level>=9?6:t.level>=2?4:3;
-   t.shots=t.level>=19?3:t.level>=6?2:1;
-   t.rate=t.level>=20?.2:t.level>=18?.25:t.level>=16?.4:t.level>=11?.6:.95;
-   t.range=(t.level>=13?54:t.level>=4?52:50)*RANGE_SCALE;
-   t.camoDetect=t.level>=5;
-   t.bonusMoab=t.level>=14?3:t.level>=8?2:0;
-   t.explosionEvery=t.level>=7?3:0;
-   if(prev!==t.level)updateHeroAppearance(t);
-  }
-  if(t.type==='tack'){
+  const pausedRadial=(t.type==='tack'||t.type==='ice'||t.type==='hero')&&combatDt<=0;
+  t.cool-=t.type==='ice'?combatDt+iceBuffDt*.5:t.type==='tack'||t.type==='hero'?combatDt:dt;if(pausedRadial)continue;if(t.cool>(t.type==='hero'?1e-9:0))continue;
+  if(t.type==='hero'){
+   while(t.cool<=1e-9){
+    const e=chooseTarget(t,enemies,quincyCanTarget);if(!e){t.cool=0;break;}
+    aimTower(t,e);for(let i=0;i<t.shots;i++)fireProjectile(t,e,t.damage,{visualSpread:(i-(t.shots-1)/2)*.18});
+    t.shotCounter=(t.shotCounter||0)+1;t.cool+=t.rate/(t.rapidTimer>0?(t.level>=15?4:3):1);
+   }
+   continue;
+  }else if(t.type==='tack'){
    if(t.paths[0]>=4){
     while(t.cool<=0){if(!fireTackFlameBurst(t)){t.cool=0;break;}t.cool+=t.rate;}
     continue;
@@ -2245,11 +2313,7 @@ function updateTowers(dt){
     const count=Math.max(1,attack.shots||1);
     for(let i=0;i<count;i++)fireProjectile(attack,e,attack.damage,{visualSpread:(i-(count-1)/2)*.18});
     t.shotCounter=(t.shotCounter||0)+1;
-    if(t.type==='hero'&&t.explosionEvery&&t.shotCounter%t.explosionEvery===0){
-      const nearby=enemies.filter(x=>x.alive&&towerCanDamage(t,x)&&Math.hypot(x.mesh.position.x-e.mesh.position.x,x.mesh.position.z-e.mesh.position.z)<3.2).slice(0,10);
-      nearby.forEach(x=>hitEnemy(x,1+(t.bonusMoab&&x.isBlimp?t.bonusMoab:0),{tower:t}));
-    }
-    const rapidMult=(t.type==='hero'&&t.rapidTimer>0)?(t.level>=15?4:3):1;t.cool=attack.rate/rapidMult
+    t.cool=attack.rate
    }
   }
  }
@@ -2443,6 +2507,7 @@ function explodeBomb(p,position){
 function updateProjectiles(dt){
  const frameProjectiles=[...projectiles];
  for(const p of frameProjectiles){
+  if(p.mode==='quincyArrow'){updateQuincyArrow(p,dt);continue;}
   if(p.mode==='iceBomb'){updateIceProjectile(p,dt);continue;}
   if(p.mode==='infernoMeteor'){updateInfernoMeteorProjectile(p,dt);continue;}
   if(p.mode==='bombCluster'){updateBombCluster(p,dt);continue;}

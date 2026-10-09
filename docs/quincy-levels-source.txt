@@ -1,0 +1,88 @@
+The following are the upgrades:
+
+HeroLevel1
+Level 1COST: $460 / $540 / $585 / $650UNLOCK: N/A XP
+Description: Quincy's arrows bounce up to 3 different targets.
+Effect: Shoots arrows every 0.95s that deal 1 damage and bounce onto nearby targets. Pops up to 3 bloons per arrow, and jumps up to 50 units apart from each target. Quincy starts with 50 range.
+HeroLevel2
+Level 2COST: $180UNLOCK: 180 XP
+Description: Base attack bounces up to 4 targets.
+Effect: Pierce increases from 3 to 4.
+HeroLevel3
+Level 3COST: $460UNLOCK: 460 XP
+Description: Rapid Shot: Triple attack speed for a short time.
+Effect: Unlocks Rapid Shot ability. When activated, attacks 3x faster temporarily. Cooldown is 60s and initial cooldown is 16.7s. The duration is 8s.
+HeroLevel4
+Level 4COST: $1,000UNLOCK: 1,000 XP
+Description: Slightly longer range.
+Effect: Base range increased from 50 to 52.
+HeroLevel5
+Level 5COST: $1,860UNLOCK: 1,860 XP
+Description: Uses his sharp eyesight to shoot Camo Bloons.
+Effect: Gains camo detection. Does not receive Camo Prioritization target option from this.
+HeroLevel6
+Level 6COST: $3,280UNLOCK: 3,280 XP
+Description: Shoots 2 arrows at a time.
+Effect: Gains a second arrow per shot in an angular spray.
+HeroLevel7
+Level 7COST: $5,180UNLOCK: 5,180 XP
+Description: Fires exploding arrows every 3rd shot.
+Effect: All arrows on every 3rd shot cause an explosion on hitting a bloon. The explosion has 1 damage and 10 pierce with a blast radius of 25.7. The arrows then keep travelling like normal arrows. This explosion increases MOAB damage with the main arrow attack. An arrow explosion counts as a burst, which means explosions are capable of damaging the same target as the originating arrow.
+HeroLevel8
+Level 8COST: $8,320UNLOCK: 8,320 XP
+Description: Arrows do triple damage to MOAB-Class Bloons.
+Effect: Arrows and explosions deal +2 MOAB-class damage.
+HeroLevel9
+Level 9COST: $9,380UNLOCK: 9,380 XP
+Description: Base attack bounces to up to 6 targets.
+Effect: Pierce of arrows increased from 4 to 6.
+HeroLevel10
+Level 10COST: $13,620UNLOCK: 13,620 XP
+Description: Storm of Arrows: Covers a large area in a deadly rain of arrows.
+Effect: Unlocks Storm of Arrows ability. When activated, the ability creates a damage area which lasts for 3 seconds. Each bloon repetitively takes 6 damage (plus +6 damage versus MOAB-class) during this at a 5% chance per frame (60 FPS), and can be rehit after every 0.05s. Infinite Bloons can be hit within a 100 radius from where the center is set.
+If a Bloon stays in the damage area throughout the whole ability, it takes about 3 to 15 hits, causing 18~90 damage.
+Only does double damage to MOAB-class bloons, unlike main attack.
+Cooldown is 70 seconds and initial cooldown is 23.33s.
+HeroLevel11
+Level 11COST: $16,380UNLOCK: 16,380 XP
+Description: Increased attack speed.
+Effect: ~+58.33% attack speed (~0.6316x attack cooldown) (0.6 seconds per attack)
+HeroLevel12
+Level 12COST: $14,400UNLOCK: 14,400 XP
+Description: Each arrow gets more popping power.
+Effect: Pierce of arrows increased from 6 to 7.
+HeroLevel13
+Level 13COST: $16,650UNLOCK: 16,650 XP
+Description: Small range increase and Rapid Shot lasts longer.
+Effect: Base range increased from 52 to 54. Rapid Shot now lasts for 12 seconds instead of 8.
+HeroLevel14
+Level 14COST: $14,940UNLOCK: 14,940 XP
+Description: Arrows do quad damage to MOAB-Class Bloons.
+Effect: Arrow and explosion damage to MOAB-class increased from +2 to +3.
+HeroLevel15
+Level 15COST: $16,380UNLOCK: 16,380 XP
+Description: Rapid Shot becomes x4 attack speed and cooldown is reduced.
+Effect: Rapid Shot increases attack speed multiplier from 3x to 4x, and cooldown reduced from 60s to 45s.
+HeroLevel16
+Level 16COST: $17,820UNLOCK: 17,820 XP
+Description: More increased attack speed.
+Effect: +50% attack speed (0.67x attack cooldown) (0.4 seconds per attack)
+HeroLevel17
+Level 17COST: $19,260UNLOCK: 19,260 XP
+Description: Arrows last 25% longer. Fires exploding arrows every 2nd shot.
+Effect: Main arrows last +25% longer. Does not affect Storm of Arrows. Now fires exploding arrows every 2nd shot.
+HeroLevel18
+Level 18COST: $20,700UNLOCK: 20,700 XP
+Description: Quincy attacks faster and Storm of Arrows is greatly enhanced.
+Effect: Storm of Arrows damage chance increased from 5% to 7.5%, deals 18 extra damage to ceramics, cooldown reduced to 55s. Quincy's main attack gains +60% attack speed (0.625x attack cooldown) (0.25 seconds per attack).
+HeroLevel19
+Level 19COST: $16,470UNLOCK: 16,470 XP
+Description: Shoots 3 arrows at a time, and each arrow gets even more popping power.
+Effect: Pierce of arrows increased from 7 to 9. Gains a third arrow per shot in an angular spray.
+HeroLevel20
+Level 20COST: $17,280UNLOCK: 17,280 XP
+Description: Quincy attacks even faster. Storm of Arrows deals more damage per arrow and fires even more arrows.
+Effect: Improves Quincy's main attack speed, and greatly enhances Storm of Arrows damage per hit and rate of damage.
+Storm of Arrows damage increased to 10 and does 10 extra damage to MOABs, 24 extra damage to Ceramics.
+Storm of Arrows damage chance increased from 7.5% to 10%.
++25% attack speed (0.8x attack cooldown) (0.2 seconds per attack)
