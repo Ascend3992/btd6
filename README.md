@@ -1,8 +1,10 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v60**. Restyles the lives, cash and round HUD, wooden tower shop and monkey upgrade panel around the supplied reference. Adds model portraits, tier markers, owned/closed-path states, targeting arrows, damage counters, red sell buttons and a placement preview. Click the selected shop monkey again to cancel placement, click a selected map monkey to deselect it, or press Escape. Settings pause the game. Exact upgrade artwork can be supplied next; the icon slots currently use equipment badges. Includes the existing Quincy stats/models and all previous gameplay updates.
+Latest version: **v61**. Adds all 15 supplied Glue Gunner upgrade icons to the owned and next-upgrade cards. All top, middle and bottom tiers are included, from Glue Soak through Super Glue. Original image bytes and transparency are preserved. Includes the reference HUD/shop, click-to-cancel placement, Quincy models/statistics and all previous gameplay updates.
 
-[Download v60 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v60.zip)
+[Download v61 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v61.zip)
+
+[Glue upgrade artwork](docs/glue-upgrade-icons.png) · [Icons in the upgrade panel](docs/glue-upgrade-icons-combat.png) · [Artwork details](docs/glue-upgrade-artwork.md)
 
 [UI preview](docs/reference-ui-upgrades.png) · [Placement preview](docs/reference-ui-placement.png) · [Mobile layout](docs/reference-ui-mobile.png) · [Upgrade icon checklist](docs/ui-upgrade-icons.md)
 

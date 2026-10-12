@@ -12,4 +12,4 @@ The v60 interface follows the supplied screenshot: illustrated lives/cash, outli
 - The bottom of the panel shows the sale value and sell button. Existing crosspath and unique Tier 5 rules apply.
 - The settings button pauses the simulation. Auto-start, round start and game speed remain available below the shop. Hero abilities appear in their panel and the ability bar.
 
-Shop portraits and selected portraits use the actual game models. Exact upgrade images still need to be supplied; the current slots use equipment badges and named upgrade cards. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots, including the suggested first batch of 15 Glue Gunner icons.
+Shop portraits and selected portraits use the actual game models. v61 includes all 15 supplied Glue Gunner icons; other towers still use equipment badges until their files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots, including the completed Glue Gunner set and the next batch of 15 Dart Monkey icons.

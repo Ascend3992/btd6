@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v60 reference UI and click-to-deselect
+Meadow Balloon Defense 3D - v61 supplied Glue Gunner upgrade artwork
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -331,3 +331,9 @@ Reference UI v60
 - Portraits come from the original game models. The selected portrait updates when upgrade paths, Quincy model stages, Fan Club state or throwing hand changes. Portrait rendering reuses a single renderer, shares the live model geometry/materials and caches at most 64 images. It does not change combat models or attack statistics.
 - Exact upgrade icon artwork is not bundled yet. upgrade-icons.js maps supplied local assets to 90 stable tower-path-tier slots; docs/ui-upgrade-icons.md lists every required upgrade name. Missing or unreadable icons use equipment badges without repeating failed downloads. No remote icon dependency is required.
 - All 31 existing regression test files pass. Local Chromium verifies shop cancel/switch, Escape, preview disposal, cancel while cash is too low, real map placement, placed-monkey deselection, purchase/affordability, owned tiers, icon mapping, closed paths, targeting, damage counters, stats, settings pause/resume, round controls, hero abilities, selling and desktop/tablet/phone/short-landscape layouts without runtime errors.
+
+Supplied Glue Gunner artwork v61
+- Archive.zip supplies the first 14 original icons; the updated Gluegunnerupgradeicons.zip supplies The Bloon Solver. Only Solver is extracted from the updated archive, leaving the existing 14 files untouched. All three upgrade paths now have their complete tier 1-5 artwork.
+- The files contain WebP image data, including entries named .png. Their data is copied without conversion, cropping, repainting or compression; only the destination suffix is normalized to .webp so servers identify the format correctly. Original transparency is preserved. Each copied file matches the archive bytes exactly.
+- upgrade-icons.js maps the original named assets to glue-1-1 through glue-3-5, including The Bloon Solver at glue-1-5. Both owned and next-upgrade cards display the corresponding artwork. Closed-path/MAX states keep their existing behavior. Other towers keep their equipment badges until their artwork is supplied.
+- Chromium verifies every tier's purchase, owned icon and next icon across all three paths. All 15 images decode with no page or resource errors. Module cache versions are bumped so an existing browser loads the new artwork registry. No combat or placement statistics changed.

@@ -1,10 +1,10 @@
 # Upgrade artwork checklist
 
-The UI has stable image slots for all 90 primary-tower upgrades. Until supplied artwork is added, slots show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
+The UI has stable image slots for all 90 primary-tower upgrades. All 15 supplied Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
 
 Add transparent PNG/WebP/SVG files under `assets/ui/upgrades/`, then map each one in `upgrade-icons.js`. Keys use `tower-path-tier`, with paths and tiers numbered from 1. For example: `glue-1-1` is Glue Soak.
 
-Suggested first batch: the 15 Glue Gunner upgrade icons below. Ability icons can follow after the tower upgrades.
+Glue Gunner artwork is complete, including The Bloon Solver (glue-1-5). Next tower batch: all 15 Dart Monkey icons, top/middle/bottom paths in tier 1–5 order. Ability icons can follow after the tower upgrades.
 
 ## Dart Monkey
 
