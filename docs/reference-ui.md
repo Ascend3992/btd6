@@ -12,6 +12,6 @@ The v60 interface follows the supplied screenshot: illustrated lives/cash, outli
 - The bottom of the panel shows the sale value and sell button. Existing crosspath and unique Tier 5 rules apply.
 - The settings button pauses the simulation. Auto-start, round start and game speed remain available below the shop. Hero abilities appear in their panel and the ability bar.
 
-Shop portraits and selected portraits use the actual game models. v63 includes all 30 supplied Dart Monkey and Glue Gunner icons; other towers still use equipment badges until their files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots, including the completed Dart and Glue sets and the next batch of 15 Boomerang Monkey icons.
+Shop portraits and selected portraits use the actual game models. v64 includes all 45 supplied Boomerang Monkey, Dart Monkey and Glue Gunner icons; other towers still use equipment badges until their files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots, including the completed Boomerang, Dart and Glue sets and the next batch of 15 Bomb Shooter icons.
 
 The v62 Normal Difficulty pause menu provides an Auto Start switch, separate music/effects volume sliders, Restart and Continue. See [upgrade overview and audio](upgrade-tree.md).

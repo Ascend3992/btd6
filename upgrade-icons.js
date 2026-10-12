@@ -31,5 +31,20 @@ export const upgradeIcons={
  "dart-3-2": "./assets/ui/upgrades/EnhancedEyesightUpgradeIcon.webp",
  "dart-3-3": "./assets/ui/upgrades/CrossbowUpgradeIcon.webp",
  "dart-3-4": "./assets/ui/upgrades/SharpShooterUpgradeIcon.webp",
- "dart-3-5": "./assets/ui/upgrades/CrossbowMasterUpgradeIcon.webp"
+ "dart-3-5": "./assets/ui/upgrades/CrossbowMasterUpgradeIcon.webp",
+ "boomer-1-1": "./assets/ui/upgrades/ImprovedRangsUpgradeIcon.webp",
+ "boomer-1-2": "./assets/ui/upgrades/GlaivesUpgradeIcon.webp",
+ "boomer-1-3": "./assets/ui/upgrades/GlaiveRicochetUpgradeIcon.webp",
+ "boomer-1-4": "./assets/ui/upgrades/MoarGlaivesUpgradeIcon.webp",
+ "boomer-1-5": "./assets/ui/upgrades/GlaiveLordUpgradeIcon.webp",
+ "boomer-2-1": "./assets/ui/upgrades/FasterThrowingUpgradeIcon_BoomerangMonkey.webp",
+ "boomer-2-2": "./assets/ui/upgrades/FasterRangsUpgradeIcon.webp",
+ "boomer-2-3": "./assets/ui/upgrades/BionicBoomerangUpgradeIcon.webp",
+ "boomer-2-4": "./assets/ui/upgrades/TurboChargeUpgradeIcon.webp",
+ "boomer-2-5": "./assets/ui/upgrades/PermaChargeUpgradeIcon.webp",
+ "boomer-3-1": "./assets/ui/upgrades/LongRangeRangsUpgradeIcon.webp",
+ "boomer-3-2": "./assets/ui/upgrades/RedHotRangsUpgradeIcon.webp",
+ "boomer-3-3": "./assets/ui/upgrades/KylieBoomerangUpgradeIcon.webp",
+ "boomer-3-4": "./assets/ui/upgrades/MOABPressUpgradeIcon.webp",
+ "boomer-3-5": "./assets/ui/upgrades/MOABDominationUpgradeIcon.webp"
 };

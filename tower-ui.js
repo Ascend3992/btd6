@@ -1,5 +1,5 @@
 import * as THREE from './assets/vendor/three.module.js';
-import {upgradeIcons} from './upgrade-icons.js?v=3';
+import {upgradeIcons} from './upgrade-icons.js?v=4';
 let portraitRenderer,portraitScene,portraitCamera;
 const portraits=new Map(),unavailableIcons=new Set();
 export function renderTowerPortrait(t){

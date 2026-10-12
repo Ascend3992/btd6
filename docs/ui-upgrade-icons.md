@@ -1,10 +1,10 @@
 # Upgrade artwork checklist
 
-The UI has stable image slots for all 90 primary-tower upgrades. All 30 supplied Dart Monkey and Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
+The UI has stable image slots for all 90 primary-tower upgrades. All 45 supplied Boomerang Monkey, Dart Monkey and Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
 
 Add transparent PNG/WebP/SVG files under `assets/ui/upgrades/`, then map each one in `upgrade-icons.js`. Keys use `tower-path-tier`, with paths and tiers numbered from 1. For example: `glue-1-1` is Glue Soak.
 
-Dart Monkey and Glue Gunner artwork is complete, including Plasma Monkey Fan Club (dart-2-5) and The Bloon Solver (glue-1-5). Next tower batch: all 15 Boomerang Monkey icons, named by upgrade. Archive order does not matter. Ability icons can follow after the tower upgrades.
+Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete. Next tower batch: all 15 Bomb Shooter icons, named by upgrade. Archive order does not matter. Ability icons can follow after the tower upgrades.
 
 ## Dart Monkey — complete (v63)
 
@@ -26,7 +26,7 @@ Dart Monkey and Glue Gunner artwork is complete, including Plasma Monkey Fan Clu
 | `dart-3-4` | Sharp Shooter |
 | `dart-3-5` | Crossbow Master |
 
-## Boomerang Monkey
+## Boomerang Monkey — complete (v64)
 
 | Slot | Upgrade |
 |---|---|
@@ -126,4 +126,4 @@ Dart Monkey and Glue Gunner artwork is complete, including Plasma Monkey Fan Clu
 | `glue-3-4` | Relentless Glue |
 | `glue-3-5` | Super Glue |
 
-The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Dart and Glue are complete: 30 of 90 slots. No substitute artwork is generated.
+The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Boomerang, Dart and Glue are complete: 45 of 90 slots. No substitute artwork is generated.

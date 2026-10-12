@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v63 supplied Dart Monkey upgrade artwork
+Meadow Balloon Defense 3D - v64 supplied Boomerang Monkey upgrade artwork
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -351,3 +351,9 @@ Supplied Dart Monkey artwork v63
 - upgrade-icons.js maps dart-1-1 through dart-3-5. The same assets appear in current/next purchase cards and all future tiers in the upgrade overview. Existing Glue artwork and all other towers are preserved.
 - Registry, presentation-module and entrypoint cache versions are bumped. Chromium verifies all 15 real purchases, owned/next image loads, tree image/name tier order, descriptions, mobile scrolling and existing Glue images, with no page or resource errors. All 33 regression test files pass.
 - No combat, cash, XP, audio or placement balance changes. Dart Monkey and Glue Gunner now have all 30 artwork slots complete. Next tower: Boomerang Monkey, all 15 upgrades, named by upgrade.
+
+Supplied Boomerang Monkey artwork v64
+- boomerangupgradeicons.zip supplies 15 original transparent WebP images. Archive order is ignored; every filename is matched to its named upgrade, including MoarGlaivesUpgradeIcon.webp for M.O.A.R Glaives and FasterThrowingUpgradeIcon_BoomerangMonkey.webp for Faster Throwing. All originals are installed byte-for-byte under assets/ui/upgrades.
+- upgrade-icons.js maps boomer-1-1 through boomer-3-5. The same assets appear in owned/next upgrade cards and all future tiers in the upgrade overview. Existing Dart and Glue artwork and all other towers are preserved.
+- Registry, presentation-module and entrypoint cache versions are bumped. Chromium verifies all 15 real purchases, owned/next image loads, tree image/name tier order, descriptions, mobile scrolling/tap details and existing Dart/Glue tree images, with no page or resource errors. All 33 regression test files pass.
+- No combat, cash, XP, audio or placement balance changes. Boomerang Monkey, Dart Monkey and Glue Gunner now have all 45 artwork slots complete. Next tower: Bomb Shooter, all 15 upgrades, named by upgrade.
