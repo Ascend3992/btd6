@@ -8,7 +8,10 @@ const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTa
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
-const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=2');
+const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=3');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=1');
+const {recordTowerUse}=await import('./tower-usage.js?v=1');
+const {playBloonPop,unlockPopAudio,setEffectsVolume,setMusicVolume}=await import('./pop-audio.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
 const {MAP_W,MAP_H,ROAD_WIDTH,EDGE_WIDTH,meadowDepthScale,createMeadowMap,createMeadowPath}=await import('./meadow-map.js?v=1');
@@ -17,7 +20,6 @@ const livesEl=document.getElementById('lives'),cashEl=document.getElementById('c
 const startBtn=document.getElementById('startBtn'),autoBtn=document.getElementById('autoBtn'),speedBtn=document.getElementById('speedBtn'),restartBtn=document.getElementById('restartBtn'),shopBtns=[...document.querySelectorAll('.towerBtn')];
 const selPanel=document.getElementById('selectedPanel'),selName=document.getElementById('selName'),selStats=document.getElementById('selStats');
 const upgradeBtns=[document.getElementById('upgrade0'),document.getElementById('upgrade1'),document.getElementById('upgrade2')];
-const upgradeInfo=document.getElementById('upgradeInfo'),buyUpgradeBtn=document.getElementById('buyUpgradeBtn');
 const camoPriorityBtn=document.getElementById('camoPriorityBtn');
 const changeHandsBtn=document.getElementById('changeHandsBtn');
 const targetBtn=document.getElementById('targetBtn'),sellBtn=document.getElementById('sellBtn'),closeSel=document.getElementById('closeSel');
@@ -29,7 +31,7 @@ const selectedPortrait=document.getElementById('selectedPortrait'),towerDetails=
 let placementPreview=null;
 let nextTowerId=1,abilityUiTimer=0;
 
-let lives=100,cash=650,round=1,speed=1,roundActive=false,autoStart=false,autoStartTimer=0,spawnQueue=[],spawnTimer=0,selectedType=null,selectedTower=null,selectedUpgradePath=null,heroPlaced=false,gameEnded=false;
+let lives=100,cash=650,round=1,speed=1,roundActive=false,autoStart=false,autoStartTimer=0,spawnQueue=[],spawnTimer=0,selectedType=null,selectedTower=null,heroPlaced=false,gameEnded=false;
 const towers=[],enemies=[],projectiles=[],visualEffects=[],acidPuddles=[];
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 
@@ -265,7 +267,7 @@ function syncControls(){
 function flushUI(){if(!uiDirty)return;uiDirty=false;livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;syncControls();shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=(cash<d.cost||(d.hero&&heroPlaced))&&selectedType!==b.dataset.tower;b.classList.toggle('unaffordable',cash<d.cost);b.title=d.name+' — $'+d.cost.toLocaleString()+(d.hero&&heroPlaced?' (already placed)':'');b.setAttribute('aria-label',b.title)})}
 function clearPlacementPreview(){if(placementPreview){disposeTransientMesh(placementPreview);placementPreview=null;}}
 function clearSelection(){
- selectedType=null;selectedTower=null;selectedUpgradePath=null;clearPlacementPreview();rangeRing.visible=false;
+ selectedType=null;selectedTower=null;clearPlacementPreview();rangeRing.visible=false;
  selPanel.classList.add('hidden');selPanel.classList.remove('inspecting');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');gameWrap.classList.remove('hasSelection','placing');
  shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});document.getElementById('shopTowerName').textContent='PRIMARY MONKEYS';document.getElementById('hint').innerHTML='Pick a monkey to place.<br>Click it again to cancel.';refreshAbilityUI();updateUI();
 }
@@ -962,7 +964,7 @@ function surfacePlacement(type,x,z){
 }
 function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType],edgeClearance=d.footprintRadius??1;if(Math.abs(x)>MAP_W/2-edgeClearance||Math.abs(z)>MAP_H/2-edgeClearance)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z,d.footprintRadius??.25))return toastMsg('Cannot place on the path');if(towerFootprintsOverlap(selectedType,x,z))return toastMsg('Too close to another tower');const placement=surfacePlacement(selectedType,x,z);if(!placement.allowed)return toastMsg('Place this tower on land or frozen water');cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;clearPlacementPreview();selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
 
-function selectTower(t){clearPlacementPreview();selectedTower=t;selectedUpgradePath=null;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected()}
+function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected()}
 
 // Preserve the elements under the pointer between pointerdown and click.
 // Replacing innerHTML during the periodic panel refresh can swallow that click.
@@ -1005,18 +1007,13 @@ function refreshSelected(){
   upgradeBtns[0].disabled=t.level<3||rapidState.disabled;setUpgradeLabel(upgradeBtns[0],'Rapid Shot',t.level<3?'Unlocks at Lv.3':rapidState.text+' • temporary attack-speed boost');
   upgradeBtns[1].disabled=t.level<10||stormState.disabled;setUpgradeLabel(upgradeBtns[1],'Storm of Arrows',t.level<10?'Unlocks at Lv.10':stormState.text+' • 100-unit area at his selected target');
   upgradeBtns[2].disabled=true;setUpgradeLabel(upgradeBtns[2],`Level ${t.level}`,t.camoDetect?'Camo detection active':'Camo detection unlocks at Lv.5');
-  const levelInfo=quincyLevelMetadata[t.level-1];
-  upgradeInfo.textContent=`Level ${t.level}: ${levelInfo.description} Quincy levels automatically every 5 rounds.`;buyUpgradeBtn.disabled=true;buyUpgradeBtn.textContent='Hero levels automatically'
+
  }
- else upgradeBtns.forEach((b,p)=>{const tier=t.paths[p];const next=upgradeData[t.type][p][tier];const otherHigh=t.paths.some((v,i)=>i!==p&&v>2);const used=t.paths.filter(v=>v>0).length;const lock=(tier>=2&&otherHigh)||(tier===0&&used>=2)||tier>=5||tierFiveTaken(t,p);b.disabled=lock||!next;b.classList.toggle('maxed',tier>=5);setUpgradeLabel(b,tier>=5?`Path ${p+1} MAX`:`${next[0]} — $${next[1]}`,tier>=5?'Tier 5 purchased':tierFiveTaken(t,p)?'Only one of this Tier 5 at a time':`Path ${p+1} • Tier ${tier+1} • Click for info`);if(selectedUpgradePath===p&&!b.disabled)b.classList.add('selectedUpgrade')});
- if(!d.hero){
-  if(selectedUpgradePath===null){upgradeInfo.textContent='Click an available upgrade to read a short description before buying it.';buyUpgradeBtn.disabled=true;buyUpgradeBtn.textContent='Buy selected upgrade'}
-  else {const p=selectedUpgradePath,tier=t.paths[p],next=upgradeData[t.type][p][tier];if(!next){upgradeInfo.textContent='This path is already maxed.';buyUpgradeBtn.disabled=true;buyUpgradeBtn.textContent='Path maxed'}else{upgradeInfo.innerHTML=`<b>${next[0]}</b><br>${upgradeDescriptions[t.type][p][tier]}`;buyUpgradeBtn.textContent=`Buy ${next[0]} — $${next[1]}`;buyUpgradeBtn.disabled=cash<next[1]||upgradeBtns[p].disabled}}
- }
+ else upgradeBtns.forEach((b,p)=>{const tier=t.paths[p];const next=upgradeData[t.type][p][tier];const otherHigh=t.paths.some((v,i)=>i!==p&&v>2);const used=t.paths.filter(v=>v>0).length;const lock=(tier>=2&&otherHigh)||(tier===0&&used>=2)||tier>=5||tierFiveTaken(t,p);b.disabled=lock||!next;b.classList.toggle('maxed',tier>=5);setUpgradeLabel(b,tier>=5?`Path ${p+1} MAX`:`${next[0]} — $${next[1]}`,tier>=5?'Tier 5 purchased':tierFiveTaken(t,p)?'Only one of this Tier 5 at a time':`Path ${p+1} • Tier ${tier+1} • Click to buy`)});
  changeHandsBtn.classList.toggle('hidden',t.type!=='boomer');changeHandsBtn.textContent='Change Hands: '+(t.throwHand===-1?'Left':'Right');
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
- targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label','Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,selectedUpgradePath,tierFiveTaken);refreshAbilityUI()
+ targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label','Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken);refreshAbilityUI()
 }
 function syncDartStats(t){
  const [top,middle,bottom]=t.paths;
@@ -1145,17 +1142,28 @@ function applyUpgrade(t,p,tier){
  }
  updateTowerAppearance(t);
 }
-upgradeBtns.forEach((b,p)=>b.addEventListener('click',()=>{const t=selectedTower;if(!t||b.disabled)return;if(towerDefs[t.type].hero){activateTowerAbility(t,p===0?'rapid':'storm');return;}selectedUpgradePath=p;towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');refreshSelected()}));
-buyUpgradeBtn.addEventListener('click',()=>{const t=selectedTower,p=selectedUpgradePath;if(!t||p===null||towerDefs[t.type].hero)return;const tier=t.paths[p],u=upgradeData[t.type][p][tier];if(tierFiveTaken(t,p)){toastMsg('Only one of this Tier 5 at a time');refreshSelected();return}if(!u||cash<u[1]||upgradeBtns[p].disabled)return;cash-=u[1];t.paths[p]++;applyUpgrade(t,p,tier);selectedUpgradePath=null;refreshSelected();updateUI()});
+upgradeBtns.forEach((b,p)=>b.addEventListener('click',()=>{
+ const t=selectedTower;if(!t||b.disabled)return;
+ if(towerDefs[t.type].hero){activateTowerAbility(t,p===0?'rapid':'storm');return;}
+ const tier=t.paths[p],u=upgradeData[t.type][p][tier];
+ if(tierFiveTaken(t,p)){toastMsg('Only one of this Tier 5 at a time');refreshSelected();return;}
+ if(!u||cash<u[1])return;
+ cash-=u[1];t.paths[p]++;applyUpgrade(t,p,tier);refreshSelected();updateUI();
+}));
 changeHandsBtn.addEventListener('click',()=>{if(selectedTower?.type!=='boomer')return;selectedTower.throwHand=selectedTower.throwHand===-1?1:-1;selectedTower.mesh.scale.x=selectedTower.throwHand;refreshSelected()});
 camoPriorityBtn.addEventListener('click',()=>{if(selectedTower?.type==='dart'&&selectedTower.paths[2]>=2){selectedTower.camoPriority=!selectedTower.camoPriority;refreshSelected();}});
 function cycleTarget(direction){if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+direction+modes.length)%modes.length];refreshSelected();}
  targetBtn.addEventListener('click',()=>cycleTarget(1));document.getElementById('targetNextBtn').addEventListener('click',()=>cycleTarget(1));document.getElementById('targetPrevBtn').addEventListener('click',()=>cycleTarget(-1));
  sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI()});closeSel.addEventListener('click',clearSelection);
- towerInfoBtn.addEventListener('click',()=>{const show=towerDetails.classList.contains('hidden');towerDetails.classList.toggle('hidden',!show);towerInfoBtn.setAttribute('aria-expanded',String(show));selectedUpgradePath=null;refreshSelected();});document.getElementById('closeTowerInfo').addEventListener('click',()=>{towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false')});
- document.getElementById('closeUpgradeInfo').addEventListener('click',()=>{selectedUpgradePath=null;refreshSelected()});
- document.getElementById('settingsBtn').addEventListener('click',()=>settingsDialog.showModal());document.getElementById('closeSettingsBtn').addEventListener('click',()=>settingsDialog.close());
- addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!settingsDialog.open)clearSelection()});
+ towerInfoBtn.addEventListener('click',()=>{const show=towerDetails.classList.contains('hidden');towerDetails.classList.toggle('hidden',!show);towerInfoBtn.setAttribute('aria-expanded',String(show));refreshSelected();});document.getElementById('closeTowerInfo').addEventListener('click',()=>{towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false')});
+ const upgradeTree=createUpgradeTree({definitions:towerDefs,upgrades:upgradeData,descriptions:upgradeDescriptions,heroLevels:quincyLevelMetadata});
+ document.getElementById('shopUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type||selectedType));
+ document.getElementById('selectedUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type));
+ addEventListener('pointerdown',unlockPopAudio,{passive:true});addEventListener('keydown',unlockPopAudio);
+ for(const [id,setVolume] of [['effects',setEffectsVolume],['music',setMusicVolume]])document.getElementById(id+'Volume').addEventListener('input',ev=>{const value=Number(ev.currentTarget.value);setVolume(value/100);ev.currentTarget.style.setProperty('--volume',value+'%');document.getElementById(id+'Percent').textContent=value+'%';});
+ document.getElementById('settingsAutoBtn').addEventListener('click',()=>autoBtn.click());
+ document.getElementById('settingsBtn').addEventListener('click',()=>{document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));settingsDialog.showModal();});document.getElementById('closeSettingsBtn').addEventListener('click',()=>settingsDialog.close());
+ addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!settingsDialog.open&&!upgradeTree.dialog.open)clearSelection()});
 
 function pointerGround(ev){const r=canvas.getBoundingClientRect();pointer.x=((ev.clientX-r.left)/r.width)*2-1;pointer.y=-((ev.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObject(ground);return hits[0]?.point||null}
 function previewPlacement(ev){
@@ -1381,7 +1389,7 @@ function destroyEnemyAndSpawnChildren(e){
  const acid=e.glueCoatings?.find(coat=>coat.direct&&coat.puddleTier>=4);if(acid)spawnAcidPuddle(e,acid);
  const stunCoat=e.glueCoatings?.filter(coat=>coat.remaining>0&&coat.relentlessTier>=4).sort((a,b)=>b.relentlessTier-a.relentlessTier||b.stunPierce-a.stunPierce)[0];
  const popPosition=stunCoat?{x:e.mesh.position.x,z:e.mesh.position.z}:null;
- spawnPopVisual(e);e.alive=false;disposeTransientMesh(e.mesh);
+ playBloonPop();spawnPopVisual(e);e.alive=false;disposeTransientMesh(e.mesh);
  trackGlueStunEnemy(e);
  const normalKids=regularChildren[e.type];
  const kids=e.isBlimp?blimpChildren[e.type]:e.superCeramic?normalKids?.slice(0,1):normalKids;
@@ -2307,28 +2315,28 @@ function updateTowers(dt){
    while(t.cool<=1e-9){
     const e=chooseTarget(t,enemies,quincyCanTarget);if(!e){t.cool=0;break;}
     aimTower(t,e);for(let i=0;i<t.shots;i++)fireProjectile(t,e,t.damage,{visualSpread:(i-(t.shots-1)/2)*.18});
-    t.shotCounter=(t.shotCounter||0)+1;t.cool+=t.rate/(t.rapidTimer>0?(t.level>=15?4:3):1);
+    recordTowerUse(t);t.shotCounter=(t.shotCounter||0)+1;t.cool+=t.rate/(t.rapidTimer>0?(t.level>=15?4:3):1);
    }
    continue;
   }else if(t.type==='tack'){
    if(t.paths[0]>=4){
-    while(t.cool<=0){if(!fireTackFlameBurst(t)){t.cool=0;break;}t.cool+=t.rate;}
+    while(t.cool<=0){if(!fireTackFlameBurst(t)){t.cool=0;break;}recordTowerUse(t);t.cool+=t.rate;}
     continue;
    }
    while(t.cool<=0){
-    if(!fireTackRadialBurst(t)){t.cool=0;break;}t.cool+=t.rate;
+    if(!fireTackRadialBurst(t)){t.cool=0;break;}recordTowerUse(t);t.cool+=t.rate;
    }
    continue;
   }else if(t.type==='ice'){
    if((t.paths?.[2]||0)>=3){
-    const e=chooseTarget(t);if(e){aimTower(t,e);fireProjectile(t,e,t.damage,{visualType:'ice'});t.cool=t.rate}
+    const e=chooseTarget(t);if(e){aimTower(t,e);fireProjectile(t,e,t.damage,{visualType:'ice'});recordTowerUse(t);t.cool=t.rate}
    }else{
     const targets=enemies.filter(e=>e.alive&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range).slice(0,t.pierce);
     const global=t.paths[1]>=5?enemies.filter(e=>e.alive&&!e.isBlimp&&towerCanDamage(t,e)):[];
     if(targets.length||global.length){
      aimTower(t,targets[0]||global[0]);targets.forEach(e=>hitEnemy(e,t.damage,{tower:t,freeze:t.freeze}));
      for(const e of global)if(e.alive)hitEnemy(e,0,{tower:t,freeze:iceMiddleTuning.secondaryFreeze});
-     spawnIceAuraVisual(t);t.cool=t.rate;
+     spawnIceAuraVisual(t);recordTowerUse(t);t.cool=t.rate;
     }
    }
   }else if(t.type==='boomer'){
@@ -2337,7 +2345,7 @@ function updateTowers(dt){
     const e=chooseTarget(attack);
     if(!e){t.cool=0;break}
     fireProjectile(attack,e);
-    t.shotCounter=(t.shotCounter||0)+1;
+    recordTowerUse(t);t.shotCounter=(t.shotCounter||0)+1;
     t.cool+=attack.rate;
    }
   }else{
@@ -2345,7 +2353,7 @@ function updateTowers(dt){
     aimTower(t,e);
     const count=Math.max(1,attack.shots||1);
     for(let i=0;i<count;i++)fireProjectile(attack,e,attack.damage,{visualSpread:(i-(count-1)/2)*.18});
-    t.shotCounter=(t.shotCounter||0)+1;
+    recordTowerUse(t);t.shotCounter=(t.shotCounter||0)+1;
     t.cool=attack.rate
    }
   }
@@ -2653,12 +2661,12 @@ function spawnStep(dt){
  }
 }
 startBtn.addEventListener('click',beginRound);
-autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls()});
+autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls()});
 speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls()});
 restartBtn.addEventListener('click',()=>location.reload());
 function endGame(win){gameEnded=true;roundActive=false;endScreen.classList.remove('hidden');endTitle.textContent=win?'Round 100 cleared!':'Game Over';endText.textContent=win?'You survived all 100 rounds.':'The balloons made it through the meadow.';refreshAbilityUI()}
 
-let last=performance.now();function loop(now){const dt=settingsDialog.open?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded&&!settingsDialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
+let last=performance.now();function loop(now){const dt=(settingsDialog.open||upgradeTree.dialog.open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded&&!settingsDialog.open&&!upgradeTree.dialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
 updateUI();flushUI();refreshAbilityUI();requestAnimationFrame(loop);
 } catch (err) {
  console.error(err);

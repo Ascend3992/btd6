@@ -1,8 +1,10 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v61**. Adds all 15 supplied Glue Gunner upgrade icons to the owned and next-upgrade cards. All top, middle and bottom tiers are included, from Glue Soak through Super Glue. Original image bytes and transparency are preserved. Includes the reference HUD/shop, click-to-cancel placement, Quincy models/statistics and all previous gameplay updates.
+Latest version: **v62**. Adds a browsable upgrade-tree menu with all future tiers and hover descriptions, green Upgrades buttons, one-click cash purchases and usage-only XP. The Normal Difficulty pause menu has Auto Start, separate effects/music volume sliders, Restart and Continue. Includes the supplied Bloon pop sound and four looping background tracks. All 15 original Glue icons and previous combat statistics are preserved.
 
-[Download v61 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v61.zip)
+[Download v62 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v62.zip)
+
+[Upgrade tree](docs/upgrade-tree-desktop.png) · [Pause menu](docs/pause-menu-desktop.png) · [Menu and audio details](docs/upgrade-tree.md)
 
 [Glue upgrade artwork](docs/glue-upgrade-icons.png) · [Icons in the upgrade panel](docs/glue-upgrade-icons-combat.png) · [Artwork details](docs/glue-upgrade-artwork.md)
 

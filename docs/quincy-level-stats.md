@@ -1,6 +1,6 @@
 # Quincy level stats
 
-The supplied table is preserved in [quincy-levels-source.txt](quincy-levels-source.txt). Base placement costs: $460 / $540 / $585 / $650. The game uses Normal ($540) pricing and its existing automatic leveling: level = min(20, 1 + floor((round - 1) / 5)). Level costs and XP are recorded as reference metadata; XP earning and buying hero levels are not implemented.
+The supplied table is preserved in [quincy-levels-source.txt](quincy-levels-source.txt). Base placement costs: $460 / $540 / $585 / $650. The game uses Normal ($540) pricing and its existing automatic leveling: level = min(20, 1 + floor((round - 1) / 5)). Level costs and level-unlock XP are recorded as reference metadata; buying hero levels is not implemented. Since v62, a separate usage XP counter records attack volleys and never gates these levels.
 
 All normal arrows deal 1 damage, jump at most 50 units between targets, and have separate pierce budgets. Range units use the same 0.32 world scale as other towers. The existing 1.4s base arrow lifetime becomes 1.75s at level 17.
 

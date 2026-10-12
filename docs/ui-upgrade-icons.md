@@ -125,3 +125,5 @@ Glue Gunner artwork is complete, including The Bloon Solver (glue-1-5). Next tow
 | `glue-3-3` | MOAB Glue |
 | `glue-3-4` | Relentless Glue |
 | `glue-3-5` | Super Glue |
+
+In v62 the same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Glue remains complete. Next needed: all 15 Dart Monkey originals, named by upgrade, in top/middle/bottom tier 1–5 order. No substitute artwork is generated.

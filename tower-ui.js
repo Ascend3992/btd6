@@ -18,15 +18,15 @@ export function renderTowerPortrait(t){
  if(portraits.size>=64)portraits.delete(portraits.keys().next().value);portraits.set(key,url);return url;
 }
 const badge={dart:'dart',boomer:'boomer',bomb:'bomb',tack:'tack',ice:'ice',glue:'flask',hero:'dart'};
-function setArt(node,type,path,tier,locked=false){
+export function setArt(node,type,path,tier,locked=false){
  const registered=upgradeIcons[type+'-'+(path+1)+'-'+tier],file=!locked&&!unavailableIcons.has(registered)&&registered,key=locked?'lock':file||badge[type];
  if(node.dataset.art===key)return;node.dataset.art=key;node.replaceChildren();
  if(file){const img=document.createElement('img');img.src=file;img.alt='';node.appendChild(img);img.addEventListener('error',()=>{unavailableIcons.add(file);delete node.dataset.art;setArt(node,type,path,tier,locked);},{once:true});}
  else setFallback(node,key);
 }
 function setFallback(node,key){node.innerHTML='<svg aria-hidden="true"><use href="assets/ui/interface.svg#'+key+'"></use></svg>';}
-export function renderUpgradeRows(t,data,cash,selectedPath,uniqueTierTaken){
- const hero=t.type==='hero',panel=document.getElementById('selectedPanel');panel.classList.toggle('heroPanel',hero);panel.classList.toggle('inspecting',!hero&&selectedPath!==null);
+export function renderUpgradeRows(t,data,cash,uniqueTierTaken){
+ const hero=t.type==='hero',panel=document.getElementById('selectedPanel');panel.classList.toggle('heroPanel',hero);
  for(let path=0;path<3;path++){
   const b=document.getElementById('upgrade'+path),row=b.parentElement,owned=row.querySelector('.ownedUpgrade'),tier=t.paths[path],next=data[t.type]?.[path]?.[tier],current=data[t.type]?.[path]?.[tier-1];
   if(hero){row.classList.remove('pathLocked','maxed');b.classList.remove('unaffordable');setArt(b.querySelector('.upgradeArt'),'hero',path,1);continue;}

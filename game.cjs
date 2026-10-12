@@ -8,7 +8,7 @@ const visuals=fs.readFileSync(path.join(__dirname,'..','..','boomerang-visuals.j
 function game(){
  const context={RANGE_SCALE:.32,meadowDepthScale:1,towers:[],enemies:[],projectiles:[],acidPuddles:[],roundActive:true,gameEnded:false,selectedTower:null,
   round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
-  updateTowerAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
+  recordTowerUse(){},playBloonPop(){},updateTowerAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
   glueMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),animateGlue(){},iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
   animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
   acidPuddleRenderer:{create:mesh},updateUI(){},ensureGlueMarker(){},destroyEnemyAndSpawnChildren(e){e.alive=false},

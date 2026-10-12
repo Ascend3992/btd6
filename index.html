@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=60"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=62"></head>
 <body><div id="gameWrap">
 <canvas id="game" aria-label="Meadow game map"></canvas>
 <header id="topbar" aria-label="Game status">
@@ -8,7 +8,7 @@
 <div class="roundHud"><small>ROUND</small><strong><span id="round">1</span>/100</strong></div>
 <button id="settingsBtn" type="button" aria-label="Settings"><svg aria-hidden="true"><use href="assets/ui/interface.svg#gear"/></svg></button>
 </header>
-<aside id="shop" aria-label="Tower shop"><div class="shopTitle">UPGRADES</div><div id="shopTowerName" class="shopCategory">PRIMARY MONKEYS</div><div class="towerGrid">
+<aside id="shop" aria-label="Tower shop"><button id="shopUpgradesBtn" type="button" class="shopTitle">UPGRADES</button><div id="shopTowerName" class="shopCategory">PRIMARY MONKEYS</div><div class="towerGrid">
 <button class="towerBtn" data-tower="dart" aria-pressed="false"><img src="assets/ui/towers/dart.png" alt=""><b>Dart Monkey</b><span>$200</span><small>Cheap, reliable darts</small></button>
 <button class="towerBtn" data-tower="boomer" aria-pressed="false"><img src="assets/ui/towers/boomer.png" alt=""><b>Boomerang Monkey</b><span>$325</span><small>Curved multi-hit attacks</small></button>
 <button class="towerBtn" data-tower="bomb" aria-pressed="false"><img src="assets/ui/towers/bomb.png" alt=""><b>Bomb Shooter</b><span>$600</span><small>Explosive splash damage</small></button>
@@ -29,10 +29,24 @@
 <div class="upgradeRow" data-path="2"><div class="tierMarkers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="ownedUpgrade"><b>NOT UPGRADED</b><span class="upgradeArt"></span><strong></strong></div><button class="upgradePath bottom" id="upgrade2" type="button"><b></b><span class="upgradeArt"></span><small></small></button></div>
 </div><button id="towerAbilityBtn" class="towerAbilityBtn hidden" type="button"></button><div class="selActions"><button id="changeHandsBtn" class="hidden" type="button">Change Hands: Right</button><button id="camoPriorityBtn" class="hidden" type="button" aria-pressed="false">Prioritize Camo: Off</button></div></div>
 <div class="sellBar"><span><svg aria-hidden="true"><use href="assets/ui/interface.svg#coins"/></svg>$<span id="sellValue">0</span></span><button id="sellBtn" type="button">SELL</button></div>
-<div id="upgradeInspector" class="upgradeInspector"><button id="closeUpgradeInfo" class="popoverClose" type="button" aria-label="Close upgrade details">×</button><div id="upgradeInfo" class="upgradeInfo">Select an upgrade to see its details.</div><button id="buyUpgradeBtn" class="buyUpgradeBtn" disabled>Buy selected upgrade</button></div>
+<button id="selectedUpgradesBtn" type="button" class="selectedUpgradesBtn">UPGRADES</button>
 <div id="towerDetails" class="towerDetails hidden"><button id="closeTowerInfo" class="popoverClose" type="button" aria-label="Close tower stats">×</button><h4>TOWER STATS</h4><div id="selStats"></div></div>
 </section>
 <section id="abilityBar" class="hidden" aria-label="Tower abilities"><div class="abilityTitle">ABILITIES</div><div id="abilityButtons"></div></section>
-<dialog id="settingsDialog"><h2>GAME PAUSED</h2><p>Choose a monkey, then click the meadow to place it. Click the shop monkey again or press Escape to cancel.</p><button id="restartBtn" type="button">Restart game</button><button id="closeSettingsBtn" type="button">Continue</button></dialog>
+<dialog id="settingsDialog" aria-labelledby="pauseTitle">
+<h2 id="pauseTitle">PAUSE</h2><div class="pauseCard"><h3>NORMAL DIFFICULTY</h3>
+<div class="pauseOptions"><span>AUTO START</span><button id="settingsAutoBtn" type="button" role="switch" aria-checked="false" aria-label="Auto Start"><i></i></button></div>
+<div class="pauseAudio"><div class="volumeControls">
+<label class="volumeRow" for="effectsVolume"><span class="volumeIcon" aria-hidden="true">◖))</span><span class="srOnly">Sound effects volume</span><input id="effectsVolume" type="range" min="0" max="100" value="35" style="--volume:35%"><output id="effectsPercent" for="effectsVolume">35%</output></label>
+<label class="volumeRow" for="musicVolume"><span class="volumeIcon" aria-hidden="true">♫</span><span class="srOnly">Music volume</span><input id="musicVolume" type="range" min="0" max="100" value="30" style="--volume:30%"><output id="musicPercent" for="musicVolume">30%</output></label>
+</div><div class="nowPlaying"><span aria-hidden="true">♫</span><span id="musicTrack">Sunset Samba</span><div class="musicBars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div></div>
+<div class="pauseActions"><button id="restartBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">↶</span><b>RESTART</b></button><button id="closeSettingsBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">➜</span><b>CONTINUE</b></button></div>
+</div></dialog>
+<dialog id="upgradeTreeDialog" aria-labelledby="treeName">
+<button id="treeBack" type="button" aria-label="Back to game">↶</button>
+<header class="treeHeader"><button id="treePrev" class="treeArrow" type="button">◀</button><div class="treeBanner"><div class="treeHeading"><h2 id="treeName"></h2><span id="treeXP" title="One usage XP per attack volley this game"></span></div><p id="treeDescription"></p></div><button id="treeNext" class="treeArrow" type="button">▶</button></header>
+<div id="treePaths"></div><p class="treeHelp">Hover an upgrade to see what it does · Tap or focus for details<span class="treeSwipeHelp">Swipe paths to see all five tiers</span></p>
+<div id="treeTooltip" role="tooltip" hidden></div>
+</dialog>
 <div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><button onclick="location.reload()">Restart</button></div></div>
-</div><script src="game.js?v=61"></script></body></html>
+</div><script src="game.js?v=62"></script></body></html>
