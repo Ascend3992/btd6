@@ -1,12 +1,12 @@
 # Upgrade artwork checklist
 
-The UI has stable image slots for all 90 primary-tower upgrades. All 15 supplied Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
+The UI has stable image slots for all 90 primary-tower upgrades. All 30 supplied Dart Monkey and Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
 
 Add transparent PNG/WebP/SVG files under `assets/ui/upgrades/`, then map each one in `upgrade-icons.js`. Keys use `tower-path-tier`, with paths and tiers numbered from 1. For example: `glue-1-1` is Glue Soak.
 
-Glue Gunner artwork is complete, including The Bloon Solver (glue-1-5). Next tower batch: all 15 Dart Monkey icons, top/middle/bottom paths in tier 1–5 order. Ability icons can follow after the tower upgrades.
+Dart Monkey and Glue Gunner artwork is complete, including Plasma Monkey Fan Club (dart-2-5) and The Bloon Solver (glue-1-5). Next tower batch: all 15 Boomerang Monkey icons, named by upgrade. Archive order does not matter. Ability icons can follow after the tower upgrades.
 
-## Dart Monkey
+## Dart Monkey — complete (v63)
 
 | Slot | Upgrade |
 |---|---|
@@ -106,7 +106,7 @@ Glue Gunner artwork is complete, including The Bloon Solver (glue-1-5). Next tow
 | `ice-3-4` | Icicles |
 | `ice-3-5` | Icicle Impale |
 
-## Glue Gunner
+## Glue Gunner — complete (v61)
 
 | Slot | Upgrade |
 |---|---|
@@ -126,4 +126,4 @@ Glue Gunner artwork is complete, including The Bloon Solver (glue-1-5). Next tow
 | `glue-3-4` | Relentless Glue |
 | `glue-3-5` | Super Glue |
 
-In v62 the same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Glue remains complete. Next needed: all 15 Dart Monkey originals, named by upgrade, in top/middle/bottom tier 1–5 order. No substitute artwork is generated.
+The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Dart and Glue are complete: 30 of 90 slots. No substitute artwork is generated.

@@ -8,8 +8,8 @@ const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTa
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
-const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=3');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=1');
+const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=4');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=2');
 const {recordTowerUse}=await import('./tower-usage.js?v=1');
 const {playBloonPop,unlockPopAudio,setEffectsVolume,setMusicVolume}=await import('./pop-audio.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');

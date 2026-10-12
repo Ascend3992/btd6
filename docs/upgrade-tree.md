@@ -2,7 +2,7 @@
 
 Open the green **Upgrades** button above the shop or beneath the selected monkey’s sell controls. The selected or placement monkey opens first; the shop defaults to Dart Monkey otherwise. The arrows browse all seven towers, wrapping at either end. Keyboard left/right arrows also browse, and Back or Escape returns to the game without losing the selected monkey.
 
-Each primary tower has three connected paths with five tiers each. Cyan nodes show tiers 1–4 and gold nodes show tier 5. Hover, keyboard focus or tap displays the upgrade’s implemented effect and in-game cash cost. All future upgrades can be inspected immediately. Quincy instead shows his 20 automatic levels. There are no Paragons, XP purchases or unlock buttons. Original Glue artwork is shared with the owned/next cards; other towers use their existing equipment badges pending supplied artwork.
+Each primary tower has three connected paths with five tiers each. Cyan nodes show tiers 1–4 and gold nodes show tier 5. Hover, keyboard focus or tap displays the upgrade’s implemented effect and in-game cash cost. All future upgrades can be inspected immediately. Quincy instead shows his 20 automatic levels. There are no Paragons, XP purchases or unlock buttons. Original Glue and Dart artwork is shared with the owned/next cards (Dart added in v63); other towers use their existing equipment badges pending supplied artwork.
 
 Clicking a next-upgrade card on a placed tower buys it once, directly with cash. Existing cash, two-path/crosspath and unique Tier 5 limits still apply. The old description-and-second-click purchase panel has been removed. The blue info button still opens combat statistics.
 

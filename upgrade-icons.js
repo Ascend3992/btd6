@@ -16,5 +16,20 @@ export const upgradeIcons={
  "glue-3-2": "./assets/ui/upgrades/StrongerGlueUpgradeIcon.webp",
  "glue-3-3": "./assets/ui/upgrades/MOABGlueUpgradeIcon.webp",
  "glue-3-4": "./assets/ui/upgrades/RelentlessGlueUpgradeIcon.webp",
- "glue-3-5": "./assets/ui/upgrades/SuperGlueUpgradeIcon.webp"
+ "glue-3-5": "./assets/ui/upgrades/SuperGlueUpgradeIcon.webp",
+ "dart-1-1": "./assets/ui/upgrades/SharpShotsUpgradeIcon.webp",
+ "dart-1-2": "./assets/ui/upgrades/RazorSharpShotsUpgradeIcon.webp",
+ "dart-1-3": "./assets/ui/upgrades/Spike-o-pultUpgradeIcon.webp",
+ "dart-1-4": "./assets/ui/upgrades/JuggernautUpgradeIcon.webp",
+ "dart-1-5": "./assets/ui/upgrades/UltraJuggernautUpgradeIcon.webp",
+ "dart-2-1": "./assets/ui/upgrades/QuickShotsUpgradeIcon.webp",
+ "dart-2-2": "./assets/ui/upgrades/VeryQuickShotsUpgradeIcon.webp",
+ "dart-2-3": "./assets/ui/upgrades/TripleShotUpgradeIcon.webp",
+ "dart-2-4": "./assets/ui/upgrades/SuperMonkeyFanClubUpgradeIcon.webp",
+ "dart-2-5": "./assets/ui/upgrades/PMFCUpgradeIcon.webp",
+ "dart-3-1": "./assets/ui/upgrades/LongRangeDartsUpgradeIcon.webp",
+ "dart-3-2": "./assets/ui/upgrades/EnhancedEyesightUpgradeIcon.webp",
+ "dart-3-3": "./assets/ui/upgrades/CrossbowUpgradeIcon.webp",
+ "dart-3-4": "./assets/ui/upgrades/SharpShooterUpgradeIcon.webp",
+ "dart-3-5": "./assets/ui/upgrades/CrossbowMasterUpgradeIcon.webp"
 };

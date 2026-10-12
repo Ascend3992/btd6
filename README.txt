@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v62 upgrade trees, usage XP and game audio
+Meadow Balloon Defense 3D - v63 supplied Dart Monkey upgrade artwork
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -345,3 +345,9 @@ Upgrade overview and audio v62
 - The uploaded MP3 plays for each destroyed layer or blimp shell, including overlapping pops; damage without a pop does not play it. Web Audio decodes it once.
 - Background music plays Sunset Samba, Winter Is Coming, Sunshine Serenade, Fiesta Flamenco, then repeats. Original recordings are included byte-for-byte. Music begins after the first pointer/key interaction; setting its slider to zero pauses it, while effects volume is independent.
 - Runtime modules include upgrade-tree-ui.js, tower-usage.js and pop-audio.js; all audio is bundled in assets/audio.
+
+Supplied Dart Monkey artwork v63
+- Dartmonkeyupgradeicons.zip supplies 15 original transparent WebP images. Archive order is ignored; each filename is matched to its named upgrade, including PMFCUpgradeIcon.webp for Plasma Monkey Fan Club. Files are installed byte-for-byte under assets/ui/upgrades without editing or conversion.
+- upgrade-icons.js maps dart-1-1 through dart-3-5. The same assets appear in current/next purchase cards and all future tiers in the upgrade overview. Existing Glue artwork and all other towers are preserved.
+- Registry, presentation-module and entrypoint cache versions are bumped. Chromium verifies all 15 real purchases, owned/next image loads, tree image/name tier order, descriptions, mobile scrolling and existing Glue images, with no page or resource errors. All 33 regression test files pass.
+- No combat, cash, XP, audio or placement balance changes. Dart Monkey and Glue Gunner now have all 30 artwork slots complete. Next tower: Boomerang Monkey, all 15 upgrades, named by upgrade.
