@@ -19,3 +19,5 @@ The v62 Normal Difficulty pause menu provides an Auto Start switch, separate mus
 v65 adds an automatic local checkpoint and a paused Resume/New Game prompt when you return. Restart clears the saved run. [Saving progress](save-progress.md).
 
 v66 loads a Home screen before gameplay, with Monkey Meadow map selection and three mode choices. Pause now displays the selected Easy/Normal/Hard mode. [Home and mode details](home-and-modes.md).
+
+The v67 [Easy mode tree](easy-tree-unlocked.png) uses restyled Deflation/Sandbox badges and unlocks both branches after an Easy win. The [Sandbox panel](sandbox-desktop.png) uses a blue testing shop with tower/send tabs, live values and reset tools. [Phone layout](sandbox-mobile.png) · [Rules](easy-branches-and-sandbox.md).

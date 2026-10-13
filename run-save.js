@@ -1,7 +1,8 @@
 // Saves contain round checkpoints, never meshes, live Bloons or projectiles.
-import {getGameMode} from './difficulty.js?v=1';
+import {getGameMode} from './difficulty.js?v=2';
+import {heroXPAtLevel,heroXPProgress} from './hero-xp.js?v=1';
 export const RUN_SAVE_KEY='meadow-btd6.saved-run';
-const SAVE_VERSION=2,MAP_VERSION='meadow-reference-v1',MAX_BYTES=2_000_000;
+const SAVE_VERSION=3,MAP_VERSION='meadow-reference-v1',MAX_BYTES=2_000_000;
 const runtimeFields=['damageDealt','cool','pressCool','shotCounter','critShotCounter','bombShotCounter','meteorCool','orbitTick','abilityCd','blitzCd','abilityTimer','abilityTick','abilityAngle','rapidCd','rapidTimer','stormCd','stormTimer','stormTick','stormClock'];
 const signedFields=new Set(['cool','pressCool','meteorCool','abilityTick','abilityAngle']);
 function requireValue(value){if(!value)throw Error('Invalid saved run');}
@@ -11,8 +12,8 @@ function point(value,rules,margin=0){requireValue(value&&typeof value==='object'
 function optionalId(value){return value==null?null:integer(value,1,1e9);}
 export function validateRunSave(raw,rules){
  try{
-  requireValue(raw&&(raw.version===1||raw.version===SAVE_VERSION)&&raw.map===MAP_VERSION);
-  const difficulty=raw.version===1?'medium':raw.difficulty,legacyMode=raw.version===1?true:raw.legacyMode;requireValue(typeof difficulty==='string'&&typeof legacyMode==='boolean');const mode=getGameMode(difficulty,legacyMode);
+  requireValue(raw&&[1,2,SAVE_VERSION].includes(raw.version)&&raw.map===MAP_VERSION);
+  const difficulty=raw.version===1?'medium':raw.difficulty,legacyMode=raw.version===1?true:raw.legacyMode,variant=raw.version<3?'standard':raw.variant;requireValue(typeof difficulty==='string'&&typeof legacyMode==='boolean');const mode=getGameMode(difficulty,legacyMode,variant);requireValue(typeof variant==='string');
   requireValue(Array.isArray(raw.towers)&&raw.towers.length<=1000);
   const ids=new Set(),tierFives=new Set();let heroes=0;
   const towers=raw.towers.map(saved=>{
@@ -37,8 +38,9 @@ export function validateRunSave(raw,rules){
    requireValue(!(runtime.abilityTimer>0)||activeAbilityKey==='primary');
    let stormStats=null;if(saved.stormStats){requireValue(hero);stormStats={};for(const key of ['chance','damage','moabBonus','ceramicBonus','cooldown'])stormStats[key]=number(saved.stormStats[key],0,key==='chance'?1:1000);}
    const placementSurface=saved.placementSurface??'land';requireValue(['land','water'].includes(placementSurface));
+   const level=integer(saved.level,hero?1:0,hero?20:0),heroXP=hero?(raw.version<3?heroXPAtLevel(level):integer(saved.heroXP)):0;requireValue(!hero||heroXPProgress(heroXP).level===level);
    return {id,type:saved.type,...position,paths,target:saved.target,throwHand:saved.throwHand,camoPriority:saved.camoPriority,
-    level:integer(saved.level,hero?1:0,hero?20:0),rotationY:number(saved.rotationY,-1e12,1e12),runtime,fanBuffs,activeAbilityKey,activeAbilityTier,stormStats,
+    level,heroXP,rotationY:number(saved.rotationY,-1e12,1e12),runtime,fanBuffs,activeAbilityKey,activeAbilityTier,stormStats,
     stormCenter:saved.stormCenter==null?null:point(saved.stormCenter,rules,10),placementSurface,frozenWaterSourceId:optionalId(saved.frozenWaterSourceId)};
   });
   requireValue(Array.isArray(raw.puddles)&&raw.puddles.length<=2000);
@@ -51,15 +53,16 @@ export function validateRunSave(raw,rules){
   requireValue(typeof raw.autoStart==='boolean'&&typeof raw.roundInProgress==='boolean');
   const selectedTowerId=optionalId(raw.selectedTowerId);requireValue(selectedTowerId===null||ids.has(selectedTowerId));
   const nextTowerId=integer(raw.nextTowerId,1,1e9);requireValue(towers.every(t=>t.id<nextTowerId&&t.fanBuffs.every(b=>b.sourceId<nextTowerId)&&(t.frozenWaterSourceId===null||t.frozenWaterSourceId<nextTowerId)));
-  return {version:SAVE_VERSION,map:MAP_VERSION,difficulty,legacyMode,savedAt:number(raw.savedAt,0,1e15),round:integer(raw.round,mode.startRound,mode.endRound),lives:number(raw.lives,.001,1e9),cash:number(raw.cash),speed:integer(raw.speed,1,3),autoStart:raw.autoStart,roundInProgress:raw.roundInProgress,
+  const sandbox=variant==='sandbox';
+  return {version:SAVE_VERSION,map:MAP_VERSION,difficulty,legacyMode,variant,sandboxLivesTarget:sandbox?integer(raw.sandboxLivesTarget,0,9999999):0,savedAt:number(raw.savedAt,0,1e15),round:integer(raw.round,mode.startRound,mode.endRound),lives:number(raw.lives,sandbox?0:.001,sandbox?9999999:1e9),cash:number(raw.cash,0,sandbox?9999999:1e12),speed:integer(raw.speed,1,3),autoStart:sandbox?false:raw.autoStart,roundInProgress:sandbox?false:raw.roundInProgress,
    effectsVolume:number(raw.effectsVolume,0,1),musicVolume:number(raw.musicVolume,0,1),absoluteZeroBuffT:number(raw.absoluteZeroBuffT,0,10),nextTowerId,selectedTowerId,towers,puddles,usage};
  }catch{return null;}
 }
 export function captureRunSave(state,rules){
- const raw={version:SAVE_VERSION,map:MAP_VERSION,difficulty:state.difficulty||'medium',legacyMode:!!state.legacyMode,savedAt:Date.now(),round:state.round,lives:state.lives,cash:state.cash,speed:state.speed,autoStart:state.autoStart,roundInProgress:!!state.roundInProgress,
+ const raw={version:SAVE_VERSION,map:MAP_VERSION,difficulty:state.difficulty||'medium',legacyMode:!!state.legacyMode,variant:state.variant||'standard',sandboxLivesTarget:state.sandboxLivesTarget??999999,savedAt:Date.now(),round:state.round,lives:state.lives,cash:state.cash,speed:state.speed,autoStart:state.autoStart,roundInProgress:!!state.roundInProgress,
   effectsVolume:state.effectsVolume,musicVolume:state.musicVolume,absoluteZeroBuffT:state.absoluteZeroBuffT,nextTowerId:state.nextTowerId,selectedTowerId:state.selectedTowerId??null,usage:state.usage,
   towers:state.towers.map(t=>{const runtime={};for(const key of runtimeFields)if(t[key]!==undefined)runtime[key]=t[key];return {id:t.id,type:t.type,x:t.x,z:t.z,paths:[...t.paths],target:t.target,throwHand:t.throwHand||1,camoPriority:!!t.camoPriority,level:t.level||0,rotationY:t.mesh.rotation.y,
-   runtime,fanBuffs:t.fanBuffs.map(b=>({sourceId:b.sourceId,tier:b.tier,remaining:b.remaining})),activeAbilityKey:t.activeAbility?.key??null,activeAbilityTier:t.activeAbility?.tier??null,stormStats:t.stormStats??null,stormCenter:t.stormCenter?{x:t.stormCenter.x,z:t.stormCenter.z}:null,placementSurface:t.placementSurface||'land',frozenWaterSourceId:t.frozenWaterSourceId??null};}),
+    heroXP:t.type==='hero'?Math.max(t.heroXP??0,heroXPAtLevel(t.level)):0,runtime,fanBuffs:t.fanBuffs.map(b=>({sourceId:b.sourceId,tier:b.tier,remaining:b.remaining})),activeAbilityKey:t.activeAbility?.key??null,activeAbilityTier:t.activeAbility?.tier??null,stormStats:t.stormStats??null,stormCenter:t.stormCenter?{x:t.stormCenter.x,z:t.stormCenter.z}:null,placementSurface:t.placementSurface||'land',frozenWaterSourceId:t.frozenWaterSourceId??null};}),
   puddles:state.puddles.filter(p=>p.life>0&&p.pierceLeft>0).map(p=>({x:p.x,z:p.z,radius:p.radius,life:p.life,totalLife:p.totalLife,pierceLeft:p.pierceLeft,damage:p.damage,roundCarry:p.roundCarry,sourceId:state.towers.some(t=>t===p.attack.sourceTower)?p.attack.sourceTower.id:null,camoDetect:!!p.attack.camoDetect}))};
  return validateRunSave(raw,rules);
 }

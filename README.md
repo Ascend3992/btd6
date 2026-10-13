@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v66**. Adds a home screen, a Monkey Meadow map selector and Easy/Normal/Hard modes with restyled 3D difficulty badges. Each mode uses the supplied lives, rounds, prices and Bloon speeds; Easy’s round-40 MOAB has 133 base HP. Pause headings and saved runs reflect the selected mode. Easy and Normal wins award a silver map border. Existing v65 saves retain their original 100-round rules.
+Latest version: **v67**. Difficulty choices now open mode trees. Beating Standard Easy unlocks Deflation (rounds 31–60, $20,000, no cash income) and Sandbox with Bloon spawning, editable cash/lives and reset tools. Quincy now levels using the supplied round-XP formula and saved per-level requirements. Existing saves retain their hero levels and mode rules.
 
-[Download v66 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v66.zip)
+[Download v67 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v67.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -33,3 +33,5 @@ All required Three.js files and licenses are bundled in `assets/vendor/`. See [R
 [Bottom-path models](docs/glue-bottom-models.png) · [Bottom-path shooting](docs/glue-bottom-models-shooting.png) · [Bottom models in combat](docs/glue-bottom-models-combat.png) · [Middle-path models](docs/glue-middle-models.png) · [Middle-path shooting](docs/glue-middle-models-shooting.png) · [Ability poses](docs/glue-middle-models-ability.png) · [Top-path models](docs/glue-top-models.png) · [Shooting poses](docs/glue-top-models-shooting.png) · [Models in combat](docs/glue-top-models-combat.png) · [Bottom-path combat preview](docs/glue-bottom-combat.png) · [Middle-path combat preview](docs/glue-middle-combat.png) · [Map preview](docs/meadow-map-preview.png) · [Bloon variants](docs/bloon-variants-preview.png)
 
 Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
+
+[Easy branches and Sandbox](docs/easy-branches-and-sandbox.md) · [Mode tree](docs/easy-tree-unlocked.png) · [Sandbox preview](docs/sandbox-desktop.png) · [Quincy XP](docs/quincy-round-xp.png)

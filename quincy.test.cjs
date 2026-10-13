@@ -36,8 +36,8 @@ test('Storm centers on the chosen First/Last/Close/Strong target, stays fixed, a
  }
  const g=game(),t=hero(g,10),chosen=target(g,80);t.stormCd=0;g.Math=Object.create(Math);g.Math.random=()=>0;assert(g.activateTowerAbility(t,'storm'));chosen.mesh.position.x=150;const late=target(g,81),outside=target(g,40);g.updateQuincyAbilities(t,.1);assert(late.hp<10000);assert.equal(outside.hp,10000);assert.equal(chosen.hp,10000);assert.equal(t.stormCenter.x,80);
 });
-test('automatic level stats and initial ability cooldowns update even while the normal attack is cooling down',()=>{
- const g=game(),t=hero(g);g.updateHeroAppearance=()=>{};t.cool=100;g.round=11;g.updateTowers(.1);assert.equal(t.level,3);assert(Math.abs(t.rapidCd-16.6)<1e-9);g.updateTowers(.1);assert(Math.abs(t.rapidCd-16.5)<1e-9);g.round=46;g.updateTowers(.1);assert.equal(t.level,10);assert(Math.abs(t.stormCd-23.23)<1e-9);g.roundActive=false;const cd=t.stormCd;g.updateTowers(.5);assert.equal(t.stormCd,cd);
+test('round XP grants levels and initial ability cooldowns even while the normal attack is cooling down',()=>{
+ const g=game(),t=hero(g);g.updateHeroAppearance=()=>{};t.cool=100;t.heroXP=600;g.awardHeroRoundXP(1);g.updateTowers(.1);assert.equal(t.level,3);assert(Math.abs(t.rapidCd-16.6)<1e-9);g.updateTowers(.1);assert(Math.abs(t.rapidCd-16.5)<1e-9);t.heroXP=g.heroXPAtLevel(10)-40;g.awardHeroRoundXP(1);g.updateTowers(.1);assert.equal(t.level,10);assert(Math.abs(t.stormCd-23.23)<1e-9);g.roundActive=false;const cd=t.stormCd;g.updateTowers(.5);assert.equal(t.stormCd,cd);
 });
 test('Rapid Shot keeps its full firing rate at different frame sizes and game speeds, and pauses between rounds',()=>{
  const counts=[];for(const dt of [1/30,1/60,1/120,.04,.12]){const g=game(),t=hero(g,20);g.round=96;target(g,4);t.rapidTimer=12;for(let elapsed=0;elapsed<1-1e-9;elapsed+=dt)g.updateTowers(Math.min(dt,1-elapsed));counts.push(t.shotCounter);assert.equal(g.projectiles.length,t.shotCounter*3);g.roundActive=false;const count=t.shotCounter,cool=t.cool;g.updateTowers(1);assert.equal(t.shotCounter,count);assert.equal(t.cool,cool);}assert(counts.every(count=>count===21),counts.join(','));

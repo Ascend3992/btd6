@@ -2,7 +2,7 @@
 
 Open the green **Upgrades** button above the shop or beneath the selected monkey’s sell controls. The selected or placement monkey opens first; the shop defaults to Dart Monkey otherwise. The arrows browse all seven towers, wrapping at either end. Keyboard left/right arrows also browse, and Back or Escape returns to the game without losing the selected monkey.
 
-Each primary tower has three connected paths with five tiers each. Cyan nodes show tiers 1–4 and gold nodes show tier 5. Hover, keyboard focus or tap displays the upgrade’s implemented effect and in-game cash cost. All future upgrades can be inspected immediately. Quincy instead shows his 20 automatic levels. There are no Paragons, XP purchases or unlock buttons. Original Glue, Dart and Boomerang artwork is shared with the owned/next cards (Dart added in v63, Boomerang in v64); other towers use their existing equipment badges pending supplied artwork.
+Each primary tower has three connected paths with five tiers each. Cyan nodes show tiers 1–4 and gold nodes show tier 5. Hover, keyboard focus or tap displays the upgrade’s implemented effect and in-game cash cost. All future upgrades can be inspected immediately. Quincy instead shows his 20 XP-earned levels. There are no Paragons, XP purchases or unlock buttons. Original Glue, Dart and Boomerang artwork is shared with the owned/next cards (Dart added in v63, Boomerang in v64); other towers use their existing equipment badges pending supplied artwork.
 
 Clicking a next-upgrade card on a placed tower buys it once, directly with cash. Existing cash, two-path/crosspath and unique Tier 5 limits still apply. The old description-and-second-click purchase panel has been removed. The blue info button still opens combat statistics.
 
@@ -27,3 +27,5 @@ All recordings are local and retain their uploaded bytes. The browser starts aud
 Since v65 the pause menu also shows checkpoint status. [Saved-run details](save-progress.md) explain automatic saves and resuming interrupted rounds.
 
 Since v66, displayed costs and cash purchases follow the selected Easy/Normal/Hard mode, including upgrade-tree descriptions. [Mode rules](home-and-modes.md).
+
+Since v67, Quincy earns level XP from completed rounds using the supplied formula and per-level requirements. His overview shows Level XP and future level requirements; his selected panel shows next-level progress. This is separate from primary-tower usage XP. [Details](easy-branches-and-sandbox.md#quincy-level-xp).

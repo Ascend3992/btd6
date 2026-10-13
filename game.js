@@ -9,11 +9,14 @@ const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBo
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
 const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=5');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=5');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=6');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
-const {captureRunSave,createRunStorage}=await import('./run-save.js?v=2');
-const {getGameMode,applyModePrices,modeBloonHealth,createMapMedals}=await import('./difficulty.js?v=1');
-const {createHomeUI}=await import('./home-ui.js?v=1');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=3');
+const {getGameMode,applyModePrices,modeBloonHealth,createMapMedals}=await import('./difficulty.js?v=2');
+const {createHomeUI}=await import('./home-ui.js?v=2');
+const {sandboxTypes,sandboxSpawnQueue,sandboxBlimpHp,createMapProgress,SANDBOX_MAX,TEST_BLOON_HP}=await import('./sandbox.js?v=1');
+const {createSandboxUI}=await import('./sandbox-ui.js?v=1');
+const {heroRoundXP,heroXPAtLevel,heroXPProgress}=await import('./hero-xp.js?v=1');
 const {playBloonPop,unlockPopAudio,setEffectsVolume,setMusicVolume}=await import('./pop-audio.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
@@ -34,7 +37,7 @@ const selectedPortrait=document.getElementById('selectedPortrait'),towerDetails=
 let placementPreview=null;
 let nextTowerId=1,abilityUiTimer=0;
 
-let currentMode=getGameMode('medium',true),gameStarted=false;
+let currentMode=getGameMode('medium',true),gameStarted=false,sandboxLivesTarget=999999,sandboxLeakTimer=0;
 let lives=100,cash=650,round=1,speed=1,roundActive=false,autoStart=false,autoStartTimer=0,spawnQueue=[],spawnTimer=0,selectedType=null,selectedTower=null,heroPlaced=false,gameEnded=false;
 const towers=[],enemies=[],projectiles=[],visualEffects=[],acidPuddles=[];
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -44,6 +47,8 @@ const layerNames=['Red','Blue','Green','Yellow','Pink','Black','White','Purple',
 const layerColors=[0xe43c36,0x3387ff,0x39b855,0xffe33d,0xef72bb,0x25282d,0xf5f5f5,0x8c43d6,0x9aa1a8,0xffffff,0x5ee4e6,0xb86f3e];
 const layerIndex=Object.fromEntries(layerNames.map((n,i)=>[n,i]));
 const blimpStats={MOAB:{hp:200,speed:'MOAB',leak:200,color:0x4b83c3,scale:[1.15,1.2,2.1]},BFB:{hp:700,speed:'BFB',leak:700,color:0xc43c3c,scale:[1.45,1.5,2.65]},ZOMG:{hp:4000,speed:'ZOMG',leak:4000,color:0x4d8357,scale:[1.75,1.8,3.2]},DDT:{hp:400,speed:'DDT',leak:400,color:0x303239,scale:[1.25,1.3,2.3]},BAD:{hp:28000,speed:'BAD',leak:28000,color:0xa34f9f,scale:[2.05,2.05,3.75]}};
+function grantIncome(amount){if(currentMode.variant==='deflation')return;cash=currentMode.variant==='sandbox'?Math.min(SANDBOX_MAX,cash+amount):cash+amount;}
+function recordCombatUse(t){if(currentMode.variant!=='sandbox')recordTowerUse(t);}
 function cashPerPop(r){return r>60?.2:r>50?.5:1}
 function formatCash(v){return (Math.round(v*10)/10).toLocaleString('en-US',{maximumFractionDigits:1})}
 
@@ -707,7 +712,7 @@ function updateHeroAppearance(t){
  const milestone=quincyModelLevel(t.level);
  if(t.mesh.userData.quincyModelLevel!==milestone)replaceTowerBody(t,makeQuincyTowerMesh(milestone));
 }
-function createTower(type,x,z){const d=towerDefs[type];const mesh=makeTowerMesh(type);mesh.position.set(x,.66,z);scene.add(mesh);const t={id:nextTowerId++,type,x,z,mesh,throwHand:1,damageDealt:0,abilityCd:0,blitzCd:0,abilityTimer:0,abilityTick:0,abilityAngle:0,activeAbility:null,fanBuffs:[],fanTier:0,glueLevel:d.glueLevel||0,projSpeed:d.projSpeed,projectileLife:d.projectileLife,projectileRadius:d.projectileRadius,glueLayers:d.glueLayers||0,range:d.range,rate:d.rate,damage:d.damage||0,cool:0,pressCool:0,invest:d.cost,target:'first',paths:[0,0,0],level:d.hero?1:0,pierce:d.pierce||1,splash:d.splash||0,slow:d.slow||0,slowDuration:d.slowDuration||2.8,freeze:d.freeze||0,tacks:d.tacks||8,shots:1,bonusMoab:0,shotCounter:0,rapidCd:0,rapidTimer:0,stormCd:0,stormTimer:0,stormTick:0,damageType:d.damageType||'',notes:d.notes||'',camoDetect:!!d.camoDetect,recoil:0,fireAnim:0};if(d.hero)syncQuincyStats(t,1);return t;}
+function createTower(type,x,z){const d=towerDefs[type];const mesh=makeTowerMesh(type);mesh.position.set(x,.66,z);scene.add(mesh);const t={id:nextTowerId++,type,x,z,mesh,throwHand:1,damageDealt:0,abilityCd:0,blitzCd:0,abilityTimer:0,abilityTick:0,abilityAngle:0,activeAbility:null,fanBuffs:[],fanTier:0,glueLevel:d.glueLevel||0,projSpeed:d.projSpeed,projectileLife:d.projectileLife,projectileRadius:d.projectileRadius,glueLayers:d.glueLayers||0,range:d.range,rate:d.rate,damage:d.damage||0,cool:0,pressCool:0,invest:d.cost,target:'first',paths:[0,0,0],level:d.hero?1:0,heroXP:0,pierce:d.pierce||1,splash:d.splash||0,slow:d.slow||0,slowDuration:d.slowDuration||2.8,freeze:d.freeze||0,tacks:d.tacks||8,shots:1,bonusMoab:0,shotCounter:0,rapidCd:0,rapidTimer:0,stormCd:0,stormTimer:0,stormTick:0,damageType:d.damageType||'',notes:d.notes||'',camoDetect:!!d.camoDetect,recoil:0,fireAnim:0};if(d.hero)syncQuincyStats(t,1);return t;}
 function syncQuincyStats(t,level){
  level=Math.max(1,Math.min(20,Math.floor(level)));if(t.quincySyncedLevel===level)return false;
  const previous=t.quincySyncedLevel||1;t.level=level;t.quincySyncedLevel=level;
@@ -719,6 +724,10 @@ function syncQuincyStats(t,level){
  return true;
 }
 function quincyStormStats(level){return {chance:level>=20?.10:level>=18?.075:.05,damage:level>=20?10:6,moabBonus:level>=20?10:6,ceramicBonus:level>=20?24:level>=18?18:0,cooldown:level>=18?55:70};}
+function awardHeroRoundXP(completedRound){
+ if(currentMode.variant==='sandbox')return;
+ for(const t of towers){if(t.type!=='hero')continue;t.heroXP=(t.heroXP??heroXPAtLevel(t.level))+heroRoundXP(completedRound);const progress=heroXPProgress(t.heroXP);if(syncQuincyStats(t,progress.level))updateHeroAppearance(t);}
+}
 function damageTypeNotes(t){
  if(t.type==='hero')return '';
  const camo=t.camoDetect?'Can detect Camo':'Cannot hit Camo';
@@ -758,8 +767,8 @@ function abilityState(t,ability){
  const cooldown=ability.key==='rapid'?t.rapidCd:ability.key==='storm'?t.stormCd:ability.key==='blitz'?t.blitzCd:t.abilityCd;
  const remaining=ability.key==='rapid'?t.rapidTimer:ability.key==='storm'?t.stormTimer:t.abilityTimer;
  const noBlimp=ability.kind==='assassin'&&!enemies.some(e=>e.alive&&e.isBlimp);
- const disabled=ability.passive||gameEnded||!roundActive||cooldown>0||remaining>0||noBlimp;
- const text=gameEnded?'Game finished':remaining>0?'Active '+remaining.toFixed(1)+'s':cooldown>0?'Cooldown '+Math.ceil(cooldown)+'s':ability.passive?'Automatic on leak':!roundActive?'Start a round':noBlimp?'Needs a blimp':'Ready';
+ const disabled=ability.passive||gameEnded||currentMode.variant==='sandbox'&&lives<=0||!roundActive&&currentMode.variant!=='sandbox'||cooldown>0||remaining>0||noBlimp;
+ const text=gameEnded?'Game finished':remaining>0?'Active '+remaining.toFixed(1)+'s':cooldown>0?'Cooldown '+Math.ceil(cooldown)+'s':ability.passive?'Automatic on leak':currentMode.variant==='sandbox'&&lives<=0?'Set lives above zero':!roundActive&&currentMode.variant!=='sandbox'?'Start a round':noBlimp?'Needs a blimp':'Ready';
  return {disabled,text,active:remaining>0};
 }
 function refreshAbilityUI(){
@@ -831,11 +840,11 @@ function getAttackTower(t){
  return attack;
 }
 function strongestBlimp(){
- return enemies.filter(e=>e.alive&&e.isBlimp).sort((a,b)=>b.hp-a.hp||progress(b)-progress(a))[0]||null;
+ return enemies.filter(e=>e.alive&&e.isBlimp).sort((a,b)=>(b.testBloon?-1:b.hp)-(a.testBloon?-1:a.hp)||progress(b)-progress(a))[0]||null;
 }
 function chooseBombAbilityTarget(t){
  const candidates=enemies.filter(e=>e.alive&&e.isBlimp);
- if(t.target==='strong')return candidates.sort((a,b)=>b.hp-a.hp||progress(b)-progress(a))[0]||null;
+ if(t.target==='strong')return candidates.sort((a,b)=>(b.testBloon?-1:b.hp)-(a.testBloon?-1:a.hp)||progress(b)-progress(a))[0]||null;
  if(t.target==='close')return candidates.sort((a,b)=>Math.hypot(a.mesh.position.x-t.x,a.mesh.position.z-t.z)-Math.hypot(b.mesh.position.x-t.x,b.mesh.position.z-t.z))[0]||null;
  return candidates.sort((a,b)=>t.target==='last'?progress(a)-progress(b):progress(b)-progress(a))[0]||null;
 }
@@ -942,7 +951,8 @@ function updateTowerAbility(t,dt){
 }
 function loseLives(amount){
  if(amount<=0)return;
- lives=Math.max(0,lives-amount);triggerBombBlitz();
+ if(currentMode.variant==='sandbox'&&sandboxLivesTarget===0&&lives===0)return;
+ lives=Math.max(0,lives-amount);if(currentMode.variant==='sandbox'&&sandboxLivesTarget>0)sandboxLeakTimer=3;triggerBombBlitz();
 }
 function triggerBombBlitz(){
  for(const t of towers){
@@ -1017,6 +1027,7 @@ function refreshSelected(){
  changeHandsBtn.classList.toggle('hidden',t.type!=='boomer');changeHandsBtn.textContent='Change Hands: '+(t.throwHand===-1?'Left':'Right');
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
+ const xpStatus=document.getElementById('heroXPStatus');xpStatus.hidden=t.type!=='hero';if(t.type==='hero'){const xp=heroXPProgress(t.heroXP??heroXPAtLevel(t.level));xpStatus.textContent=xp.level===20?'LEVEL 20 · MAX':'LEVEL '+t.level+' · XP '+xp.current.toLocaleString()+' / '+xp.required.toLocaleString();}
  targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label','Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken);refreshAbilityUI()
 }
 function syncDartStats(t){
@@ -1158,9 +1169,9 @@ changeHandsBtn.addEventListener('click',()=>{if(selectedTower?.type!=='boomer')r
 camoPriorityBtn.addEventListener('click',()=>{if(selectedTower?.type==='dart'&&selectedTower.paths[2]>=2){selectedTower.camoPriority=!selectedTower.camoPriority;refreshSelected();saveRunCheckpoint();}});
 function cycleTarget(direction){if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+direction+modes.length)%modes.length];refreshSelected();saveRunCheckpoint();}
  targetBtn.addEventListener('click',()=>cycleTarget(1));document.getElementById('targetNextBtn').addEventListener('click',()=>cycleTarget(1));document.getElementById('targetPrevBtn').addEventListener('click',()=>cycleTarget(-1));
- sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI();saveRunCheckpoint()});closeSel.addEventListener('click',clearSelection);
+ sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash=currentMode.variant==='sandbox'?Math.min(SANDBOX_MAX,cash+Math.floor(t.invest*.7)):cash+Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI();saveRunCheckpoint()});closeSel.addEventListener('click',clearSelection);
  towerInfoBtn.addEventListener('click',()=>{const show=towerDetails.classList.contains('hidden');towerDetails.classList.toggle('hidden',!show);towerInfoBtn.setAttribute('aria-expanded',String(show));refreshSelected();});document.getElementById('closeTowerInfo').addEventListener('click',()=>{towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false')});
- const upgradeTree=createUpgradeTree({definitions:towerDefs,upgrades:upgradeData,descriptions:upgradeDescriptions,heroLevels:quincyLevelMetadata});
+ const upgradeTree=createUpgradeTree({definitions:towerDefs,upgrades:upgradeData,descriptions:upgradeDescriptions,heroLevels:quincyLevelMetadata,heroLevelXP:()=>towers.find(t=>t.type==='hero')?.heroXP||0});
  document.getElementById('shopUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type||selectedType));
  document.getElementById('selectedUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type));
  addEventListener('pointerdown',unlockPopAudio,{passive:true});addEventListener('keydown',unlockPopAudio);
@@ -1296,7 +1307,7 @@ function normalizeSpawnName(raw){
  name=name.replace(/\s*\(.*$/,'').replace(/\b(MOAB|BFB|ZOMG|DDT|BAD)s\b/gi,'$1').trim();
  if(name==='Multi-Colored')name='Rainbow';
  if(name.includes('Ceramic'))name='Ceramic';
- name=[...layerNames,...Object.keys(blimpStats)].find(n=>n.toLowerCase()===name.toLowerCase());
+ name=[...layerNames,...Object.keys(blimpStats),...sandboxTypes.slice(-2)].find(n=>n.toLowerCase()===name.toLowerCase());
  if(!name)throw new Error('Unknown bloon type: '+raw);
  return {type:name,camo,regrow,fort,superCeramic};
 }
@@ -1313,6 +1324,8 @@ function blimpHealthMultiplier(r){
 }
 function enemyBaseHp(type,opts={}){
  const spawnRound=opts.spawnRound??round;
+ if(type==='Test Bloon'||type==='MOAB Test Bloon')return TEST_BLOON_HP;
+ if(currentMode.variant==='sandbox'&&(type==='DDT'||type==='BAD'))return sandboxBlimpHp(type,spawnRound,blimpHealthMultiplier(spawnRound));
  if(blimpStats[type])return Math.round(modeBloonHealth(type,blimpStats[type].hp,spawnRound,currentMode)*blimpHealthMultiplier(spawnRound));
  if(type==='Ceramic')return opts.superCeramic||spawnRound>=81?60:10;
  return 1;
@@ -1342,15 +1355,17 @@ function placeEnemyOnTrack(e){
 }
 function spawnEnemy(spec,trackState=null){
  const o=typeof spec==='string'?normalizeSpawnName(spec):{...spec};
- if(!blimpStats[o.type]&&!Object.hasOwn(layerIndex,o.type))throw new Error('Unknown bloon type: '+o.type);
+ const testBloon=o.type==='Test Bloon'||o.type==='MOAB Test Bloon';
+ if(testBloon&&currentMode.variant!=='sandbox')throw new Error('Test Bloons are only available in Sandbox');
+ if(!testBloon&&!blimpStats[o.type]&&!Object.hasOwn(layerIndex,o.type))throw new Error('Unknown bloon type: '+o.type);
  if(o.type==='DDT')o.camo=true;
  o.spawnRound=o.spawnRound??round;
  if(o.type==='Ceramic'&&o.spawnRound>=81)o.superCeramic=true;
- const isBlimp=!!blimpStats[o.type];
+ const isBlimp=!!blimpStats[o.type]||o.type==='MOAB Test Bloon';
  const layer=isBlimp?null:(layerIndex[o.type]??0);
- const mesh=isBlimp?makeBlimpMesh(o.type,o):makeBloonMesh(layer,o);scene.add(mesh);
+ const mesh=isBlimp?makeBlimpMesh(testBloon?'MOAB':o.type,o):makeBloonMesh(testBloon?6:layer,o);scene.add(mesh);
  const hp=enemyBaseHp(o.type,o)*(o.fort?2:1);
- const e={type:o.type,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueStrikeDamageAmp:0,glueVulnerableT:0,glueDps:0,glueCarry:0,glueLayers:0,glueLevel:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
+ const e={type:o.type,testBloon,layer,fort:!!o.fort,camo:!!o.camo,regrow:!!o.regrow,superCeramic:!!o.superCeramic,spawnRound:o.spawnRound,isBlimp,mesh,seg:trackState?.seg??0,dist:trackState?.dist??0,laneOffset:trackState?.laneOffset??0,alive:true,knockbackT:0,knockbackSpeed:0,slowT:0,slowMult:1,freezeT:0,abilityFreezeT:0,abilitySlowT:0,abilitySlowMult:1,glueT:0,glueSlow:1,glueDamageAmp:0,glueAmpT:0,glueStrikeDamageAmp:0,glueVulnerableT:0,glueDps:0,glueCarry:0,glueLayers:0,glueLevel:0,hp,maxHp:hp,maxLayer:layer,regrowTimer:0,regrowStack:[...(o.regrowStack||[])]};
  enemies.push(e);placeEnemyOnTrack(e);return e;
 }
 function childProps(parent,type,regrowStack){
@@ -1396,7 +1411,7 @@ function destroyEnemyAndSpawnChildren(e){
  playBloonPop();spawnPopVisual(e);e.alive=false;disposeTransientMesh(e.mesh);
  trackGlueStunEnemy(e);
  const normalKids=regularChildren[e.type];
- const kids=e.isBlimp?blimpChildren[e.type]:e.superCeramic?normalKids?.slice(0,1):normalKids;
+ const kids=e.testBloon?null:e.isBlimp?blimpChildren[e.type]:e.superCeramic?normalKids?.slice(0,1):normalKids;
  const children=kids?spawnChildSet(e,kids):[];
  if(stunCoat)applyGluePopStun(stunCoat,popPosition);
  return children;
@@ -1405,13 +1420,13 @@ function destroyEnemyAndSpawnChildren(e){
 const trackDistances=[0];for(let i=1;i<PATH.length;i++)trackDistances[i]=trackDistances[i-1]+PATH[i-1].distanceTo(PATH[i]);
 function progress(e){return trackDistances[e.seg]+e.dist}
 function enemySpeed(e){
- const key=e.isBlimp?e.type:layerNames[Math.min(e.layer,layerNames.length-1)],base=(bloonSpeeds[key]||75)/9.5*currentMode.bloonSpeed;
+ const key=e.testBloon?(e.isBlimp?'MOAB':'Red'):e.isBlimp?e.type:layerNames[Math.min(e.layer,layerNames.length-1)],base=(bloonSpeeds[key]||75)/9.5*currentMode.bloonSpeed;
  if(e.type==='BAD')return base;
  if(e.abilityFreezeT>0||e.freezeT>0)return 0;
  const slow=Math.min(e.auraSlowMult||1,e.permafrostLayers>0?(e.permafrostSlow||1):1,e.slowT>0?e.slowMult:1,e.glueT>0?e.glueSlow:1,e.abilitySlowT>0?e.abilitySlowMult:1);
  return base*slow;
 }
-function leakDamage(e){if(e.isBlimp)return Math.max(1,Math.ceil(e.hp));return Math.max(1,(e.layer??0)+1)}
+function leakDamage(e){if(e.testBloon)return 0;if(e.isBlimp)return Math.max(1,Math.ceil(e.hp));return Math.max(1,(e.layer??0)+1)}
 function setEnemyType(e,newType){
  const old=e.mesh;disposeTransientMesh(old);e.glueMarker=null;e.freezeMarker=null;e.icicleMarker=null;
  e.type=newType;e.layer=layerIndex[newType]??0;e.isBlimp=!!blimpStats[newType];
@@ -1614,7 +1629,7 @@ function moveEnemies(dt){
   let move=enemySpeed(e)*Math.min(motionDt-knockDt,dt-frozenDt);
   while(move>0&&e.alive){
    const a=PATH[e.seg],b=PATH[e.seg+1];
-   if(!b){e.alive=false;disposeTransientMesh(e.mesh);loseLives(leakDamage(e));if(lives<=0)endGame(false);break}
+   if(!b){e.alive=false;disposeTransientMesh(e.mesh);loseLives(leakDamage(e));if(lives<=0&&currentMode.variant!=='sandbox')endGame(false);break}
    const len=a.distanceTo(b),remain=len-e.dist;
    if(move<remain){e.dist+=move;move=0}else{move-=remain;e.seg++;e.dist=0}
    if(e.alive){placeEnemyOnTrack(e);e.mesh.rotation.y=e.isBlimp?Math.atan2(b.x-a.x,b.z-a.z):Math.sin(animationTime*1.5+e.laneOffset)*.12}
@@ -1707,6 +1722,7 @@ function sourceTowerForDamage(t){return t?.sourceTower||t}
 function projectileBounds(a,b,radius){return {minX:Math.min(a.x,b.x)-radius-1e-8,maxX:Math.max(a.x,b.x)+radius+1e-8,minZ:Math.min(a.z,b.z)-radius-1e-8,maxZ:Math.max(a.z,b.z)+radius+1e-8};}
 function inProjectileBounds(e,bounds){const p=e.mesh.position;return p.x>=bounds.minX&&p.x<=bounds.maxX&&p.z>=bounds.minZ&&p.z<=bounds.maxZ;}
 function hitEnemy(e,dmg,fx={}){
+ if(currentMode.variant==='sandbox'&&lives<=0)return {children:[],remainingDamage:0};
  if(!e||!e.alive)return;
  if(dmg>0){e.regrowTimer=0;e.hitFlash=.16;}
  if(fx.glue&&(!e.isBlimp||fx.allowBlimpSlow)){
@@ -1722,9 +1738,9 @@ function hitEnemy(e,dmg,fx={}){
  let dealt=0,children=[];
  let left=dmg>0?Math.max(0,Math.floor(dmg+(fx.ignoreGlueAmp?(fx.suppressGlueStrikeAmp?0:e.glueStrikeDamageAmp||0):(e.glueDamageAmp||0)+(e.brittleT>0?e.brittleDamage||0:0)))):0;
  if(left>0&&e.alive){
-  const taken=Math.min(left,e.hp);if(!e.isBlimp)cash+=taken*cashPerPop(round);
+  const taken=Math.min(left,e.hp);if(!e.isBlimp&&!e.testBloon)grantIncome(taken*cashPerPop(round));
   e.hp-=taken;left-=taken;dealt=taken;
-  if(e.hp<=0){if(e.isBlimp)cash+=1;children=destroyEnemyAndSpawnChildren(e)||[];}
+  if(e.hp<=0){if(e.isBlimp&&!e.testBloon)grantIncome(1);children=destroyEnemyAndSpawnChildren(e)||[];}
  }
  for(const target of e.alive?[e]:children){
   if(ice){
@@ -1756,7 +1772,7 @@ function chooseTarget(t,candidates=enemies,canHit=towerCanDamage){
   const priority=!!(t.camoPriority&&t.camoDetect&&e.camo);
   if(preferCamo&&!priority)continue;
   if(priority&&!preferCamo){best=null;bestScore=-Infinity;preferCamo=true;}
-  const score=t.target==='first'?progress(e):t.target==='last'?-progress(e):t.target==='strong'?(e.isBlimp?1000+e.hp:e.layer||0):-distanceSquared;
+  const score=t.target==='first'?progress(e):t.target==='last'?-progress(e):t.target==='strong'?(e.testBloon?-1:e.isBlimp?1000+e.hp:e.layer||0):-distanceSquared;
   if(score>bestScore){best=e;bestScore=score;}
  }
  return best;
@@ -2148,7 +2164,7 @@ function updateMOABPress(t,dt){
   // Use the tower's target priority, filtering out regular bloons for this attack only.
   const targets=enemies.filter(e=>e.alive&&e.isBlimp&&towerCanDamage(targeting,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=targeting.range);
   if(!targets.length){t.pressCool=0;break}
-  targets.sort((a,b)=>t.target==='strong'?b.hp-a.hp:t.target==='close'?Math.hypot(a.mesh.position.x-t.x,a.mesh.position.z-t.z)-Math.hypot(b.mesh.position.x-t.x,b.mesh.position.z-t.z):t.target==='last'?progress(a)-progress(b):progress(b)-progress(a));
+  targets.sort((a,b)=>t.target==='strong'?(b.testBloon?-1:b.hp)-(a.testBloon?-1:a.hp):t.target==='close'?Math.hypot(a.mesh.position.x-t.x,a.mesh.position.z-t.z)-Math.hypot(b.mesh.position.x-t.x,b.mesh.position.z-t.z):t.target==='last'?progress(a)-progress(b):progress(b)-progress(a));
   fireKylieProjectile(t,targets[0],{special:true});
   t.pressCool+=boomerSpecialTuning.cooldown*t.rate/towerDefs.boomer.rate;
  }
@@ -2303,10 +2319,10 @@ function updateQuincyAbilities(t,dt){
  if(t.stormTimer<=0){t.stormHits.clear();t.stormAttack=null;}
 }
 function updateTowers(dt){
- const iceBuffDt=roundActive?Math.min(dt,absoluteZeroBuffT):0;if(roundActive)absoluteZeroBuffT=Math.max(0,absoluteZeroBuffT-dt);
+ if(currentMode.variant==='sandbox'&&lives<=0)return;
+ const iceBuffDt=(roundActive||currentMode.variant==='sandbox')?Math.min(dt,absoluteZeroBuffT):0;if(roundActive||currentMode.variant==='sandbox')absoluteZeroBuffT=Math.max(0,absoluteZeroBuffT-dt);
  for(const t of towers){
-  const combatDt=roundActive?dt:0;
-  if(t.type==='hero'&&syncQuincyStats(t,Math.min(20,1+Math.floor((round-1)/5))))updateHeroAppearance(t);
+  const combatDt=roundActive||currentMode.variant==='sandbox'?dt:0;
   updateTowerAbility(t,combatDt);
   if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else if(t.type==='hero'&&t.mesh.userData.quincyRig)animateQuincy(t,dt);else animateTower(t,dt);
   if(t.type==='hero'){
@@ -2319,28 +2335,28 @@ function updateTowers(dt){
    while(t.cool<=1e-9){
     const e=chooseTarget(t,enemies,quincyCanTarget);if(!e){t.cool=0;break;}
     aimTower(t,e);for(let i=0;i<t.shots;i++)fireProjectile(t,e,t.damage,{visualSpread:(i-(t.shots-1)/2)*.18});
-    recordTowerUse(t);t.shotCounter=(t.shotCounter||0)+1;t.cool+=t.rate/(t.rapidTimer>0?(t.level>=15?4:3):1);
+    recordCombatUse(t);t.shotCounter=(t.shotCounter||0)+1;t.cool+=t.rate/(t.rapidTimer>0?(t.level>=15?4:3):1);
    }
    continue;
   }else if(t.type==='tack'){
    if(t.paths[0]>=4){
-    while(t.cool<=0){if(!fireTackFlameBurst(t)){t.cool=0;break;}recordTowerUse(t);t.cool+=t.rate;}
+    while(t.cool<=0){if(!fireTackFlameBurst(t)){t.cool=0;break;}recordCombatUse(t);t.cool+=t.rate;}
     continue;
    }
    while(t.cool<=0){
-    if(!fireTackRadialBurst(t)){t.cool=0;break;}recordTowerUse(t);t.cool+=t.rate;
+    if(!fireTackRadialBurst(t)){t.cool=0;break;}recordCombatUse(t);t.cool+=t.rate;
    }
    continue;
   }else if(t.type==='ice'){
    if((t.paths?.[2]||0)>=3){
-    const e=chooseTarget(t);if(e){aimTower(t,e);fireProjectile(t,e,t.damage,{visualType:'ice'});recordTowerUse(t);t.cool=t.rate}
+    const e=chooseTarget(t);if(e){aimTower(t,e);fireProjectile(t,e,t.damage,{visualType:'ice'});recordCombatUse(t);t.cool=t.rate}
    }else{
     const targets=enemies.filter(e=>e.alive&&towerCanDamage(t,e)&&Math.hypot(e.mesh.position.x-t.x,e.mesh.position.z-t.z)<=t.range).slice(0,t.pierce);
     const global=t.paths[1]>=5?enemies.filter(e=>e.alive&&!e.isBlimp&&towerCanDamage(t,e)):[];
     if(targets.length||global.length){
      aimTower(t,targets[0]||global[0]);targets.forEach(e=>hitEnemy(e,t.damage,{tower:t,freeze:t.freeze}));
      for(const e of global)if(e.alive)hitEnemy(e,0,{tower:t,freeze:iceMiddleTuning.secondaryFreeze});
-     spawnIceAuraVisual(t);recordTowerUse(t);t.cool=t.rate;
+     spawnIceAuraVisual(t);recordCombatUse(t);t.cool=t.rate;
     }
    }
   }else if(t.type==='boomer'){
@@ -2349,7 +2365,7 @@ function updateTowers(dt){
     const e=chooseTarget(attack);
     if(!e){t.cool=0;break}
     fireProjectile(attack,e);
-    recordTowerUse(t);t.shotCounter=(t.shotCounter||0)+1;
+    recordCombatUse(t);t.shotCounter=(t.shotCounter||0)+1;
     t.cool+=attack.rate;
    }
   }else{
@@ -2357,7 +2373,7 @@ function updateTowers(dt){
     aimTower(t,e);
     const count=Math.max(1,attack.shots||1);
     for(let i=0;i<count;i++)fireProjectile(attack,e,attack.damage,{visualSpread:(i-(count-1)/2)*.18});
-    recordTowerUse(t);t.shotCounter=(t.shotCounter||0)+1;
+    recordCombatUse(t);t.shotCounter=(t.shotCounter||0)+1;
     t.cool=attack.rate
    }
   }
@@ -2630,6 +2646,39 @@ function updateProjectiles(dt){
  for(let i=projectiles.length-1;i>=0;i--)if(projectiles[i].dead){disposeTransientMesh(projectiles[i].mesh);projectiles.splice(i,1)}
 }
 
+function finishSandboxSend(){
+ if(roundActive)endRoundAcidPuddles();roundActive=false;spawnTimer=0;startBtn.disabled=false;startBtn.textContent='Send Round';updateUI();refreshAbilityUI();saveRunCheckpoint();
+}
+function clearSandboxBloons(){
+ if(currentMode.variant!=='sandbox')return;
+ for(const e of enemies){e.alive=false;disposeTransientMesh(e.mesh);}enemies.length=0;spawnQueue=[];glueStunGrid=null;
+ for(const p of projectiles)disposeTransientMesh(p.mesh);projectiles.length=0;finishSandboxSend();
+}
+function setSandboxRound(value,send=false){
+ if(currentMode.variant!=='sandbox'||!Number.isInteger(value)||value<1||value>mapProgress.read())return false;
+ clearSandboxBloons();round=value;if(send){spawnQueue=buildRound(value);roundActive=spawnQueue.length>0;spawnTimer=0;}
+ sandboxUI.sync();updateUI();refreshAbilityUI();saveRunCheckpoint();return true;
+}
+function sendSandboxBloons(options){
+ if(currentMode.variant!=='sandbox')return;const queued=sandboxSpawnQueue(options,round);if(!spawnQueue.length)spawnTimer=0;spawnQueue.push(...queued);roundActive=true;updateUI();refreshAbilityUI();
+}
+function setSandboxStats(money,health){
+ if(currentMode.variant!=='sandbox'||!Number.isInteger(money)||!Number.isInteger(health)||money<0||money>SANDBOX_MAX||health<0||health>SANDBOX_MAX)return;
+ cash=money;lives=health;sandboxLivesTarget=health;sandboxLeakTimer=0;updateUI();if(selectedTower)refreshSelected();refreshAbilityUI();saveRunCheckpoint();
+}
+function updateSandboxRecovery(dt){
+ if(currentMode.variant!=='sandbox'||sandboxLeakTimer<=0)return;sandboxLeakTimer=Math.max(0,sandboxLeakTimer-dt);if(sandboxLeakTimer===0&&lives===0&&sandboxLivesTarget>0){lives=sandboxLivesTarget;updateUI();refreshAbilityUI();}
+}
+function resetSandboxDamage(){if(currentMode.variant!=='sandbox')return;for(const t of towers)t.damageDealt=0;if(selectedTower)refreshSelected();saveRunCheckpoint();}
+function removeSandboxTowers(){
+ if(currentMode.variant!=='sandbox')return;for(const t of towers){disposeTransientMesh(t.abilityHalo);disposeTransientMesh(t.mesh);}towers.length=0;heroPlaced=false;
+ for(const p of projectiles)disposeTransientMesh(p.mesh);projectiles.length=0;for(const p of acidPuddles)disposeTransientMesh(p.mesh);acidPuddles.length=0;absoluteZeroBuffT=0;clearSelection();updateUI();refreshAbilityUI();saveRunCheckpoint();
+}
+function resetSandboxCooldowns(){if(currentMode.variant!=='sandbox')return;for(const t of towers)for(const key of ['abilityCd','blitzCd','rapidCd','stormCd'])t[key]=0;refreshAbilityUI();if(selectedTower)refreshSelected();saveRunCheckpoint();}
+function setSandboxHeroLevel(value){
+ if(currentMode.variant!=='sandbox')return false;const t=towers.find(t=>t.type==='hero');if(!t)return false;t.heroXP=heroXPAtLevel(value);syncQuincyStats(t,value);updateHeroAppearance(t);refreshAbilityUI();if(selectedTower===t)refreshSelected();saveRunCheckpoint();return true;
+}
+
 function buildRound(n){
  const q=[],groups=exactRoundData[n]||[];
  const addGroup=(count,raw,groupIndex)=>{
@@ -2649,51 +2698,52 @@ function buildRound(n){
  groups.forEach(([count,name],i)=>addGroup(count,name,i));
  return q;
 }
-function beginRound(){if(!gameStarted||roundActive||gameEnded||pendingResume)return;saveRunCheckpoint(true);autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
+function beginRound(){if(currentMode.variant==='sandbox'){setSandboxRound(round,true);return;}if(!gameStarted||roundActive||gameEnded||pendingResume)return;saveRunCheckpoint(true);autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
 function spawnStep(dt){
+ if(currentMode.variant==='sandbox'){if(!roundActive)return;spawnTimer-=dt;while(spawnQueue.length&&spawnTimer<=1e-9){const s=spawnQueue.shift();spawnEnemy(s.spec);spawnTimer+=s.gap;}if(!spawnQueue.length&&!enemies.length)finishSandboxSend();return;}
  if(!roundActive){
   if(autoStart&&autoStartTimer>0&&!gameEnded){autoStartTimer-=dt;if(autoStartTimer<=0)beginRound()}
   return;
  }
  if(spawnQueue.length){spawnTimer-=dt;if(spawnTimer<=0){const s=spawnQueue.shift();spawnEnemy(s.spec);spawnTimer=s.gap}}
  else if(!enemies.length){
-  roundActive=false;endRoundAcidPuddles();cash+=100+round;
+  roundActive=false;endRoundAcidPuddles();grantIncome(100+round);awardHeroRoundXP(round);
   if(round>=currentMode.endRound){endGame(true);return}
-  round++;startBtn.disabled=false;startBtn.textContent='Start Round';
+  round++;if(currentMode.variant==='standard')mapProgress.record(round);startBtn.disabled=false;startBtn.textContent='Start Round';
   if(autoStart){autoStartTimer=.8;startBtn.textContent='Next round soon…'}
   updateUI();if(selectedTower)refreshSelected();saveRunCheckpoint();
  }
 }
 startBtn.addEventListener('click',beginRound);
-autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls();saveRunCheckpoint()});
+autoBtn.addEventListener('click',()=>{if(currentMode.variant==='sandbox')return;autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls();saveRunCheckpoint()});
 speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls();saveRunCheckpoint()});
 restartBtn.addEventListener('click',restartRun);document.getElementById('endRestartBtn').addEventListener('click',restartRun);
-function endGame(win){if(win&&!currentMode.legacy&&!mapMedals.award(currentMode.key))toastMsg('Map medal could not be saved in this browser');gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round '+currentMode.endRound+' cleared!':'Game Over';endText.textContent=win?'Monkey Meadow · '+currentMode.label+' mode completed!':'The balloons made it through the meadow.';refreshAbilityUI()}
+function endGame(win){if(currentMode.variant==='sandbox')return;if(win&&currentMode.variant==='standard')mapProgress.record(round);if(win&&!currentMode.legacy&&!mapMedals.award(currentMode.variant==='deflation'?'deflation':currentMode.key))toastMsg('Map medal could not be saved in this browser');gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round '+currentMode.endRound+' cleared!':'Game Over';endText.textContent=win?'Monkey Meadow · '+currentMode.label+' mode completed!':'The balloons made it through the meadow.';refreshAbilityUI()}
 
 const resumeDialog=document.getElementById('resumeDialog');
 const saveRules={definitions:towerDefs,width:MAP_W,height:MAP_H};
 let runCheckpoint=null,pendingResume=null,leavingForRestart=false,lastAutoSave=0,saveWarning='';
 const runStore=createRunStorage({rules:saveRules,
  onError(kind){document.getElementById('saveStatus').textContent=kind==='invalid'?'Saved run could not be loaded. A new game is ready.':'Saving is unavailable in this browser. Keep this tab open to keep your run.';if(saveWarning!==kind){saveWarning=kind;toastMsg(kind==='invalid'?'Saved run could not be loaded':'Browser storage is unavailable; progress cannot be saved');}},
- onSaved(saved){saveWarning='';const text='Saved · Round '+saved.round+' · Interrupted rounds restart from the beginning.',status=document.getElementById('saveStatus');if(status.textContent!==text)status.textContent=text;}
+ onSaved(saved){saveWarning='';const text='Saved · Round '+saved.round+(saved.variant==='sandbox'?' · Sandbox board saved. Bloon sends clear on resume.':' · Interrupted rounds restart from the beginning.'),status=document.getElementById('saveStatus');if(status.textContent!==text)status.textContent=text;}
 });
 function saveRunCheckpoint(roundInProgress=roundActive){
  if(!gameStarted||pendingResume||leavingForRestart||gameEnded)return;
  const settings={speed,autoStart,effectsVolume:Number(document.getElementById('effectsVolume').value)/100,musicVolume:Number(document.getElementById('musicVolume').value)/100};
- if(!roundActive){
-  const captured=captureRunSave({difficulty:currentMode.key,legacyMode:currentMode.legacy,round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
+ if(!roundActive||currentMode.variant==='sandbox'){
+  const captured=captureRunSave({difficulty:currentMode.key,legacyMode:currentMode.legacy,variant:currentMode.variant,sandboxLivesTarget,round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
   if(!captured){runStore.write(null);return;}runCheckpoint=captured;
  }
  if(runCheckpoint){runCheckpoint={...runCheckpoint,...settings,savedAt:Date.now()};runStore.write(runCheckpoint);}
 }
 function restoreRunState(saved){
- configureDifficulty(saved.difficulty,saved.legacyMode);
- round=saved.round;lives=saved.lives;cash=saved.cash;speed=saved.speed;autoStart=saved.autoStart;absoluteZeroBuffT=saved.absoluteZeroBuffT;roundActive=false;autoStartTimer=0;heroPlaced=false;
+ configureDifficulty(saved.difficulty,saved.legacyMode,saved.variant);
+ round=saved.round;lives=saved.lives;cash=saved.cash;sandboxLivesTarget=saved.sandboxLivesTarget;sandboxLeakTimer=currentMode.variant==='sandbox'&&lives===0&&sandboxLivesTarget>0?3:0;if(currentMode.variant==='standard')mapProgress.record(round);speed=saved.speed;autoStart=saved.autoStart;absoluteZeroBuffT=saved.absoluteZeroBuffT;roundActive=false;autoStartTimer=0;heroPlaced=false;
  const byId=new Map();
  for(const record of saved.towers){
   const t=createTower(record.type,record.x,record.z);towers.push(t);t.id=record.id;
   for(let p=0;p<3;p++)for(let tier=0;tier<record.paths[p];tier++){t.paths[p]++;applyUpgrade(t,p,tier);}
-  if(t.type==='hero'){syncQuincyStats(t,record.level);heroPlaced=true;}
+  if(t.type==='hero'){t.heroXP=record.heroXP;syncQuincyStats(t,record.level);heroPlaced=true;}
   Object.assign(t,record.runtime);t.target=record.target;t.throwHand=record.throwHand;t.camoPriority=record.camoPriority;t.fanBuffs=record.fanBuffs.map(buff=>({...buff}));setFanBoostTier(t,t.fanBuffs.reduce((tier,buff)=>Math.max(tier,buff.tier),0));
   t.placementSurface=record.placementSurface;t.frozenWaterSourceId=record.frozenWaterSourceId;
   t.activeAbility=record.activeAbilityKey?getTowerAbilities({...t,paths:t.paths.map((tier,p)=>p===1?record.activeAbilityTier:tier)}).find(a=>a.key===record.activeAbilityKey):null;
@@ -2706,18 +2756,18 @@ function restoreRunState(saved){
  for(const record of saved.puddles){const mesh=acidPuddleRenderer.create(0);mesh.position.set(record.x,.73,record.z);mesh.scale.setScalar(record.radius);scene.add(mesh);const {sourceId,camoDetect,...stats}=record;acidPuddles.push({...stats,mesh,hitEnemies:new Set(),attack:{type:'acidPuddle',damageType:'Acid',camoDetect,sourceTower:byId.get(sourceId)||null}});}
  restoreTowerUsage(saved.usage);
  for(const [id,value,setVolume] of [['effects',saved.effectsVolume,setEffectsVolume],['music',saved.musicVolume,setMusicVolume]]){const percent=Math.round(value*100),input=document.getElementById(id+'Volume');input.value=percent;input.style.setProperty('--volume',percent+'%');document.getElementById(id+'Percent').textContent=percent+'%';setVolume(value);}
- autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));speedBtn.textContent='Speed ×'+speed;startBtn.textContent='Start Round';startBtn.disabled=false;
- if(saved.selectedTowerId)selectTower(byId.get(saved.selectedTowerId));updateUI();flushUI();refreshAbilityUI();
+ autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));speedBtn.textContent='Speed ×'+speed;startBtn.textContent=currentMode.variant==='sandbox'?'Send Round':'Start Round';startBtn.disabled=false;
+ sandboxUI.sync();if(saved.selectedTowerId)selectTower(byId.get(saved.selectedTowerId));updateUI();flushUI();refreshAbilityUI();
 }
-function configureDifficulty(key,legacy=false){
- currentMode=getGameMode(key,legacy);applyModePrices(towerDefs,upgradeData,currentMode);
- document.getElementById('pauseDifficulty').textContent=currentMode.label.toUpperCase()+' MODE';document.getElementById('roundLimit').textContent=currentMode.endRound;
+function configureDifficulty(key,legacy=false,variant='standard'){
+ currentMode=getGameMode(key,legacy,variant);applyModePrices(towerDefs,upgradeData,currentMode);
+ document.getElementById('pauseDifficulty').textContent=currentMode.label.toUpperCase()+' MODE';document.getElementById('roundLimit').textContent=currentMode.endRound;document.getElementById('settingsAutoBtn').disabled=currentMode.variant==='sandbox';sandboxUI.sync();
  for(const button of shopBtns)button.querySelector('span').textContent='$'+towerDefs[button.dataset.tower].cost.toLocaleString();updateUI();
 }
 function setGameStarted(started){gameStarted=started;gameWrap.classList.toggle('inHome',!started);for(const id of ['topbar','shop','selectedPanel','abilityBar','game','endScreen'])document.getElementById(id).inert=!started;resize();}
-function startNewMode(key){
- configureDifficulty(key);runStore.clear();pendingResume=null;runCheckpoint=null;round=currentMode.startRound;lives=currentMode.lives;cash=650;roundActive=false;autoStartTimer=0;gameEnded=false;
- document.getElementById('saveStatus').textContent='Progress saves automatically in this browser.';homeUI.setSavedRun(null);homeUI.hide();setGameStarted(true);updateUI();flushUI();saveRunCheckpoint();
+function startNewMode(key,variant='standard'){
+ if(variant!=='standard'&&!mapMedals.read().easy)return;configureDifficulty(key,false,variant);runStore.clear();pendingResume=null;runCheckpoint=null;round=currentMode.startRound;lives=currentMode.lives;cash=currentMode.startCash;sandboxLivesTarget=lives;sandboxLeakTimer=0;roundActive=false;autoStartTimer=0;gameEnded=false;
+ if(currentMode.variant==='standard')mapProgress.record(round);startBtn.textContent=currentMode.variant==='sandbox'?'Send Round':'Start Round';startBtn.disabled=false;sandboxUI.sync();document.getElementById('saveStatus').textContent=currentMode.variant==='sandbox'?'Sandbox board saves automatically. Bloon sends are cleared on resume.':'Progress saves automatically in this browser.';homeUI.setSavedRun(null);homeUI.hide();setGameStarted(true);updateUI();flushUI();saveRunCheckpoint();
 }
 function restartRun(){leavingForRestart=true;runCheckpoint=null;runStore.clear();location.reload();}
 function saveOnLeave(){saveRunCheckpoint();}
@@ -2741,11 +2791,12 @@ if(pendingResume){
  runCheckpoint=pendingResume;document.getElementById('resumeTitle').textContent='RESUME ROUND '+pendingResume.round+'?';document.getElementById('resumeSummary').textContent=pendingResume.towers.length+' towers · '+Math.ceil(pendingResume.lives)+' lives · $'+formatCash(pendingResume.cash);
  document.getElementById('resumeNote').textContent=pendingResume.roundInProgress?'This round replays from the beginning. Changes made during the round are rolled back.':'Your towers, upgrades and resources are ready for the next round.';
 }
-const mapMedals=createMapMedals();
+const mapMedals=createMapMedals(),mapProgress=createMapProgress(mapMedals);
+const sandboxUI=createSandboxUI({getState:()=>({sandbox:currentMode.variant==='sandbox',cash,lives,round,maxRound:mapProgress.read()}),actions:{cancelPlacement:clearSelection,setRound:n=>setSandboxRound(n),sendRound:n=>setSandboxRound(n,true),sendBloons:sendSandboxBloons,clearBloons:clearSandboxBloons,setStats:setSandboxStats,resetDamage:resetSandboxDamage,removeTowers:removeSandboxTowers,resetCooldowns:resetSandboxCooldowns,setHeroLevel:setSandboxHeroLevel}});
 const homeUI=createHomeUI({savedRun:pendingResume,medals:mapMedals,onResume:()=>{document.getElementById('resumeRunBtn').click();if(pendingResume)resumeDialog.showModal();},onStart:startNewMode});
 setGameStarted(false);
 
-let last=performance.now();function loop(now){const dt=(!gameStarted||document.hidden||settingsDialog.open||upgradeTree.dialog.open||resumeDialog.open||document.getElementById('modeDialog').open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(gameStarted&&!gameEnded&&!document.hidden&&!settingsDialog.open&&!upgradeTree.dialog.open&&!resumeDialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}if(now-lastAutoSave>=2000){lastAutoSave=now;if(!roundActive)saveRunCheckpoint();}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
+let last=performance.now();function loop(now){const dt=(!gameStarted||document.hidden||settingsDialog.open||upgradeTree.dialog.open||resumeDialog.open||document.getElementById('modeDialog').open||document.getElementById('branchDialog').open||sandboxUI.dialog.open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(gameStarted&&!gameEnded&&!document.hidden&&!settingsDialog.open&&!upgradeTree.dialog.open&&!resumeDialog.open&&!sandboxUI.dialog.open){updateSandboxRecovery(dt);spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}if(now-lastAutoSave>=2000){lastAutoSave=now;if(!roundActive||currentMode.variant==='sandbox')saveRunCheckpoint();}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
 updateUI();flushUI();refreshAbilityUI();requestAnimationFrame(loop);
 } catch (err) {
  console.error(err);

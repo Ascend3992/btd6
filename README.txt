@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v66 home screen, map selection and difficulty modes
+Meadow Balloon Defense 3D - v67 Easy branches, Sandbox and Quincy level XP
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -375,3 +375,15 @@ Home and difficulty modes v66
 - New saves use schema 2 and store difficulty. Schema-1 v65 saves migrate to legacy Normal: their original 100-life baseline, 100-round limit, base Bloon speed and default prices remain in place, including runs past round 60. The stored lives/cash/towers remain intact. Only new mode selections use the new rules.
 - Winning each fresh mode records its Monkey Meadow medal under a separate localStorage key. Completing Easy and Normal awards a silver map border. New Game/Restart clear the active run while preserving earned medals. Storage errors do not prevent gameplay. Legacy 100-round runs do not award new mode medals.
 - 35 regression test files pass. Chromium checks Home/map/mode navigation, mobile layout, badge loads, all three mode rules, actual tower/upgrade spending, Easy MOAB health/fortification, pause headings, victory limits, saved Hard pricing/investment, medal/silver-border persistence, restart and v65-format round-83 restoration. No page/resource errors.
+
+Easy branches, Sandbox and hero XP v67
+- Difficulty selection opens a mode tree. Standard Easy branches to Deflation and Sandbox, both unlocked by an Easy win. Existing Easy medals unlock both. Normal and Hard currently show Standard modes only.
+- Deflation uses Easy prices/lives/speed, starts round 31 with $20,000, finishes round 60 and earns no cash from pops, blimps or rounds. Tower sales remain refunds. Deflation has a separate medal and does not raise standard map progress.
+- Easy Sandbox starts with $9,999,999 and 999,999 lives. Its blue Towers/Send Bloons shop has Set/Send Round, 19 Bloon types, count 1-999, spacing 0-999 tenths of a second, Camo/Regrow/Fortified properties, and reset/clear tools. Custom sends append; Set/Send Round clears active and queued Bloons. Round limit follows standard map progress (max 999), with old medals/save rounds retained.
+- Cash/lives editors accept 0-9,999,999. Manual zero lives stops attacks without ending the game. Leak-depleted lives recover after 3 seconds without leaking. There are no victory/defeat conditions, medals, round rewards, usage XP, earned hero XP or map progress in Sandbox. Quincy level can be set manually for testing.
+- Test Bloons have 1 trillion HP, no children, no leak damage and lowest Strong priority; MOAB Test Bloons count as blimps. Sandbox DDT base HP is 480 before round 90; BAD base HP is 28,000 before round 100. Existing modifiers apply afterwards.
+- Clear Bloons cancels queued sends and completes end-of-round effects once. Reset Damage clears local counters. Remove Towers clears the board without refunds. Reset Abilities resets cooldowns. Restart returns to Home.
+- Quincy receives XP once after each completed round while placed: 20r+20 through round 20; 40(r-20)+420 through round 50; 90(r-50)+1620 afterwards. The supplied per-level requirements now drive levels, with overflow retained and level 20 cap. Late placement starts at level 1/zero XP; Sandbox does not earn XP. The selected panel shows next-level progress and the overview shows Level XP/requirements.
+- Save schema 3 records branch and hero XP. v65/v66 saves preserve stored hero levels by seeding minimum XP and retain their original difficulty/round rules. Sandbox boards save manual cash/lives/round/towers; active Bloon sends clear on resume.
+- User reference Deflation/Sandbox badges are restyled as faceted 3D gold-rimmed icons in the transparent original generated PNG. All 45 original upgrade icons, other tower stats and all five audio assets remain intact.
+- See docs/easy-branches-and-sandbox.md for rules, screenshots, persistence and verification. 37 regression test files pass.
