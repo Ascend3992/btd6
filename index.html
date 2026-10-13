@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=62"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=65"></head>
 <body><div id="gameWrap">
 <canvas id="game" aria-label="Meadow game map"></canvas>
 <header id="topbar" aria-label="Game status">
@@ -40,13 +40,16 @@
 <label class="volumeRow" for="effectsVolume"><span class="volumeIcon" aria-hidden="true">◖))</span><span class="srOnly">Sound effects volume</span><input id="effectsVolume" type="range" min="0" max="100" value="35" style="--volume:35%"><output id="effectsPercent" for="effectsVolume">35%</output></label>
 <label class="volumeRow" for="musicVolume"><span class="volumeIcon" aria-hidden="true">♫</span><span class="srOnly">Music volume</span><input id="musicVolume" type="range" min="0" max="100" value="30" style="--volume:30%"><output id="musicPercent" for="musicVolume">30%</output></label>
 </div><div class="nowPlaying"><span aria-hidden="true">♫</span><span id="musicTrack">Sunset Samba</span><div class="musicBars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div></div>
-<div class="pauseActions"><button id="restartBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">↶</span><b>RESTART</b></button><button id="closeSettingsBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">➜</span><b>CONTINUE</b></button></div>
+<p id="saveStatus" class="saveStatus" role="status">Progress saves automatically in this browser.</p><div class="pauseActions"><button id="restartBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">↶</span><b>RESTART</b></button><button id="closeSettingsBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">➜</span><b>CONTINUE</b></button></div>
 </div></dialog>
+<dialog id="resumeDialog" aria-labelledby="resumeTitle">
+<h2 id="resumeTitle">RESUME YOUR RUN?</h2><p id="resumeSummary"></p><p id="resumeNote"></p><div class="resumeActions"><button id="resumeRunBtn" type="button" autofocus>RESUME</button><button id="newRunBtn" type="button">NEW GAME</button></div><small>Saved on this browser and website.</small>
+</dialog>
 <dialog id="upgradeTreeDialog" aria-labelledby="treeName">
 <button id="treeBack" type="button" aria-label="Back to game">↶</button>
 <header class="treeHeader"><button id="treePrev" class="treeArrow" type="button">◀</button><div class="treeBanner"><div class="treeHeading"><h2 id="treeName"></h2><span id="treeXP" title="One usage XP per attack volley this game"></span></div><p id="treeDescription"></p></div><button id="treeNext" class="treeArrow" type="button">▶</button></header>
 <div id="treePaths"></div><p class="treeHelp">Hover an upgrade to see what it does · Tap or focus for details<span class="treeSwipeHelp">Swipe paths to see all five tiers</span></p>
 <div id="treeTooltip" role="tooltip" hidden></div>
 </dialog>
-<div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><button onclick="location.reload()">Restart</button></div></div>
-</div><script src="game.js?v=64"></script></body></html>
+<div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><button id="endRestartBtn" type="button">Restart</button></div></div>
+</div><script src="game.js?v=65"></script></body></html>

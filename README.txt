@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v64 supplied Boomerang Monkey upgrade artwork
+Meadow Balloon Defense 3D - v65 automatic saved-run checkpoints
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -357,3 +357,12 @@ Supplied Boomerang Monkey artwork v64
 - upgrade-icons.js maps boomer-1-1 through boomer-3-5. The same assets appear in owned/next upgrade cards and all future tiers in the upgrade overview. Existing Dart and Glue artwork and all other towers are preserved.
 - Registry, presentation-module and entrypoint cache versions are bumped. Chromium verifies all 15 real purchases, owned/next image loads, tree image/name tier order, descriptions, mobile scrolling/tap details and existing Dart/Glue tree images, with no page or resource errors. All 33 regression test files pass.
 - No combat, cash, XP, audio or placement balance changes. Boomerang Monkey, Dart Monkey and Glue Gunner now have all 45 artwork slots complete. Next tower: Bomb Shooter, all 15 upgrades, named by upgrade.
+
+Automatic run saves v65
+- One local run is saved automatically under meadow-btd6.saved-run in browser localStorage. Saves are isolated to this browser/profile and website origin. Clearing site data removes the checkpoint. No account, server or network call is used to save a run.
+- Saves commit at the beginning and completion of each round, after between-round tower purchases/placement/sales, targeting/hand changes and settings changes, periodically while between rounds, and on pagehide/hidden visibility. A checkpoint is already written before combat starts, so mobile tab closure does not depend on an unload event.
+- Leaving during round 60 restores round 60 from its beginning. Cash, lives, towers, upgrades and usage XP earned or changed during the interrupted round are rolled back together to prevent duplicate rewards. Completed rounds retain their rewards exactly once. Live Bloons, shots and cosmetic effects are recreated by replaying the round.
+- Restored state includes positions, upgrade paths, targeting, hand/Camo priority, damage totals, invested values derived from upgrades, hero level, ability cooldowns/timers, Fan Club buffs, original active-ability tier, Storm activation stats, persistent glue puddles, global freeze buff, tower IDs, usage XP, speed, Auto Start and volume sliders.
+- A valid save opens a paused Resume/New Game prompt. Escape cannot accidentally dismiss it or overwrite the old save. Resume restarts an interrupted round; a between-round checkpoint waits for Start Round. New Game and Restart discard the checkpoint. Winning or losing clears it.
+- Versioned saves validate map compatibility, types, numeric bounds, IDs, upgrade paths, unique Tier 5s and hero count before building models. Corrupt/incompatible saves do not crash the game. Unavailable/full storage shows a message while gameplay remains usable. Atomic setItem writes retain the last successful save on quota failure.
+- The entrypoint, styles and changed usage/overview module caches are bumped. run-save.js and run-save.test.cjs cover the format and storage; Chromium verifies actual close/reopen round 60, all seven tower reconstructions, resources/timers/XP/effects, round 61 completion rewards, restart/new-game, win/loss cleanup, malformed saves and blocked storage. All 34 regression test files pass.

@@ -9,8 +9,9 @@ const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBo
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
 const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=5');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=3');
-const {recordTowerUse}=await import('./tower-usage.js?v=1');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=4');
+const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=1');
 const {playBloonPop,unlockPopAudio,setEffectsVolume,setMusicVolume}=await import('./pop-audio.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
@@ -912,7 +913,7 @@ function activateTowerAbility(t,key){
   spawnAbilityPulse(t.x,t.z,ability.color,['snowstorm','glueStorm'].includes(ability.kind)?Math.hypot(MAP_W,MAP_H):t.range);
   if(ability.duration===0)t.activeAbility=null;
  }
- toastMsg(ability.name+'!');refreshAbilityUI();if(selectedTower)refreshSelected();return true;
+ toastMsg(ability.name+'!');refreshAbilityUI();if(selectedTower)refreshSelected();saveRunCheckpoint();return true;
 }
 function updateTowerAbility(t,dt){
  t.abilityCd=Math.max(0,t.abilityCd-dt);
@@ -964,7 +965,7 @@ function surfacePlacement(type,x,z){
 }
 function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType],edgeClearance=d.footprintRadius??1;if(Math.abs(x)>MAP_W/2-edgeClearance||Math.abs(z)>MAP_H/2-edgeClearance)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z,d.footprintRadius??.25))return toastMsg('Cannot place on the path');if(towerFootprintsOverlap(selectedType,x,z))return toastMsg('Too close to another tower');const placement=surfacePlacement(selectedType,x,z);if(!placement.allowed)return toastMsg('Place this tower on land or frozen water');cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;clearPlacementPreview();selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
 
-function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected()}
+function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected();saveRunCheckpoint()}
 
 // Preserve the elements under the pointer between pointerdown and click.
 // Replacing innerHTML during the periodic panel refresh can swallow that click.
@@ -1148,22 +1149,22 @@ upgradeBtns.forEach((b,p)=>b.addEventListener('click',()=>{
  const tier=t.paths[p],u=upgradeData[t.type][p][tier];
  if(tierFiveTaken(t,p)){toastMsg('Only one of this Tier 5 at a time');refreshSelected();return;}
  if(!u||cash<u[1])return;
- cash-=u[1];t.paths[p]++;applyUpgrade(t,p,tier);refreshSelected();updateUI();
+ cash-=u[1];t.paths[p]++;applyUpgrade(t,p,tier);refreshSelected();updateUI();saveRunCheckpoint();
 }));
-changeHandsBtn.addEventListener('click',()=>{if(selectedTower?.type!=='boomer')return;selectedTower.throwHand=selectedTower.throwHand===-1?1:-1;selectedTower.mesh.scale.x=selectedTower.throwHand;refreshSelected()});
-camoPriorityBtn.addEventListener('click',()=>{if(selectedTower?.type==='dart'&&selectedTower.paths[2]>=2){selectedTower.camoPriority=!selectedTower.camoPriority;refreshSelected();}});
-function cycleTarget(direction){if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+direction+modes.length)%modes.length];refreshSelected();}
+changeHandsBtn.addEventListener('click',()=>{if(selectedTower?.type!=='boomer')return;selectedTower.throwHand=selectedTower.throwHand===-1?1:-1;selectedTower.mesh.scale.x=selectedTower.throwHand;refreshSelected();saveRunCheckpoint()});
+camoPriorityBtn.addEventListener('click',()=>{if(selectedTower?.type==='dart'&&selectedTower.paths[2]>=2){selectedTower.camoPriority=!selectedTower.camoPriority;refreshSelected();saveRunCheckpoint();}});
+function cycleTarget(direction){if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+direction+modes.length)%modes.length];refreshSelected();saveRunCheckpoint();}
  targetBtn.addEventListener('click',()=>cycleTarget(1));document.getElementById('targetNextBtn').addEventListener('click',()=>cycleTarget(1));document.getElementById('targetPrevBtn').addEventListener('click',()=>cycleTarget(-1));
- sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI()});closeSel.addEventListener('click',clearSelection);
+ sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash+=Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI();saveRunCheckpoint()});closeSel.addEventListener('click',clearSelection);
  towerInfoBtn.addEventListener('click',()=>{const show=towerDetails.classList.contains('hidden');towerDetails.classList.toggle('hidden',!show);towerInfoBtn.setAttribute('aria-expanded',String(show));refreshSelected();});document.getElementById('closeTowerInfo').addEventListener('click',()=>{towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false')});
  const upgradeTree=createUpgradeTree({definitions:towerDefs,upgrades:upgradeData,descriptions:upgradeDescriptions,heroLevels:quincyLevelMetadata});
  document.getElementById('shopUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type||selectedType));
  document.getElementById('selectedUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type));
  addEventListener('pointerdown',unlockPopAudio,{passive:true});addEventListener('keydown',unlockPopAudio);
- for(const [id,setVolume] of [['effects',setEffectsVolume],['music',setMusicVolume]])document.getElementById(id+'Volume').addEventListener('input',ev=>{const value=Number(ev.currentTarget.value);setVolume(value/100);ev.currentTarget.style.setProperty('--volume',value+'%');document.getElementById(id+'Percent').textContent=value+'%';});
+ for(const [id,setVolume] of [['effects',setEffectsVolume],['music',setMusicVolume]])document.getElementById(id+'Volume').addEventListener('input',ev=>{const value=Number(ev.currentTarget.value);setVolume(value/100);ev.currentTarget.style.setProperty('--volume',value+'%');document.getElementById(id+'Percent').textContent=value+'%';saveRunCheckpoint();});
  document.getElementById('settingsAutoBtn').addEventListener('click',()=>autoBtn.click());
  document.getElementById('settingsBtn').addEventListener('click',()=>{document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));settingsDialog.showModal();});document.getElementById('closeSettingsBtn').addEventListener('click',()=>settingsDialog.close());
- addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!settingsDialog.open&&!upgradeTree.dialog.open)clearSelection()});
+ addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!settingsDialog.open&&!upgradeTree.dialog.open&&!resumeDialog.open)clearSelection()});
 
 function pointerGround(ev){const r=canvas.getBoundingClientRect();pointer.x=((ev.clientX-r.left)/r.width)*2-1;pointer.y=-((ev.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObject(ground);return hits[0]?.point||null}
 function previewPlacement(ev){
@@ -2645,7 +2646,7 @@ function buildRound(n){
  groups.forEach(([count,name],i)=>addGroup(count,name,i));
  return q;
 }
-function beginRound(){if(roundActive||gameEnded)return;autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
+function beginRound(){if(roundActive||gameEnded||pendingResume)return;saveRunCheckpoint(true);autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
 function spawnStep(dt){
  if(!roundActive){
   if(autoStart&&autoStartTimer>0&&!gameEnded){autoStartTimer-=dt;if(autoStartTimer<=0)beginRound()}
@@ -2657,16 +2658,79 @@ function spawnStep(dt){
   if(round>=100){endGame(true);return}
   round++;startBtn.disabled=false;startBtn.textContent='Start Round';
   if(autoStart){autoStartTimer=.8;startBtn.textContent='Next round soon…'}
-  updateUI();if(selectedTower)refreshSelected();
+  updateUI();if(selectedTower)refreshSelected();saveRunCheckpoint();
  }
 }
 startBtn.addEventListener('click',beginRound);
-autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls()});
-speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls()});
-restartBtn.addEventListener('click',()=>location.reload());
-function endGame(win){gameEnded=true;roundActive=false;endScreen.classList.remove('hidden');endTitle.textContent=win?'Round 100 cleared!':'Game Over';endText.textContent=win?'You survived all 100 rounds.':'The balloons made it through the meadow.';refreshAbilityUI()}
+autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls();saveRunCheckpoint()});
+speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls();saveRunCheckpoint()});
+restartBtn.addEventListener('click',restartRun);document.getElementById('endRestartBtn').addEventListener('click',restartRun);
+function endGame(win){gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round 100 cleared!':'Game Over';endText.textContent=win?'You survived all 100 rounds.':'The balloons made it through the meadow.';refreshAbilityUI()}
 
-let last=performance.now();function loop(now){const dt=(settingsDialog.open||upgradeTree.dialog.open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded&&!settingsDialog.open&&!upgradeTree.dialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
+const resumeDialog=document.getElementById('resumeDialog');
+const saveRules={definitions:towerDefs,width:MAP_W,height:MAP_H};
+let runCheckpoint=null,pendingResume=null,leavingForRestart=false,lastAutoSave=0,saveWarning='';
+const runStore=createRunStorage({rules:saveRules,
+ onError(kind){document.getElementById('saveStatus').textContent=kind==='invalid'?'Saved run could not be loaded. A new game is ready.':'Saving is unavailable in this browser. Keep this tab open to keep your run.';if(saveWarning!==kind){saveWarning=kind;toastMsg(kind==='invalid'?'Saved run could not be loaded':'Browser storage is unavailable; progress cannot be saved');}},
+ onSaved(saved){saveWarning='';const text='Saved · Round '+saved.round+' · Interrupted rounds restart from the beginning.',status=document.getElementById('saveStatus');if(status.textContent!==text)status.textContent=text;}
+});
+function saveRunCheckpoint(roundInProgress=roundActive){
+ if(pendingResume||leavingForRestart||gameEnded)return;
+ const settings={speed,autoStart,effectsVolume:Number(document.getElementById('effectsVolume').value)/100,musicVolume:Number(document.getElementById('musicVolume').value)/100};
+ if(!roundActive){
+  if(!roundInProgress&&round===1&&!towers.length&&cash===650&&lives===100)return;
+  const captured=captureRunSave({round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
+  if(!captured){runStore.write(null);return;}runCheckpoint=captured;
+ }
+ if(runCheckpoint){runCheckpoint={...runCheckpoint,...settings,savedAt:Date.now()};runStore.write(runCheckpoint);}
+}
+function restoreRunState(saved){
+ round=saved.round;lives=saved.lives;cash=saved.cash;speed=saved.speed;autoStart=saved.autoStart;absoluteZeroBuffT=saved.absoluteZeroBuffT;roundActive=false;autoStartTimer=0;heroPlaced=false;
+ const byId=new Map();
+ for(const record of saved.towers){
+  const t=createTower(record.type,record.x,record.z);towers.push(t);t.id=record.id;
+  for(let p=0;p<3;p++)for(let tier=0;tier<record.paths[p];tier++){t.paths[p]++;applyUpgrade(t,p,tier);}
+  if(t.type==='hero'){syncQuincyStats(t,record.level);heroPlaced=true;}
+  Object.assign(t,record.runtime);t.target=record.target;t.throwHand=record.throwHand;t.camoPriority=record.camoPriority;t.fanBuffs=record.fanBuffs.map(buff=>({...buff}));setFanBoostTier(t,t.fanBuffs.reduce((tier,buff)=>Math.max(tier,buff.tier),0));
+  t.placementSurface=record.placementSurface;t.frozenWaterSourceId=record.frozenWaterSourceId;
+  t.activeAbility=record.activeAbilityKey?getTowerAbilities({...t,paths:t.paths.map((tier,p)=>p===1?record.activeAbilityTier:tier)}).find(a=>a.key===record.activeAbilityKey):null;
+  if(t.activeAbility&&t.abilityTimer>0&&t.activeAbility.kind!=='fanClub')setAbilityHalo(t,t.activeAbility);
+  if(t.stormTimer>0){t.stormCenter=record.stormCenter||{x:t.x,z:t.z};t.stormHits=new Map();t.stormStats=record.stormStats||quincyStormStats(t.level);t.stormAttack={type:'quincyStorm',damageType:'Normal',camoDetect:true,sourceTower:t};}
+  if(record.stormStats)t.stormStats={...record.stormStats};
+  updateTowerAppearance(t);t.mesh.scale.x=t.throwHand;t.mesh.rotation.y=record.rotationY;byId.set(t.id,t);
+ }
+ nextTowerId=saved.nextTowerId;
+ for(const record of saved.puddles){const mesh=acidPuddleRenderer.create(0);mesh.position.set(record.x,.73,record.z);mesh.scale.setScalar(record.radius);scene.add(mesh);const {sourceId,camoDetect,...stats}=record;acidPuddles.push({...stats,mesh,hitEnemies:new Set(),attack:{type:'acidPuddle',damageType:'Acid',camoDetect,sourceTower:byId.get(sourceId)||null}});}
+ restoreTowerUsage(saved.usage);
+ for(const [id,value,setVolume] of [['effects',saved.effectsVolume,setEffectsVolume],['music',saved.musicVolume,setMusicVolume]]){const percent=Math.round(value*100),input=document.getElementById(id+'Volume');input.value=percent;input.style.setProperty('--volume',percent+'%');document.getElementById(id+'Percent').textContent=percent+'%';setVolume(value);}
+ autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));speedBtn.textContent='Speed ×'+speed;startBtn.textContent='Start Round';startBtn.disabled=false;
+ if(saved.selectedTowerId)selectTower(byId.get(saved.selectedTowerId));updateUI();flushUI();refreshAbilityUI();
+}
+function restartRun(){leavingForRestart=true;runCheckpoint=null;runStore.clear();location.reload();}
+function saveOnLeave(){saveRunCheckpoint();}
+addEventListener('pagehide',saveOnLeave);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveOnLeave();});
+resumeDialog.addEventListener('cancel',ev=>ev.preventDefault());
+document.getElementById('resumeRunBtn').addEventListener('click',()=>{
+ const saved=pendingResume;if(!saved)return;
+ try{
+  restoreRunState(saved);pendingResume=null;runCheckpoint=saved;resumeDialog.close();
+  if(saved.roundInProgress)beginRound();else saveRunCheckpoint();toastMsg('Resumed round '+round);
+ }catch{
+  for(const t of towers){disposeTransientMesh(t.abilityHalo);disposeTransientMesh(t.mesh);}towers.length=0;
+  for(const p of acidPuddles)disposeTransientMesh(p.mesh);acidPuddles.length=0;
+  round=1;lives=100;cash=650;speed=1;autoStart=false;roundActive=false;heroPlaced=false;absoluteZeroBuffT=0;nextTowerId=1;restoreTowerUsage({});clearSelection();updateUI();flushUI();
+  document.getElementById('resumeRunBtn').disabled=true;document.getElementById('resumeNote').textContent='This saved run could not be restored. Choose New Game to play.';
+ }
+});
+document.getElementById('newRunBtn').addEventListener('click',()=>{runStore.clear();pendingResume=null;runCheckpoint=null;resumeDialog.close();document.getElementById('saveStatus').textContent='Progress saves automatically in this browser.';});
+pendingResume=runStore.read();
+if(pendingResume){
+ runCheckpoint=pendingResume;document.getElementById('resumeTitle').textContent='RESUME ROUND '+pendingResume.round+'?';document.getElementById('resumeSummary').textContent=pendingResume.towers.length+' towers · '+Math.ceil(pendingResume.lives)+' lives · $'+formatCash(pendingResume.cash);
+ document.getElementById('resumeNote').textContent=pendingResume.roundInProgress?'This round replays from the beginning. Changes made during the round are rolled back.':'Your towers, upgrades and resources are ready for the next round.';
+ resumeDialog.showModal();
+}
+
+let last=performance.now();function loop(now){const dt=(document.hidden||settingsDialog.open||upgradeTree.dialog.open||resumeDialog.open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded&&!document.hidden&&!settingsDialog.open&&!upgradeTree.dialog.open&&!resumeDialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}if(now-lastAutoSave>=2000){lastAutoSave=now;if(!roundActive)saveRunCheckpoint();}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
 updateUI();flushUI();refreshAbilityUI();requestAnimationFrame(loop);
 } catch (err) {
  console.error(err);

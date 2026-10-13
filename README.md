@@ -1,8 +1,10 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v64**. Adds all 15 supplied Boomerang Monkey upgrade icons to owned/next cards and the complete upgrade tree, matched by filename rather than archive order. Boomerang, Dart and Glue artwork is now complete. Original image bytes and transparency are preserved. Includes one-click upgrades, usage-only XP, the Normal Difficulty pause menu, the uploaded pop effect and looping music. Combat statistics are unchanged.
+Latest version: **v65**. Automatically saves your run locally and offers Resume or New Game when you return. Towers, upgrades, cash, lives, usage XP, targeting, ability cooldowns and persistent effects restore from the saved round checkpoint. Leaving during round 60 lets you replay round 60 from its starting state. Includes all previous artwork, UI and audio updates.
 
-[Download v64 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v64.zip)
+[Download v65 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v65.zip)
+
+[Resume prompt](docs/resume-run-desktop.png) · [Phone resume prompt](docs/resume-run-mobile.png) · [Saved-run details](docs/save-progress.md)
 
 [Boomerang upgrade tree](docs/boomer-upgrade-tree.png) · [Boomerang cards](docs/boomer-upgrade-icons-combat.png) · [Boomerang artwork details](docs/boomer-upgrade-artwork.md)
 

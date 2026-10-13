@@ -15,3 +15,5 @@ The v60 interface follows the supplied screenshot: illustrated lives/cash, outli
 Shop portraits and selected portraits use the actual game models. v64 includes all 45 supplied Boomerang Monkey, Dart Monkey and Glue Gunner icons; other towers still use equipment badges until their files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots, including the completed Boomerang, Dart and Glue sets and the next batch of 15 Bomb Shooter icons.
 
 The v62 Normal Difficulty pause menu provides an Auto Start switch, separate music/effects volume sliders, Restart and Continue. See [upgrade overview and audio](upgrade-tree.md).
+
+v65 adds an automatic local checkpoint and a paused Resume/New Game prompt when you return. Restart clears the saved run. [Saving progress](save-progress.md).

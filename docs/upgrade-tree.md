@@ -6,7 +6,7 @@ Each primary tower has three connected paths with five tiers each. Cyan nodes sh
 
 Clicking a next-upgrade card on a placed tower buys it once, directly with cash. Existing cash, two-path/crosspath and unique Tier 5 limits still apply. The old description-and-second-click purchase panel has been removed. The blue info button still opens combat statistics.
 
-**Usage XP** counts normal attack volleys: one XP for each fired volley or radial attack with a target, including zero-damage Glue and freeze attacks. It aggregates across monkeys of the same type within the current game and remains after selling them. Idle towers earn none. Extra damage ticks and ability-only effects do not add usage XP. XP never restricts upgrades, spends cash, changes attack statistics or purchases Quincy levels. Restarting resets the counter.
+**Usage XP** counts normal attack volleys: one XP for each fired volley or radial attack with a target, including zero-damage Glue and freeze attacks. It aggregates across monkeys of the same type within the current game and remains after selling them. Idle towers earn none. Extra damage ticks and ability-only effects do not add usage XP. XP never restricts upgrades, spends cash, changes attack statistics or purchases Quincy levels. Restarting resets the counter. Since v65, resuming a saved run restores its checkpoint usage XP.
 
 The upgrade overview and pause menu stop simulation, including spawning, movement, attacks, cooldowns and auto-start timers. Closing either resumes from the same game time. The **Normal Difficulty** pause menu has only an Auto Start switch, independent sound-effect/music sliders, Restart and Continue. Auto Start is synchronized with the shop’s existing button. Restart starts a fresh game.
 
@@ -23,3 +23,5 @@ All recordings are local and retain their uploaded bytes. The browser starts aud
 ## Validation
 
 33 regression test files cover existing combat plus usage accounting and audio overlap/playlist/volume behavior. Chromium checks one-click purchases and all 15 owned/next Glue icons, tier order, overview navigation and descriptions, actual image/audio decoding, music cycling through all four tracks, pop versus nonlethal damage, independent volume controls, Auto Start synchronization, responsive menus, and simulation pause/resume. No combat tuning is changed.
+
+Since v65 the pause menu also shows checkpoint status. [Saved-run details](save-progress.md) explain automatic saves and resuming interrupted rounds.
