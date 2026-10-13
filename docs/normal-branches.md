@@ -1,6 +1,6 @@
 # Normal branches — v68
 
-Choosing **Normal (Medium)** opens its connected mode tree. **Standard Normal** leads to **Reverse** and **Apopalypse**. Both unlock after a Normal win on Monkey Meadow; previously earned v66/v67 Normal medals unlock them immediately. Easy medals do not unlock them. Each branch records its own medal without replacing the parent’s medal. Easy’s Deflation/Sandbox branches remain unchanged, and Hard currently has only Standard Hard.
+Choosing **Normal (Medium)** opens its connected mode tree. **Standard Normal** leads to **Reverse** and **Apopalypse**. Both unlock after a Normal win on Monkey Meadow; previously earned v66/v67 Normal medals unlock them immediately. Easy medals do not unlock them. Each branch records its own medal without replacing the parent’s medal. Easy’s Deflation/Sandbox branches remain unchanged, and Hard now has its five [v69 branches](hard-branches.md).
 
 [Locked tree](normal-tree-locked.png) · [Unlocked tree](normal-tree-unlocked.png) · [Phone tree](normal-tree-mobile.png)
 

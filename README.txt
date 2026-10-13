@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v68 Normal branches, Reverse and Apopalypse
+Meadow Balloon Defense 3D - v69 Hard branches, 100 Alternate Bloon Rounds and CHIMPS badges
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -377,7 +377,7 @@ Home and difficulty modes v66
 - 35 regression test files pass. Chromium checks Home/map/mode navigation, mobile layout, badge loads, all three mode rules, actual tower/upgrade spending, Easy MOAB health/fortification, pause headings, victory limits, saved Hard pricing/investment, medal/silver-border persistence, restart and v65-format round-83 restoration. No page/resource errors.
 
 Easy branches, Sandbox and hero XP v67
-- Difficulty selection opens a mode tree. Standard Easy branches to Deflation and Sandbox, both unlocked by an Easy win. Existing Easy medals unlock both. Normal and Hard currently show Standard modes only.
+- Difficulty selection opens a mode tree. Standard Easy branches to Deflation and Sandbox, both unlocked by an Easy win. Existing Easy medals unlock both. Normal unlocks Reverse/Apopalypse. Hard unlocks two connected paths; see the v69 rules below.
 - Deflation uses Easy prices/lives/speed, starts round 31 with $20,000, finishes round 60 and earns no cash from pops, blimps or rounds. Tower sales remain refunds. Deflation has a separate medal and does not raise standard map progress.
 - Easy Sandbox starts with $9,999,999 and 999,999 lives. Its blue Towers/Send Bloons shop has Set/Send Round, 19 Bloon types, count 1-999, spacing 0-999 tenths of a second, Camo/Regrow/Fortified properties, and reset/clear tools. Custom sends append; Set/Send Round clears active and queued Bloons. Round limit follows standard map progress (max 999), with old medals/save rounds retained.
 - Cash/lives editors accept 0-9,999,999. Manual zero lives stops attacks without ending the game. Leak-depleted lives recover after 3 seconds without leaking. There are no victory/defeat conditions, medals, round rewards, usage XP, earned hero XP or map progress in Sandbox. Quincy level can be set manually for testing.
@@ -396,3 +396,14 @@ Normal branches v68
 - Save schema 4 supports v65/v66/v67. Apopalypse preserves live logical Bloons, queue/timing/seed/pending wave completions, HP/positions/status/source references, shard/icicle/puddle history and existing tower/economy/XP state. In-flight projectiles and cosmetic effects are discarded on resume, while cooldowns and durable effects persist. Reverse restores its route before replaying the checkpoint.
 - The supplied Reverse and Apopalypse references are restyled as faceted gold-rimmed icons in the original generated transparent PNG. All original 45 upgrade icons and five audio files remain unchanged.
 - 38 regression test files pass. Chromium verifies the real tree locks/unlocks and loads, reverse motion/order/saves, live overlapping Apopalypse waves/effects/source references/XP/win, responsive layouts and existing mode/save compatibility. See docs/normal-branches.md.
+
+Hard branches v69
+-----------------
+- Standard Hard unlocks Double HP MOABs and Alternate Bloons Rounds. Double HP unlocks Half Cash. ABR unlocks Impoppable, which unlocks CHIMPS. Earlier map medals still count.
+- Double HP MOABs doubles every blimp shell, including children, stacked with Fortified and the existing round HP multiplier. Regular Bloons are unchanged.
+- Half Cash starts with $325; pop, round and generator income are halved. Prices remain Hard prices.
+- ABR stores every supplied row 1-100, repeated group order and Camo/Regrow/Fortified flags. New Hard ABR runs start at round 3 and end at 100. The table has aggregate durations only; sends preserve each ordered group and spread uniformly over that duration. Round 100 is one Fortified BAD. Raw source is bundled at docs/alternate-rounds-source.txt.
+- Impoppable starts round 6, ends 100, has 1 life and 120% Normal prices (nearest $5, half down). CHIMPS uses those rounds/lives with Hard prices, no selling, no extra generated income, no Continues or life recovery. Ordinary pops/round rewards remain. No Knowledge/Powers system exists.
+- An uninterrupted CHIMPS win earns black; Resume/page closure/Retry Last Round earns red. Retry restores the exact pre-round checkpoint without retaining partial-wave cash, purchases, damage or XP. Pause/tab switching alone keeps black eligibility. A later red win never downgrades an existing black medal.
+- Save schema 5 preserves versions 1-4, adds Hard variants and CHIMPS eligibility, and validates one-life runs. All 45 original upgrade icons, 5 MP3s and base combat stats remain intact.
+- 39 regression test files pass. Actual Chromium tests cover tree images/ordering/unlocks, prices/economy/HP, ABR spawning and final round, Impoppable saves, CHIMPS selling/income guards, retry restoration and badge retention. See docs/hard-branches.md.

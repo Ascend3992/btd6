@@ -10,7 +10,7 @@ Every load opens **Home**. Choose **Play** (or **New Game** when a checkpoint ex
 | Normal (Medium) | 150 | 1–60 | 100% | 1.10× |
 | Hard | 100 | 3–80 | 108% | 1.25× |
 
-Starting cash is $650 in every mode. Prices round to the nearest $5, with halfway values rounded down. The original v65 Normal prices are the source for all calculations; changing modes never compounds a discount. For example, Dart placement costs $170/$200/$215 and Sharp Shots costs $120/$140/$150 in Easy/Normal/Hard.
+Starting cash is $650 in each Standard mode. Prices round to the nearest $5, with halfway values rounded down. The original v65 Normal prices are the source for all calculations; changing modes never compounds a discount. For example, Dart placement costs $170/$200/$215 and Sharp Shots costs $120/$140/$150 in Easy/Normal/Hard.
 
 Easy’s round-40 MOAB has **133 base HP** instead of 200. Other MOAB health remains unchanged. The existing round data supplies the final Easy MOAB, Normal BFB and Hard ZOMG. Freeze and slow effects keep their existing behavior after the difficulty’s speed multiplier. Tower damage, attack rates, ranges and upgrade effects are unchanged.
 
@@ -31,3 +31,7 @@ Winning a fresh mode records an Easy, Normal or Hard medal for Monkey Meadow in 
 The three user-supplied reference badges were restyled with the image-generation tool into chunky low-poly 3D portraits with golden medallion rims, matching the game models. Easy retains the cyan helmet and pacifier; Normal retains the green camouflage helmet and cards; Hard retains dark armor and red eyes/cabling. The generated transparent PNG is preserved unchanged as `assets/ui/modes/difficulty-badges.png`; CSS displays its three equal cells. The map thumbnail uses the existing Monkey Meadow render. All 45 original tower upgrade icons remain untouched.
 
 35 regression test files pass. New checks exercise price scaling/noncompounding, investment/refunds, lives/round limits, Bloon speed with freeze/slow, MOAB health, mode save validation, v65 migration, and medal storage failures. Chromium verifies the actual Home/map/mode flow and all three difficulty rules, real purchases, pause headings, sprite/map image loads, responsive layouts, saved Hard values, wins at 40/60/80, medals/silver border, restart and a v65-format round-83 resume. No page or resource errors occur.
+
+## v69 Hard tree
+
+Standard Hard unlocks Double HP MOABs → Half Cash and Alternate Bloons Rounds → Impoppable → CHIMPS. ABR ends at round 100 using the complete supplied table. Each later node requires a win in its predecessor. See [Hard rules, badges and saves](hard-branches.md).

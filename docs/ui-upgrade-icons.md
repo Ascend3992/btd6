@@ -127,3 +127,5 @@ Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete. Next tower ba
 | `glue-3-5` | Super Glue |
 
 The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Boomerang, Dart and Glue are complete: 45 of 90 slots. No substitute artwork is generated.
+
+v69 adds restyled Hard mode medallions separately at `assets/ui/modes/hard-branch-badges.png`; the 45 original upgrade assets above remain unchanged. [Hard badge artwork and ordering](hard-branches.md).

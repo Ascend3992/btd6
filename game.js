@@ -11,10 +11,11 @@ const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrig
 const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=5');
 const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=6');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
-const {captureRunSave,createRunStorage}=await import('./run-save.js?v=4');
-const {getGameMode,applyModePrices,modeBloonHealth,createMapMedals}=await import('./difficulty.js?v=3');
-const {createHomeUI}=await import('./home-ui.js?v=3');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=5');
+const {getGameMode,applyModePrices,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=4');
+const {createHomeUI}=await import('./home-ui.js?v=4');
 const {setRouteDirection,reverseRoundQueue,apopalypseRoundQueue}=await import('./normal-branches.js?v=1');
+const {alternateRoundQueue}=await import('./alternate-rounds.js?v=1');
 const {sandboxTypes,sandboxSpawnQueue,sandboxBlimpHp,createMapProgress,SANDBOX_MAX,TEST_BLOON_HP}=await import('./sandbox.js?v=1');
 const {createSandboxUI}=await import('./sandbox-ui.js?v=1');
 const {heroRoundXP,heroXPAtLevel,heroXPProgress}=await import('./hero-xp.js?v=1');
@@ -38,7 +39,7 @@ const selectedPortrait=document.getElementById('selectedPortrait'),towerDetails=
 let placementPreview=null;
 let nextTowerId=1,abilityUiTimer=0;
 
-let currentMode=getGameMode('medium',true),gameStarted=false,sandboxLivesTarget=999999,sandboxLeakTimer=0,apopSeed=0,apopPending=[];
+let currentMode=getGameMode('medium',true),gameStarted=false,sandboxLivesTarget=999999,sandboxLeakTimer=0,apopSeed=0,apopPending=[],chimpsClean=false,retryCheckpoint=null;
 let lives=100,cash=650,round=1,speed=1,roundActive=false,autoStart=false,autoStartTimer=0,spawnQueue=[],spawnTimer=0,selectedType=null,selectedTower=null,heroPlaced=false,gameEnded=false;
 const towers=[],enemies=[],projectiles=[],visualEffects=[],acidPuddles=[];
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -48,7 +49,7 @@ const layerNames=['Red','Blue','Green','Yellow','Pink','Black','White','Purple',
 const layerColors=[0xe43c36,0x3387ff,0x39b855,0xffe33d,0xef72bb,0x25282d,0xf5f5f5,0x8c43d6,0x9aa1a8,0xffffff,0x5ee4e6,0xb86f3e];
 const layerIndex=Object.fromEntries(layerNames.map((n,i)=>[n,i]));
 const blimpStats={MOAB:{hp:200,speed:'MOAB',leak:200,color:0x4b83c3,scale:[1.15,1.2,2.1]},BFB:{hp:700,speed:'BFB',leak:700,color:0xc43c3c,scale:[1.45,1.5,2.65]},ZOMG:{hp:4000,speed:'ZOMG',leak:4000,color:0x4d8357,scale:[1.75,1.8,3.2]},DDT:{hp:400,speed:'DDT',leak:400,color:0x303239,scale:[1.25,1.3,2.3]},BAD:{hp:28000,speed:'BAD',leak:28000,color:0xa34f9f,scale:[2.05,2.05,3.75]}};
-function grantIncome(amount){if(currentMode.variant==='deflation')return;cash=currentMode.variant==='sandbox'?Math.min(SANDBOX_MAX,cash+amount):cash+amount;}
+function grantIncome(amount,kind='generated'){const granted=modeIncome(amount,kind,currentMode);cash=currentMode.variant==='sandbox'?Math.min(SANDBOX_MAX,cash+granted):cash+granted;}
 function recordCombatUse(t){if(currentMode.variant!=='sandbox')recordTowerUse(t);}
 function cashPerPop(r){return r>60?.2:r>50?.5:1}
 function formatCash(v){return (Math.round(v*10)/10).toLocaleString('en-US',{maximumFractionDigits:1})}
@@ -1028,8 +1029,9 @@ function refreshSelected(){
  changeHandsBtn.classList.toggle('hidden',t.type!=='boomer');changeHandsBtn.textContent='Change Hands: '+(t.throwHand===-1?'Left':'Right');
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
+ sellBtn.disabled=currentMode.canSell===false;sellBtn.textContent=sellBtn.disabled?'SELLING DISABLED':'SELL';
  const xpStatus=document.getElementById('heroXPStatus');xpStatus.hidden=t.type!=='hero';if(t.type==='hero'){const xp=heroXPProgress(t.heroXP??heroXPAtLevel(t.level));xpStatus.textContent=xp.level===20?'LEVEL 20 · MAX':'LEVEL '+t.level+' · XP '+xp.current.toLocaleString()+' / '+xp.required.toLocaleString();}
- targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label','Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken);refreshAbilityUI()
+ targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label',currentMode.canSell===false?'Selling is disabled in CHIMPS':'Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken);refreshAbilityUI()
 }
 function syncDartStats(t){
  const [top,middle,bottom]=t.paths;
@@ -1170,7 +1172,7 @@ changeHandsBtn.addEventListener('click',()=>{if(selectedTower?.type!=='boomer')r
 camoPriorityBtn.addEventListener('click',()=>{if(selectedTower?.type==='dart'&&selectedTower.paths[2]>=2){selectedTower.camoPriority=!selectedTower.camoPriority;refreshSelected();saveRunCheckpoint();}});
 function cycleTarget(direction){if(!selectedTower)return;const modes=['first','last','strong','close'];selectedTower.target=modes[(modes.indexOf(selectedTower.target)+direction+modes.length)%modes.length];refreshSelected();saveRunCheckpoint();}
  targetBtn.addEventListener('click',()=>cycleTarget(1));document.getElementById('targetNextBtn').addEventListener('click',()=>cycleTarget(1));document.getElementById('targetPrevBtn').addEventListener('click',()=>cycleTarget(-1));
- sellBtn.addEventListener('click',()=>{const t=selectedTower;if(!t)return;cash=currentMode.variant==='sandbox'?Math.min(SANDBOX_MAX,cash+Math.floor(t.invest*.7)):cash+Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI();saveRunCheckpoint()});closeSel.addEventListener('click',clearSelection);
+ sellBtn.addEventListener('click',()=>{if(currentMode.canSell===false)return toastMsg('Selling is disabled in CHIMPS');const t=selectedTower;if(!t)return;cash=currentMode.variant==='sandbox'?Math.min(SANDBOX_MAX,cash+Math.floor(t.invest*.7)):cash+Math.floor(t.invest*.7);disposeTransientMesh(t.mesh);const i=towers.indexOf(t);if(i>=0)towers.splice(i,1);if(towerDefs[t.type].hero)heroPlaced=false;clearSelection();updateUI();saveRunCheckpoint()});closeSel.addEventListener('click',clearSelection);
  towerInfoBtn.addEventListener('click',()=>{const show=towerDetails.classList.contains('hidden');towerDetails.classList.toggle('hidden',!show);towerInfoBtn.setAttribute('aria-expanded',String(show));refreshSelected();});document.getElementById('closeTowerInfo').addEventListener('click',()=>{towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false')});
  const upgradeTree=createUpgradeTree({definitions:towerDefs,upgrades:upgradeData,descriptions:upgradeDescriptions,heroLevels:quincyLevelMetadata,heroLevelXP:()=>towers.find(t=>t.type==='hero')?.heroXP||0});
  document.getElementById('shopUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type||selectedType));
@@ -1327,7 +1329,7 @@ function enemyBaseHp(type,opts={}){
  const spawnRound=opts.spawnRound??round;
  if(type==='Test Bloon'||type==='MOAB Test Bloon')return TEST_BLOON_HP;
  if(currentMode.variant==='sandbox'&&(type==='DDT'||type==='BAD'))return sandboxBlimpHp(type,spawnRound,blimpHealthMultiplier(spawnRound));
- if(blimpStats[type])return Math.round(modeBloonHealth(type,blimpStats[type].hp,spawnRound,currentMode)*blimpHealthMultiplier(spawnRound));
+ if(blimpStats[type])return Math.round(modeBloonHealth(type,blimpStats[type].hp,spawnRound,currentMode)*blimpHealthMultiplier(spawnRound)*(currentMode.blimpHealthMultiplier??1));
  if(type==='Ceramic')return opts.superCeramic||spawnRound>=81?60:10;
  return 1;
 }
@@ -1739,9 +1741,9 @@ function hitEnemy(e,dmg,fx={}){
  let dealt=0,children=[];
  let left=dmg>0?Math.max(0,Math.floor(dmg+(fx.ignoreGlueAmp?(fx.suppressGlueStrikeAmp?0:e.glueStrikeDamageAmp||0):(e.glueDamageAmp||0)+(e.brittleT>0?e.brittleDamage||0:0)))):0;
  if(left>0&&e.alive){
-  const taken=Math.min(left,e.hp);if(!e.isBlimp&&!e.testBloon)grantIncome(taken*cashPerPop(round));
+  const taken=Math.min(left,e.hp);if(!e.isBlimp&&!e.testBloon)grantIncome(taken*cashPerPop(round),'pop');
   e.hp-=taken;left-=taken;dealt=taken;
-  if(e.hp<=0){if(e.isBlimp&&!e.testBloon)grantIncome(1);children=destroyEnemyAndSpawnChildren(e)||[];}
+  if(e.hp<=0){if(e.isBlimp&&!e.testBloon)grantIncome(1,'pop');children=destroyEnemyAndSpawnChildren(e)||[];}
  }
  for(const target of e.alive?[e]:children){
   if(ice){
@@ -2681,6 +2683,7 @@ function setSandboxHeroLevel(value){
 }
 
 function buildRound(n){
+ if(currentMode.variant==='alternate')return alternateRoundQueue(n,normalizeSpawnName);
  const q=[],groups=exactRoundData[n]||[];
  const addGroup=(count,raw,groupIndex)=>{
   const spec=normalizeSpawnName(raw);
@@ -2722,9 +2725,9 @@ function spawnStep(dt){
   if(autoStart&&autoStartTimer>0&&!gameEnded){autoStartTimer-=dt;if(autoStartTimer<=0)beginRound()}
   return;
  }
- if(spawnQueue.length){spawnTimer-=dt;if(spawnTimer<=0){const s=spawnQueue.shift();spawnEnemy(s.spec);spawnTimer=s.gap}}
+ if(spawnQueue.length){spawnTimer-=dt;if(currentMode.variant==='alternate'){while(spawnQueue.length&&spawnTimer<=1e-9){const s=spawnQueue.shift();spawnEnemy(s.spec);spawnTimer+=s.gap;}}else if(spawnTimer<=0){const s=spawnQueue.shift();spawnEnemy(s.spec);spawnTimer=s.gap}}
  else if(!enemies.length){
-  roundActive=false;endRoundAcidPuddles();grantIncome(100+round);awardHeroRoundXP(round);
+  roundActive=false;endRoundAcidPuddles();grantIncome(100+round,'round');awardHeroRoundXP(round);
   if(round>=currentMode.endRound){endGame(true);return}
   round++;if(currentMode.variant==='standard')mapProgress.record(round);startBtn.disabled=false;startBtn.textContent='Start Round';
   if(autoStart){autoStartTimer=.8;startBtn.textContent='Next round soon…'}
@@ -2735,7 +2738,25 @@ startBtn.addEventListener('click',beginRound);
 autoBtn.addEventListener('click',()=>{if(['sandbox','apopalypse'].includes(currentMode.variant))return;autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls();saveRunCheckpoint()});
 speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls();saveRunCheckpoint()});
 restartBtn.addEventListener('click',restartRun);document.getElementById('endRestartBtn').addEventListener('click',restartRun);
-function endGame(win){if(currentMode.variant==='sandbox')return;if(win&&currentMode.variant==='standard')mapProgress.record(round);if(win&&!currentMode.legacy&&!mapMedals.award(currentMode.variant==='standard'?currentMode.key:currentMode.variant))toastMsg('Map medal could not be saved in this browser');gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round '+currentMode.endRound+' cleared!':'Game Over';endText.textContent=win?'Monkey Meadow · '+currentMode.label+' mode completed!':'The balloons made it through the meadow.';refreshAbilityUI()}
+function updateChimpsStatus(){const status=document.getElementById('chimpsBadgeStatus');status.hidden=currentMode.variant!=='chimps';status.textContent=chimpsClean?'Black badge eligible · uninterrupted run':'Red badge run · resumed or retried';status.className=chimpsClean?'badgeBlack':'badgeRed';}
+function endGame(win){
+ if(currentMode.variant==='sandbox'||gameEnded)return;
+ if(win&&currentMode.variant==='standard')mapProgress.record(round);
+ if(win&&!currentMode.legacy&&!mapMedals.award(currentMode.variant==='standard'?currentMode.key:currentMode.variant,{cleanChimps:chimpsClean}))toastMsg('Map medal could not be saved in this browser');
+ retryCheckpoint=!win&&currentMode.variant==='chimps'&&runCheckpoint?{...runCheckpoint,chimpsClean:false,roundInProgress:true}:null;
+ gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round '+currentMode.endRound+' cleared!':'Game Over';endText.textContent=win?'Monkey Meadow · '+currentMode.label+' mode completed!':'The balloons made it through the meadow.';
+ const badge=document.getElementById('endChimpsBadge');badge.hidden=!(win&&currentMode.variant==='chimps');badge.textContent=chimpsClean?'BLACK BADGE EARNED':'RED BADGE EARNED';badge.className=chimpsClean?'badgeBlack':'badgeRed';document.getElementById('retryRoundBtn').hidden=!retryCheckpoint;refreshAbilityUI();
+}
+function retryLastRound(){
+ if(currentMode.variant!=='chimps'||!gameEnded||!retryCheckpoint)return;const saved={...retryCheckpoint,chimpsClean:false,roundInProgress:true};runStore.write(saved);pendingResume=saved;
+ for(const t of towers){disposeTransientMesh(t.abilityHalo);disposeTransientMesh(t.mesh);}towers.length=0;
+ for(const e of enemies)disposeTransientMesh(e.mesh);enemies.length=0;for(const p of projectiles)disposeTransientMesh(p.mesh);projectiles.length=0;
+ for(const p of acidPuddles)disposeTransientMesh(p.mesh);acidPuddles.length=0;for(const v of visualEffects)for(const mesh of v.meshes||[])disposeTransientMesh(mesh);visualEffects.length=0;glueStunGrid=null;clearSelection();
+ try{gameEnded=false;roundActive=false;spawnQueue=[];retryCheckpoint=null;restoreRunState(saved);pendingResume=null;runCheckpoint=saved;endScreen.classList.add('hidden');document.getElementById('retryRoundBtn').hidden=true;beginRound();updateChimpsStatus();toastMsg('Round restarted · Red badge run');}
+ catch{pendingResume=null;gameEnded=true;roundActive=false;retryCheckpoint=saved;toastMsg('Reload to resume your saved round');}
+}
+document.getElementById('retryRoundBtn').addEventListener('click',retryLastRound);
+
 
 const resumeDialog=document.getElementById('resumeDialog');
 const saveRules={definitions:towerDefs,width:MAP_W,height:MAP_H,pathLengths:PATH.map((p,i)=>PATH[i+1]?p.distanceTo(PATH[i+1]):0)};
@@ -2748,13 +2769,13 @@ function saveRunCheckpoint(roundInProgress=roundActive){
  if(!gameStarted||pendingResume||leavingForRestart||gameEnded)return;
  const settings={speed,autoStart,effectsVolume:Number(document.getElementById('effectsVolume').value)/100,musicVolume:Number(document.getElementById('musicVolume').value)/100};
  if(!roundActive||['sandbox','apopalypse'].includes(currentMode.variant)){
-  const captured=captureRunSave({difficulty:currentMode.key,legacyMode:currentMode.legacy,variant:currentMode.variant,apop:{seed:apopSeed,pendingRounds:apopPending,queue:spawnQueue,spawnTimer},enemies,sandboxLivesTarget,round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
+  const captured=captureRunSave({difficulty:currentMode.key,legacyMode:currentMode.legacy,variant:currentMode.variant,chimpsClean,apop:{seed:apopSeed,pendingRounds:apopPending,queue:spawnQueue,spawnTimer},enemies,sandboxLivesTarget,round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
   if(!captured){runStore.write(null);return;}runCheckpoint=captured;
  }
  if(runCheckpoint){runCheckpoint={...runCheckpoint,...settings,savedAt:Date.now()};runStore.write(runCheckpoint);}
 }
 function restoreRunState(saved){
- configureDifficulty(saved.difficulty,saved.legacyMode,saved.variant);
+ chimpsClean=false;configureDifficulty(saved.difficulty,saved.legacyMode,saved.variant);
  round=saved.round;lives=saved.lives;cash=saved.cash;sandboxLivesTarget=saved.sandboxLivesTarget;sandboxLeakTimer=currentMode.variant==='sandbox'&&lives===0&&sandboxLivesTarget>0?3:0;if(currentMode.variant==='standard')mapProgress.record(round);speed=saved.speed;autoStart=saved.autoStart;absoluteZeroBuffT=saved.absoluteZeroBuffT;roundActive=false;autoStartTimer=0;heroPlaced=false;
  const byId=new Map();
  for(const record of saved.towers){
@@ -2792,18 +2813,18 @@ function restoreApopalypseState(saved,byId,active){
  acidPuddles.forEach((p,i)=>p.hitEnemies=new Set(saved.puddleHits[i].map(index=>restored[index])));
 }
 function configureDifficulty(key,legacy=false,variant='standard'){
- currentMode=getGameMode(key,legacy,variant);setRouteDirection(PATH,trackDistances,variant==='reverse');applyModePrices(towerDefs,upgradeData,currentMode);gameWrap.classList.toggle('isApopalypse',variant==='apopalypse');
+ currentMode=getGameMode(key,legacy,variant);setRouteDirection(PATH,trackDistances,variant==='reverse');applyModePrices(towerDefs,upgradeData,currentMode);gameWrap.classList.toggle('isApopalypse',variant==='apopalypse');gameWrap.classList.toggle('isChimps',variant==='chimps');updateChimpsStatus();
  document.getElementById('pauseDifficulty').textContent=currentMode.label.toUpperCase()+' MODE';document.getElementById('roundLimit').textContent=currentMode.endRound;document.getElementById('settingsAutoBtn').disabled=['sandbox','apopalypse'].includes(currentMode.variant);if(currentMode.variant==='apopalypse'){autoStart=false;autoBtn.textContent='Auto Start: Off';autoBtn.classList.remove('active');document.getElementById('settingsAutoBtn').setAttribute('aria-checked','false');}sandboxUI.sync();
  for(const button of shopBtns)button.querySelector('span').textContent='$'+towerDefs[button.dataset.tower].cost.toLocaleString();updateUI();
 }
 function setGameStarted(started){gameStarted=started;gameWrap.classList.toggle('inHome',!started);for(const id of ['topbar','shop','selectedPanel','abilityBar','game','endScreen'])document.getElementById(id).inert=!started;resize();}
 function startNewMode(key,variant='standard'){
- if(variant!=='standard'&&!mapMedals.read()[key])return;configureDifficulty(key,false,variant);runStore.clear();pendingResume=null;runCheckpoint=null;round=currentMode.startRound;lives=currentMode.lives;cash=currentMode.startCash;sandboxLivesTarget=lives;sandboxLeakTimer=0;roundActive=false;autoStartTimer=0;gameEnded=false;apopPending=[];apopSeed=variant==='apopalypse'?crypto.getRandomValues(new Uint32Array(1))[0]:0;
+ if(!modeUnlocked(key,variant,mapMedals.read()))return;chimpsClean=variant==='chimps';retryCheckpoint=null;configureDifficulty(key,false,variant);runStore.clear();pendingResume=null;runCheckpoint=null;round=currentMode.startRound;lives=currentMode.lives;cash=currentMode.startCash;sandboxLivesTarget=lives;sandboxLeakTimer=0;roundActive=false;autoStartTimer=0;gameEnded=false;apopPending=[];apopSeed=variant==='apopalypse'?crypto.getRandomValues(new Uint32Array(1))[0]:0;
  if(currentMode.variant==='standard')mapProgress.record(round);startBtn.textContent=currentMode.variant==='sandbox'?'Send Round':'Start Round';startBtn.disabled=false;sandboxUI.sync();document.getElementById('saveStatus').textContent=currentMode.variant==='sandbox'?'Sandbox board saves automatically. Bloon sends are cleared on resume.':currentMode.variant==='apopalypse'?'Continuous waves save automatically in this browser.':'Progress saves automatically in this browser.';homeUI.setSavedRun(null);homeUI.hide();setGameStarted(true);updateUI();flushUI();saveRunCheckpoint();
 }
 function restartRun(){leavingForRestart=true;runCheckpoint=null;runStore.clear();location.reload();}
-function saveOnLeave(){saveRunCheckpoint();}
-addEventListener('pagehide',saveOnLeave);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveOnLeave();});
+function saveOnLeave(){if(currentMode.variant==='chimps'&&gameStarted&&!gameEnded&&!leavingForRestart){chimpsClean=false;if(runCheckpoint)runCheckpoint={...runCheckpoint,chimpsClean:false};updateChimpsStatus();}saveRunCheckpoint();}
+addEventListener('pagehide',saveOnLeave);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveRunCheckpoint();});
 resumeDialog.addEventListener('cancel',ev=>ev.preventDefault());
 document.getElementById('resumeRunBtn').addEventListener('click',()=>{
  const saved=pendingResume;if(!saved)return;

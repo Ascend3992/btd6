@@ -23,3 +23,5 @@ v66 loads a Home screen before gameplay, with Monkey Meadow map selection and th
 The v67 [Easy mode tree](easy-tree-unlocked.png) uses restyled Deflation/Sandbox badges and unlocks both branches after an Easy win. The [Sandbox panel](sandbox-desktop.png) uses a blue testing shop with tower/send tabs, live values and reset tools. [Phone layout](sandbox-mobile.png) · [Rules](easy-branches-and-sandbox.md).
 
 The v68 [Normal mode tree](normal-tree-unlocked.png) adds gold-rimmed Reverse and Apopalypse icons, with both branches unlocked by a Normal win. [Phone tree](normal-tree-mobile.png) · [Apopalypse pause](apopalypse-pause.png) · [Rules and saves](normal-branches.md).
+
+The v69 [Hard tree](hard-tree-unlocked.png) adds two connected paths and five challenge modes, with prerequisite status and red/black CHIMPS medals. [Phone tree](hard-tree-mobile.png) · [Rules](hard-branches.md).

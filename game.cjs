@@ -18,7 +18,7 @@ function game(){
   placeEnemyOnTrack(e){e.mesh.position.x=e.seg*10+e.dist;e.mesh.position.z=0},
   scene:{add(){}},makeTowerMesh:mesh,makeProjectileMesh:mesh,makeQuincyArrowMesh:mesh,quincyMuzzleOrigin:t=>({x:t.x,y:2.15,z:t.z})};
  vm.createContext(context);
- for(const file of ['hero-xp.js','sandbox.js','normal-branches.js','apopalypse-save.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..',file),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
+ for(const file of ['hero-xp.js','sandbox.js','normal-branches.js','apopalypse-save.js','alternate-rounds.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..',file),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..','difficulty.js'),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
  // Use the real visual selectors and throw hooks; mock meshes simply have no rig.
  for(const [start,end] of [['export function boomerangProjectileKind','export function makeBoomerangWeapon'],['export function triggerBoomerangThrow',null]]){

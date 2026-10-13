@@ -1,0 +1,286 @@
+№	Bloon groups	Dur.	Base RBE	Base cash
+1	Blue×10	23.00s	20 (20)	$20 + $101 ($20 + $101)
+2	Red×35
+Red×20	25.00s	55 (75)	$55 + $102 ($75 + $203)
+3	Blue×6
+Regrow Blue×5
+Red×15	16.71s	37 (112)	$37 + $103 ($112 + $306)
+4	Blue×15
+Blue×18
+Red×10	17.31s	76 (188)	$76 + $104 ($188 + $410)
+5	Camo Red×12
+Green×3
+Regrow Blue×15
+Camo Regrow Red×1	20.54s	52 (240)	$52 + $105 ($240 + $515)
+6	Green×8
+Blue×10
+Regrow Green×5	18.70s	59 (299)	$59 + $106 ($299 + $621)
+7	Black×2
+Green×6
+Camo Blue×15
+Regrow Blue×10	26.80s	90 (389)	$90 + $107 ($389 + $728)
+8	Yellow×10
+Regrow Green×3
+Green×12	28.00s	85 (474)	$85 + $108 ($474 + $836)
+9	Regrow Green×30	18.95s	90 (564)	$90 + $109 ($564 + $945)
+10	Green×40
+Lead×2
+Blue×22	44.16s	210 (774)	$210 + $110 ($774 + $1,055)
+11	Camo Green×3
+Green×20
+Blue×10
+Regrow Blue×10	19.16s	109 (883)	$109 + $111 ($883 + $1,166)
+12	Regrow Green×6
+Blue×20
+Pink×3	17.39s	73 (956)	$73 + $112 ($956 + $1,278)
+13	Blue×50
+Yellow×18	32.21s	172 (1,128)	$172 + $113 ($1,128 + $1,391)
+14	Red×18
+Black×1
+White×1
+Regrow Yellow×4
+Red×31
+Regrow Blue×10
+Camo Regrow Green×5
+Black×2	26.63s	144 (1,272)	$144 + $114 ($1,272 + $1,505)
+15	Blue×20
+Green×15
+Yellow×12
+Pink×10
+Purple×3	25.00s	216 (1,488)	$216 + $115 ($1,488 + $1,620)
+16	Regrow Green×20
+Camo Green×20
+Green×15	16.02s	165 (1,653)	$165 + $116 ($1,653 + $1,736)
+17	Pink×12	5.00s	60 (1,713)	$60 + $117 ($1,713 + $1,853)
+18	Yellow×60
+Green×30	26.82s	330 (2,043)	$330 + $118 ($2,043 + $1,971)
+19	Blue×10
+Regrow Green×5
+Pink×15
+Black×2	15.76s	132 (2,175)	$132 + $119 ($2,175 + $2,090)
+20	Regrow Black×6	5.25s	66 (2,241)	$66 + $120 ($2,241 + $2,210)
+21	Red×40
+Red×10
+Blue×4	18.12s	58 (2,299)	$58 + $121 ($2,299 + $2,331)
+22	Purple×16	8.00s	176 (2,475)	$176 + $122 ($2,475 + $2,453)
+23	Black×7
+White×6
+Lead×4	9.00s	235 (2,710)	$235 + $123 ($2,710 + $2,576)
+24	Camo Lead×1	1.00s	23 (2,733)	$23 + $124 ($2,733 + $2,700)
+25	Regrow Pink×22
+Regrow Purple×10	21.14s	220 (2,953)	$220 + $125 ($2,953 + $2,825)
+26	Black×15
+Zebra×3
+Rainbow×2	18.20s	328 (3,281)	$328 + $126 ($3,281 + $2,951)
+27	Camo Red×100
+Camo Blue×60
+Camo Green×45
+Camo Yellow×45	34.26s	535 (3,816)	$535 + $127 ($3,816 + $3,078)
+28	Regrow Lead×6	5.00s	138 (3,954)	$138 + $128 ($3,954 + $3,206)
+29	Regrow Pink×50
+White×8	15.25s	338 (4,292)	$338 + $129 ($4,292 + $3,335)
+30	Camo Lead×9	13.07s	207 (4,499)	$207 + $130 ($4,499 + $3,465)
+31	Regrow Black×8
+Camo White×8
+Zebra×10
+Regrow Zebra×3	14.71s	475 (4,974)	$475 + $131 ($4,974 + $3,596)
+32	Rainbow×5
+Ceramic×3
+Purple×10	26.00s	657 (5,631)	$630 + $132 ($5,604 + $3,728)
+33	Camo Red×20
+Camo Blue×13	25.34s	46 (5,677)	$46 + $133 ($5,650 + $3,861)
+34	Green×200
+Rainbow×6	36.00s	882 (6,559)	$882 + $134 ($6,532 + $3,995)
+35	Regrow White×25
+Ceramic×3
+Purple×25
+Camo Black×30	33.76s	1,192 (7,751)	$1,165 + $135 ($7,697 + $4,130)
+36	Camo Regrow Yellow×40
+Black×5
+Camo Regrow Yellow×40
+Black×5
+Ceramic×2	18.99s	638 (8,389)	$620 + $136 ($8,317 + $4,266)
+37	Regrow White×25
+White×25
+Lead×18
+Zebra×10
+Regrow Black×7	43.51s	1,271 (9,660)	$1,271 + $137 ($9,588 + $4,403)
+38	Black×17
+Purple×42
+Lead×14
+Rainbow×7
+Regrow Ceramic×1	29.06s	1,404 (11,064)	$1,395 + $138 ($10,983 + $4,541)
+39	Camo Regrow White×10
+Zebra×5
+Zebra×15
+Rainbow×15
+Camo Rainbow×2	37.93s	1,369 (12,433)	$1,369 + $139 ($12,352 + $4,680)
+40	Fortified MOAB×1	1.00s	856 (13,289)	$381 + $140 ($12,733 + $4,820)
+41	Black×60
+Zebra×70	32.00s	2,270 (15,559)	$2,270 + $141 ($15,003 + $4,961)
+42	Camo Regrow Rainbow×6
+Camo Regrow Rainbow×5	10.60s	517 (16,076)	$517 + $142 ($15,520 + $5,103)
+43	Rainbow×10
+MOAB×2	9.26s	1,702 (17,778)	$1,232 + $143 ($16,752 + $5,246)
+44	Zebra×10
+Fortified Lead×10
+Zebra×10
+Zebra×10
+Zebra×10	23.67s	1,180 (18,958)	$1,150 + $144 ($17,902 + $5,390)
+45	Ceramic×10
+Camo Purple×10
+Pink×120
+Fortified Lead×4	38.08s	1,854 (20,812)	$1,752 + $145 ($19,654 + $5,535)
+46	Fortified Ceramic×8	7.00s	912 (21,724)	$760 + $146 ($20,414 + $5,681)
+47	MOAB×3
+Camo Regrow Pink×70	24.65s	2,198 (23,922)	$1,493 + $147 ($21,907 + $5,828)
+48	Fortified Regrow Lead×15
+Camo Regrow Purple×30
+Regrow Black×80
+Fortified Ceramic×3	52.00s	1,942 (25,864)	$1,840 + $148 ($23,747 + $5,976)
+49	Regrow Yellow×300
+Camo Rainbow×10
+Regrow Ceramic×14
+Camo Zebra×10
+Regrow Rainbow×10	50.00s	3,826 (29,690)	$3,700 + $149 ($27,447 + $6,125)
+50	Fortified MOAB×2
+Fortified Regrow Lead×8
+MOAB×4	18.00s	4,384 (34,074)	$2,470 + $150 ($29,917 + $6,275)
+51	Fortified Camo Ceramic×28
+Zebra×10	21.13s	3,422 (37,496)	$1,445 + $151 ($31,362 + $6,426)
+52	Rainbow×35
+Fortified MOAB×1
+Fortified Ceramic×5
+MOAB×1
+Regrow Ceramic×5	20.56s	4,207 (41,703)	$1,678.5 + $152 ($33,040.5 + $6,578)
+53	Camo Pink×120
+Fortified MOAB×1
+Fortified MOAB×1
+Fortified MOAB×1	35.00s	3,168 (44,871)	$871.5 + $153 ($33,912 + $6,731)
+54	Regrow Black×35
+MOAB×1
+BFB×1	19.41s	4,165 (49,036)	$1,145.5 + $154 ($35,057.5 + $6,885)
+55	Ceramic×10
+Camo Ceramic×10
+Ceramic×10
+Camo Ceramic×15
+Fortified MOAB×1	29.78s	5,536 (54,572)	$2,328 + $155 ($37,385.5 + $7,040)
+56	Camo Regrow Purple×40
+MOAB×5	20.18s	3,520 (58,092)	$1,172.5 + $156 ($38,558 + $7,196)
+57	Fortified MOAB×2
+Ceramic×25
+BFB×1	26.23s	7,476 (65,568)	$2,331 + $157 ($40,889 + $7,353)
+58	MOAB×10
+Ceramic×15
+Fortified Regrow Ceramic×10	43.98s	8,860 (74,428)	$3,092.5 + $158 ($43,981.5 + $7,511)
+59	Fortified Camo Ceramic×20
+Camo Regrow Lead×50
+Rainbow×25	26.16s	4,605 (79,033)	$2,112.5 + $159 ($46,094 + $7,670)
+60	Fortified BFB×1	1.00s	4,824 (83,857)	$762.5 + $160 ($46,856.5 + $7,830)
+61	Regrow Zebra×50
+MOAB×15
+Fortified Lead×15	24.37s	10,780 (94,637)	$1,442 + $161 ($48,298.5 + $7,991)
+62	Purple×250
+Fortified MOAB×5
+BFB×2
+Fortified Camo Regrow Lead×15	48.29s	13,748 (108,385)	$1,610 + $162 ($49,908.5 + $8,153)
+63	Fortified Ceramic×30
+Ceramic×40
+Camo Ceramic×40
+MOAB×5	42.25s	14,820 (123,205)	$2,471 + $163 ($52,379.5 + $8,316)
+64	Fortified MOAB×6
+BFB×2	9.53s	11,464 (134,669)	$1,067.2 + $164 ($53,446.7 + $8,480)
+65	BFB×3
+Rainbow×70
+Fortified Ceramic×50
+Fortified MOAB×3	40.66s	21,050 (155,719)	$2,751.6 + $165 ($56,198.3 + $8,645)
+66	BFB×1
+MOAB×2
+MOAB×4
+BFB×2	23.75s	13,188 (168,907)	$1,372.2 + $166 ($57,570.5 + $8,811)
+67	Fortified MOAB×4
+Fortified Camo Regrow Ceramic×20
+MOAB×6	26.44s	9,400 (178,307)	$1,142 + $167 ($58,712.5 + $8,978)
+68	MOAB×4
+Fortified BFB×1	8.44s	7,288 (185,595)	$609.8 + $168 ($59,322.3 + $9,146)
+69	Camo Regrow Purple×40
+Camo Regrow Black×40
+Camo Ceramic×50	42.13s	6,080 (191,675)	$1,126 + $169 ($60,448.3 + $9,315)
+70	Rainbow×200
+Fortified MOAB×6	30.00s	14,536 (206,211)	$2,337.2 + $170 ($62,785.5 + $9,485)
+71	Fortified Regrow Ceramic×30
+Fortified MOAB×10	16.55s	11,980 (218,191)	$1,332 + $171 ($64,117.5 + $9,656)
+72	Fortified Ceramic×38
+BFB×1
+Fortified BFB×1	21.70s	12,320 (230,511)	$1,332 + $172 ($65,449.5 + $9,828)
+73	Fortified MOAB×7
+Fortified BFB×2
+Fortified MOAB×1	26.95s	16,496 (247,007)	$1,219.6 + $173 ($66,669.1 + $10,001)
+74	Regrow Black×100
+Fortified Camo Regrow Ceramic×25
+Fortified BFB×1	31.44s	8,774 (255,781)	$1,000 + $174 ($67,669.1 + $10,175)
+75	BFB×1
+Lead×50
+BFB×5
+Fortified Lead×14
+Fortified MOAB×4
+Fortified BFB×2	22.59s	33,570 (289,351)	$3,039.2 + $175 ($70,708.3 + $10,350)
+76	BFB×10	10.00s	31,640 (320,991)	$3,050 + $176 ($73,758.3 + $10,526)
+77	Fortified MOAB×11
+Fortified BFB×5	58.92s	33,536 (354,527)	$2,363.2 + $177 ($76,121.5 + $10,703)
+78	Zebra×150
+Fortified Ceramic×60
+Fortified BFB×1
+Purple×80
+Camo Ceramic×72	79.40s	23,482 (378,009)	$3,679 + $178 ($79,800.5 + $10,881)
+79	Camo Rainbow×500
+Fortified BFB×4
+ZOMG×1	60.00s	59,452 (437,461)	$7,140.2 + $179 ($86,940.7 + $11,060)
+80	ZOMG×2	20.00s	33,312 (470,773)	$2,440.4 + $180 ($89,381.1 + $11,240)
+81	BFB×15
+Fortified MOAB×20	26.47s	57,670 (528,443)	$6,099 + $181 ($95,480.1 + $11,421)
+82	BFB×15
+Fortified BFB×8
+ZOMG×1	37.55s	95,816 (624,259)	$8,235.2 + $182 ($103,715.3 + $11,603)
+83	Camo Ceramic×40
+Regrow Ceramic×40
+Fortified Camo Regrow Ceramic×40
+Fortified MOAB×20	60.20s	29,280 (653,539)	$3,804 + $183 ($107,519.3 + $11,786)
+84	MOAB×50
+Fortified BFB×15	35.00s	103,720 (757,259)	$8,385 + $184 ($115,904.3 + $11,970)
+85	ZOMG×3	10.00s	46,056 (803,315)	$3,660.6 + $185 ($119,564.9 + $12,155)
+86	Fortified BFB×8	20.85s	43,264 (846,579)	$1,220 + $186 ($120,784.9 + $12,341)
+87	ZOMG×5	10.00s	78,760 (925,339)	$3,050.5 + $187 ($123,835.4 + $12,528)
+88	BFB×12
+Fortified MOAB×15
+DDT×3	13.05s	50,784 (976,123)	$2,515.8 + $188 ($126,351.2 + $12,716)
+89	Fortified MOAB×15
+Fortified BFB×12	18.15s	81,816 (1,057,939)	$2,401.5 + $189 ($128,752.7 + $12,905)
+90	Fortified Regrow Ceramic×50
+DDT×4	11.90s	9,408 (1,067,347)	$627.4 + $190 ($129,380.1 + $13,095)
+91	Fortified Ceramic×100
+Fortified BFB×15	30.00s	98,420 (1,165,767)	$3,237.5 + $191 ($132,617.6 + $13,286)
+92	Fortified MOAB×50
+ZOMG×4
+DDT×4	35.00s	120,480 (1,286,247)	$4,497.8 + $192 ($137,115.4 + $13,478)
+93	Fortified BFB×17
+Fortified DDT×7	20.00s	109,716 (1,395,963)	$2,859.2 + $193 ($139,974.6 + $13,671)
+94	BFB×25
+ZOMG×8	15.00s	212,416 (1,608,379)	$8,693.3 + $194 ($148,667.9 + $13,865)
+95	Camo Regrow Purple×500
+DDT×30
+Fortified MOAB×30	40.81s	57,720 (1,666,099)	$2,586 + $195 ($151,253.9 + $14,060)
+96	Fortified BFB×10
+Fortified MOAB×20
+ZOMG×5
+DDT×10
+Fortified BFB×10
+ZOMG×6	32.12s	342,032 (2,008,131)	$10,904.1 + $196 ($162,158 + $14,256)
+97	Fortified ZOMG×2
+Fortified DDT×8	4.23s	82,656 (2,090,787)	$1,525 + $197 ($163,683 + $14,453)
+98	Fortified BFB×20
+ZOMG×11	20.00s	320,032 (2,410,819)	$9,761.1 + $198 ($173,444.1 + $14,651)
+99	MOAB×30
+Fortified DDT×9
+BAD×1	19.28s	97,360 (2,508,179)	$2,820.5 + $199 ($176,264.6 + $14,850)
+100	Fortified BAD×1	0.10s	133,280 (2,641,459)	$1,334.6 + $200 ($177,599.2 + $15,050)

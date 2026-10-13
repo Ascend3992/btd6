@@ -1,6 +1,6 @@
 # Easy branches, Sandbox and hero XP — v67
 
-Selecting Easy, Normal or Hard now opens its mode tree. **Standard Easy** leads to two connected branches: **Deflation** and **Sandbox**. Both are locked until Monkey Meadow’s Standard Easy medal is earned; existing v66 Easy medals unlock them immediately. Since v68, Normal has Reverse and Apopalypse branches unlocked by a Normal win; [details](normal-branches.md). Hard currently shows only its Standard mode. Back/Escape navigation does not replace a checkpoint. A new run starts only when an unlocked tree node is selected.
+Selecting Easy, Normal or Hard now opens its mode tree. **Standard Easy** leads to two connected branches: **Deflation** and **Sandbox**. Both are locked until Monkey Meadow’s Standard Easy medal is earned; existing v66 Easy medals unlock them immediately. Since v68, Normal has Reverse and Apopalypse branches unlocked by a Normal win; [details](normal-branches.md). Hard now has its five [v69 branches](hard-branches.md). Back/Escape navigation does not replace a checkpoint. A new run starts only when an unlocked tree node is selected.
 
 [Locked Easy tree](easy-tree-locked.png) · [Unlocked tree](easy-tree-unlocked.png) · [Phone tree](easy-tree-mobile.png)
 
