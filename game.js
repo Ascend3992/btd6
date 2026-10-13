@@ -9,9 +9,11 @@ const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBo
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
 const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=5');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=4');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=5');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
-const {captureRunSave,createRunStorage}=await import('./run-save.js?v=1');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=2');
+const {getGameMode,applyModePrices,modeBloonHealth,createMapMedals}=await import('./difficulty.js?v=1');
+const {createHomeUI}=await import('./home-ui.js?v=1');
 const {playBloonPop,unlockPopAudio,setEffectsVolume,setMusicVolume}=await import('./pop-audio.js?v=1');
 const {BloonRenderer}=await import('./bloon-renderer.js?v=3');
 const {makeReferenceBloonTemplate,paintBloonGeometry}=await import('./bloon-visuals.js?v=1');
@@ -32,6 +34,7 @@ const selectedPortrait=document.getElementById('selectedPortrait'),towerDetails=
 let placementPreview=null;
 let nextTowerId=1,abilityUiTimer=0;
 
+let currentMode=getGameMode('medium',true),gameStarted=false;
 let lives=100,cash=650,round=1,speed=1,roundActive=false,autoStart=false,autoStartTimer=0,spawnQueue=[],spawnTimer=0,selectedType=null,selectedTower=null,heroPlaced=false,gameEnded=false;
 const towers=[],enemies=[],projectiles=[],visualEffects=[],acidPuddles=[];
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
@@ -1310,7 +1313,7 @@ function blimpHealthMultiplier(r){
 }
 function enemyBaseHp(type,opts={}){
  const spawnRound=opts.spawnRound??round;
- if(blimpStats[type])return Math.round(blimpStats[type].hp*blimpHealthMultiplier(spawnRound));
+ if(blimpStats[type])return Math.round(modeBloonHealth(type,blimpStats[type].hp,spawnRound,currentMode)*blimpHealthMultiplier(spawnRound));
  if(type==='Ceramic')return opts.superCeramic||spawnRound>=81?60:10;
  return 1;
 }
@@ -1402,7 +1405,7 @@ function destroyEnemyAndSpawnChildren(e){
 const trackDistances=[0];for(let i=1;i<PATH.length;i++)trackDistances[i]=trackDistances[i-1]+PATH[i-1].distanceTo(PATH[i]);
 function progress(e){return trackDistances[e.seg]+e.dist}
 function enemySpeed(e){
- const key=e.isBlimp?e.type:layerNames[Math.min(e.layer,layerNames.length-1)],base=(bloonSpeeds[key]||75)/9.5;
+ const key=e.isBlimp?e.type:layerNames[Math.min(e.layer,layerNames.length-1)],base=(bloonSpeeds[key]||75)/9.5*currentMode.bloonSpeed;
  if(e.type==='BAD')return base;
  if(e.abilityFreezeT>0||e.freezeT>0)return 0;
  const slow=Math.min(e.auraSlowMult||1,e.permafrostLayers>0?(e.permafrostSlow||1):1,e.slowT>0?e.slowMult:1,e.glueT>0?e.glueSlow:1,e.abilitySlowT>0?e.abilitySlowMult:1);
@@ -2646,7 +2649,7 @@ function buildRound(n){
  groups.forEach(([count,name],i)=>addGroup(count,name,i));
  return q;
 }
-function beginRound(){if(roundActive||gameEnded||pendingResume)return;saveRunCheckpoint(true);autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
+function beginRound(){if(!gameStarted||roundActive||gameEnded||pendingResume)return;saveRunCheckpoint(true);autoStartTimer=0;roundActive=true;spawnQueue=buildRound(round);spawnTimer=0;startBtn.disabled=true;startBtn.textContent='Round Running';updateUI();syncControls()}
 function spawnStep(dt){
  if(!roundActive){
   if(autoStart&&autoStartTimer>0&&!gameEnded){autoStartTimer-=dt;if(autoStartTimer<=0)beginRound()}
@@ -2655,7 +2658,7 @@ function spawnStep(dt){
  if(spawnQueue.length){spawnTimer-=dt;if(spawnTimer<=0){const s=spawnQueue.shift();spawnEnemy(s.spec);spawnTimer=s.gap}}
  else if(!enemies.length){
   roundActive=false;endRoundAcidPuddles();cash+=100+round;
-  if(round>=100){endGame(true);return}
+  if(round>=currentMode.endRound){endGame(true);return}
   round++;startBtn.disabled=false;startBtn.textContent='Start Round';
   if(autoStart){autoStartTimer=.8;startBtn.textContent='Next round soon…'}
   updateUI();if(selectedTower)refreshSelected();saveRunCheckpoint();
@@ -2665,7 +2668,7 @@ startBtn.addEventListener('click',beginRound);
 autoBtn.addEventListener('click',()=>{autoStart=!autoStart;autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));if(autoStart&&!roundActive&&!gameEnded)autoStartTimer=.35;else if(!autoStart)autoStartTimer=0;syncControls();saveRunCheckpoint()});
 speedBtn.addEventListener('click',()=>{speed=speed===1?2:speed===2?3:1;speedBtn.textContent='Speed ×'+speed;syncControls();saveRunCheckpoint()});
 restartBtn.addEventListener('click',restartRun);document.getElementById('endRestartBtn').addEventListener('click',restartRun);
-function endGame(win){gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round 100 cleared!':'Game Over';endText.textContent=win?'You survived all 100 rounds.':'The balloons made it through the meadow.';refreshAbilityUI()}
+function endGame(win){if(win&&!currentMode.legacy&&!mapMedals.award(currentMode.key))toastMsg('Map medal could not be saved in this browser');gameEnded=true;roundActive=false;runCheckpoint=null;runStore.clear();endScreen.classList.remove('hidden');endTitle.textContent=win?'Round '+currentMode.endRound+' cleared!':'Game Over';endText.textContent=win?'Monkey Meadow · '+currentMode.label+' mode completed!':'The balloons made it through the meadow.';refreshAbilityUI()}
 
 const resumeDialog=document.getElementById('resumeDialog');
 const saveRules={definitions:towerDefs,width:MAP_W,height:MAP_H};
@@ -2675,16 +2678,16 @@ const runStore=createRunStorage({rules:saveRules,
  onSaved(saved){saveWarning='';const text='Saved · Round '+saved.round+' · Interrupted rounds restart from the beginning.',status=document.getElementById('saveStatus');if(status.textContent!==text)status.textContent=text;}
 });
 function saveRunCheckpoint(roundInProgress=roundActive){
- if(pendingResume||leavingForRestart||gameEnded)return;
+ if(!gameStarted||pendingResume||leavingForRestart||gameEnded)return;
  const settings={speed,autoStart,effectsVolume:Number(document.getElementById('effectsVolume').value)/100,musicVolume:Number(document.getElementById('musicVolume').value)/100};
  if(!roundActive){
-  if(!roundInProgress&&round===1&&!towers.length&&cash===650&&lives===100)return;
-  const captured=captureRunSave({round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
+  const captured=captureRunSave({difficulty:currentMode.key,legacyMode:currentMode.legacy,round,lives,cash,...settings,roundInProgress,towers,nextTowerId,puddles:acidPuddles,absoluteZeroBuffT,selectedTowerId:selectedTower?.id??null,usage:exportTowerUsage()},saveRules);
   if(!captured){runStore.write(null);return;}runCheckpoint=captured;
  }
  if(runCheckpoint){runCheckpoint={...runCheckpoint,...settings,savedAt:Date.now()};runStore.write(runCheckpoint);}
 }
 function restoreRunState(saved){
+ configureDifficulty(saved.difficulty,saved.legacyMode);
  round=saved.round;lives=saved.lives;cash=saved.cash;speed=saved.speed;autoStart=saved.autoStart;absoluteZeroBuffT=saved.absoluteZeroBuffT;roundActive=false;autoStartTimer=0;heroPlaced=false;
  const byId=new Map();
  for(const record of saved.towers){
@@ -2706,6 +2709,16 @@ function restoreRunState(saved){
  autoBtn.textContent='Auto Start: '+(autoStart?'On':'Off');autoBtn.classList.toggle('active',autoStart);document.getElementById('settingsAutoBtn').setAttribute('aria-checked',String(autoStart));speedBtn.textContent='Speed ×'+speed;startBtn.textContent='Start Round';startBtn.disabled=false;
  if(saved.selectedTowerId)selectTower(byId.get(saved.selectedTowerId));updateUI();flushUI();refreshAbilityUI();
 }
+function configureDifficulty(key,legacy=false){
+ currentMode=getGameMode(key,legacy);applyModePrices(towerDefs,upgradeData,currentMode);
+ document.getElementById('pauseDifficulty').textContent=currentMode.label.toUpperCase()+' MODE';document.getElementById('roundLimit').textContent=currentMode.endRound;
+ for(const button of shopBtns)button.querySelector('span').textContent='$'+towerDefs[button.dataset.tower].cost.toLocaleString();updateUI();
+}
+function setGameStarted(started){gameStarted=started;gameWrap.classList.toggle('inHome',!started);for(const id of ['topbar','shop','selectedPanel','abilityBar','game','endScreen'])document.getElementById(id).inert=!started;resize();}
+function startNewMode(key){
+ configureDifficulty(key);runStore.clear();pendingResume=null;runCheckpoint=null;round=currentMode.startRound;lives=currentMode.lives;cash=650;roundActive=false;autoStartTimer=0;gameEnded=false;
+ document.getElementById('saveStatus').textContent='Progress saves automatically in this browser.';homeUI.setSavedRun(null);homeUI.hide();setGameStarted(true);updateUI();flushUI();saveRunCheckpoint();
+}
 function restartRun(){leavingForRestart=true;runCheckpoint=null;runStore.clear();location.reload();}
 function saveOnLeave(){saveRunCheckpoint();}
 addEventListener('pagehide',saveOnLeave);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveOnLeave();});
@@ -2713,7 +2726,7 @@ resumeDialog.addEventListener('cancel',ev=>ev.preventDefault());
 document.getElementById('resumeRunBtn').addEventListener('click',()=>{
  const saved=pendingResume;if(!saved)return;
  try{
-  restoreRunState(saved);pendingResume=null;runCheckpoint=saved;resumeDialog.close();
+  restoreRunState(saved);pendingResume=null;runCheckpoint=saved;setGameStarted(true);homeUI.hide();homeUI.setSavedRun(null);resumeDialog.close();
   if(saved.roundInProgress)beginRound();else saveRunCheckpoint();toastMsg('Resumed round '+round);
  }catch{
   for(const t of towers){disposeTransientMesh(t.abilityHalo);disposeTransientMesh(t.mesh);}towers.length=0;
@@ -2722,15 +2735,17 @@ document.getElementById('resumeRunBtn').addEventListener('click',()=>{
   document.getElementById('resumeRunBtn').disabled=true;document.getElementById('resumeNote').textContent='This saved run could not be restored. Choose New Game to play.';
  }
 });
-document.getElementById('newRunBtn').addEventListener('click',()=>{runStore.clear();pendingResume=null;runCheckpoint=null;resumeDialog.close();document.getElementById('saveStatus').textContent='Progress saves automatically in this browser.';});
+document.getElementById('newRunBtn').addEventListener('click',()=>{runStore.clear();pendingResume=null;runCheckpoint=null;resumeDialog.close();homeUI.setSavedRun(null);homeUI.showMaps();document.getElementById('saveStatus').textContent='Progress saves automatically in this browser.';});
 pendingResume=runStore.read();
 if(pendingResume){
  runCheckpoint=pendingResume;document.getElementById('resumeTitle').textContent='RESUME ROUND '+pendingResume.round+'?';document.getElementById('resumeSummary').textContent=pendingResume.towers.length+' towers · '+Math.ceil(pendingResume.lives)+' lives · $'+formatCash(pendingResume.cash);
  document.getElementById('resumeNote').textContent=pendingResume.roundInProgress?'This round replays from the beginning. Changes made during the round are rolled back.':'Your towers, upgrades and resources are ready for the next round.';
- resumeDialog.showModal();
 }
+const mapMedals=createMapMedals();
+const homeUI=createHomeUI({savedRun:pendingResume,medals:mapMedals,onResume:()=>{document.getElementById('resumeRunBtn').click();if(pendingResume)resumeDialog.showModal();},onStart:startNewMode});
+setGameStarted(false);
 
-let last=performance.now();function loop(now){const dt=(document.hidden||settingsDialog.open||upgradeTree.dialog.open||resumeDialog.open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(!gameEnded&&!document.hidden&&!settingsDialog.open&&!upgradeTree.dialog.open&&!resumeDialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}if(now-lastAutoSave>=2000){lastAutoSave=now;if(!roundActive)saveRunCheckpoint();}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
+let last=performance.now();function loop(now){const dt=(!gameStarted||document.hidden||settingsDialog.open||upgradeTree.dialog.open||resumeDialog.open||document.getElementById('modeDialog').open)?0:Math.min(.04,(now-last)/1000)*speed;last=now;animationTime+=dt;if(gameStarted&&!gameEnded&&!document.hidden&&!settingsDialog.open&&!upgradeTree.dialog.open&&!resumeDialog.open){spawnStep(dt);moveEnemies(dt);updateTowers(dt);updateProjectiles(dt);updateAcidPuddles(dt);updateVisualEffects(dt)}abilityUiTimer-=dt;if(abilityUiTimer<=0){abilityUiTimer=.12;if(selectedTower)refreshSelected();else refreshAbilityUI()}if(now-lastAutoSave>=2000){lastAutoSave=now;if(!roundActive)saveRunCheckpoint();}flushUI();bloonRenderer.flush();freezeMarkerRenderer.flush();icicleMarkerRenderer.flush();acidPuddleRenderer.flush();renderer.render(scene,camera);requestAnimationFrame(loop)}
 updateUI();flushUI();refreshAbilityUI();requestAnimationFrame(loop);
 } catch (err) {
  console.error(err);

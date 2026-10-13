@@ -7,7 +7,7 @@ const visuals=fs.readFileSync(path.join(__dirname,'..','..','boomerang-visuals.j
 // Exercise the game's existing combat functions without requiring a WebGL context.
 function game(){
  const context={RANGE_SCALE:.32,meadowDepthScale:1,towers:[],enemies:[],projectiles:[],acidPuddles:[],roundActive:true,gameEnded:false,selectedTower:null,
-  round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
+  currentMode:{key:'medium',legacy:true,bloonSpeed:1},round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
   saveRunCheckpoint(){},recordTowerUse(){},playBloonPop(){},updateTowerAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
   glueMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),animateGlue(){},iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
   animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
@@ -17,6 +17,7 @@ function game(){
   placeEnemyOnTrack(e){e.mesh.position.x=e.seg*10+e.dist;e.mesh.position.z=0},
   scene:{add(){}},makeTowerMesh:mesh,makeProjectileMesh:mesh,makeQuincyArrowMesh:mesh,quincyMuzzleOrigin:t=>({x:t.x,y:2.15,z:t.z})};
  vm.createContext(context);
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..','difficulty.js'),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
  // Use the real visual selectors and throw hooks; mock meshes simply have no rig.
  for(const [start,end] of [['export function boomerangProjectileKind','export function makeBoomerangWeapon'],['export function triggerBoomerangThrow',null]]){
   const from=visuals.indexOf(start),to=end?visuals.indexOf(end,from):visuals.length;
@@ -41,6 +42,7 @@ function game(){
  include('function syncDartStats(','function applyUpgrade(');
  include('function syncGlueStats(','upgradeBtns.forEach((b,p)=>b.addEventListener');
  include('function pointSegDist(','function placeTower(');
+ include('function blimpHealthMultiplier(','function trackGlueStunEnemy(');
  include('function progress(','function enemySpeed(');
  include('function enemySpeed(','function leakDamage(');
  include('function updateRegrow(','function towerCanDamage(');
@@ -54,6 +56,7 @@ function game(){
  include('function updateMOABPress(','function dealGlaiveHit(');
  context.spawnTackFlameVisual=()=>{};context.visualEffects=[];
  include('function dealGlaiveHit(','function buildRound(');
+ vm.runInContext('function setDifficultyForTest(key,legacy=false){currentMode=getGameMode(key,legacy);applyModePrices(towerDefs,upgradeData,currentMode)}',context);
  return context;
 }
 function position(x=0,y=0,z=0){return {x,y,z,set(x,y,z){Object.assign(this,{x,y,z})},clone(){return position(this.x,this.y,this.z)}}}

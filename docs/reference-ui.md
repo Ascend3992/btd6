@@ -17,3 +17,5 @@ Shop portraits and selected portraits use the actual game models. v64 includes a
 The v62 Normal Difficulty pause menu provides an Auto Start switch, separate music/effects volume sliders, Restart and Continue. See [upgrade overview and audio](upgrade-tree.md).
 
 v65 adds an automatic local checkpoint and a paused Resume/New Game prompt when you return. Restart clears the saved run. [Saving progress](save-progress.md).
+
+v66 loads a Home screen before gameplay, with Monkey Meadow map selection and three mode choices. Pause now displays the selected Easy/Normal/Hard mode. [Home and mode details](home-and-modes.md).

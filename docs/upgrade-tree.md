@@ -25,3 +25,5 @@ All recordings are local and retain their uploaded bytes. The browser starts aud
 33 regression test files cover existing combat plus usage accounting and audio overlap/playlist/volume behavior. Chromium checks one-click purchases and all 15 owned/next Glue icons, tier order, overview navigation and descriptions, actual image/audio decoding, music cycling through all four tracks, pop versus nonlethal damage, independent volume controls, Auto Start synchronization, responsive menus, and simulation pause/resume. No combat tuning is changed.
 
 Since v65 the pause menu also shows checkpoint status. [Saved-run details](save-progress.md) explain automatic saves and resuming interrupted rounds.
+
+Since v66, displayed costs and cash purchases follow the selected Easy/Normal/Hard mode, including upgrade-tree descriptions. [Mode rules](home-and-modes.md).

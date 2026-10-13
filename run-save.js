@@ -1,6 +1,7 @@
 // Saves contain round checkpoints, never meshes, live Bloons or projectiles.
+import {getGameMode} from './difficulty.js?v=1';
 export const RUN_SAVE_KEY='meadow-btd6.saved-run';
-const SAVE_VERSION=1,MAP_VERSION='meadow-reference-v1',MAX_BYTES=2_000_000;
+const SAVE_VERSION=2,MAP_VERSION='meadow-reference-v1',MAX_BYTES=2_000_000;
 const runtimeFields=['damageDealt','cool','pressCool','shotCounter','critShotCounter','bombShotCounter','meteorCool','orbitTick','abilityCd','blitzCd','abilityTimer','abilityTick','abilityAngle','rapidCd','rapidTimer','stormCd','stormTimer','stormTick','stormClock'];
 const signedFields=new Set(['cool','pressCool','meteorCool','abilityTick','abilityAngle']);
 function requireValue(value){if(!value)throw Error('Invalid saved run');}
@@ -10,7 +11,8 @@ function point(value,rules,margin=0){requireValue(value&&typeof value==='object'
 function optionalId(value){return value==null?null:integer(value,1,1e9);}
 export function validateRunSave(raw,rules){
  try{
-  requireValue(raw&&raw.version===SAVE_VERSION&&raw.map===MAP_VERSION);
+  requireValue(raw&&(raw.version===1||raw.version===SAVE_VERSION)&&raw.map===MAP_VERSION);
+  const difficulty=raw.version===1?'medium':raw.difficulty,legacyMode=raw.version===1?true:raw.legacyMode;requireValue(typeof difficulty==='string'&&typeof legacyMode==='boolean');const mode=getGameMode(difficulty,legacyMode);
   requireValue(Array.isArray(raw.towers)&&raw.towers.length<=1000);
   const ids=new Set(),tierFives=new Set();let heroes=0;
   const towers=raw.towers.map(saved=>{
@@ -49,12 +51,12 @@ export function validateRunSave(raw,rules){
   requireValue(typeof raw.autoStart==='boolean'&&typeof raw.roundInProgress==='boolean');
   const selectedTowerId=optionalId(raw.selectedTowerId);requireValue(selectedTowerId===null||ids.has(selectedTowerId));
   const nextTowerId=integer(raw.nextTowerId,1,1e9);requireValue(towers.every(t=>t.id<nextTowerId&&t.fanBuffs.every(b=>b.sourceId<nextTowerId)&&(t.frozenWaterSourceId===null||t.frozenWaterSourceId<nextTowerId)));
-  return {version:SAVE_VERSION,map:MAP_VERSION,savedAt:number(raw.savedAt,0,1e15),round:integer(raw.round,1,100),lives:number(raw.lives,.001,1e9),cash:number(raw.cash),speed:integer(raw.speed,1,3),autoStart:raw.autoStart,roundInProgress:raw.roundInProgress,
+  return {version:SAVE_VERSION,map:MAP_VERSION,difficulty,legacyMode,savedAt:number(raw.savedAt,0,1e15),round:integer(raw.round,mode.startRound,mode.endRound),lives:number(raw.lives,.001,1e9),cash:number(raw.cash),speed:integer(raw.speed,1,3),autoStart:raw.autoStart,roundInProgress:raw.roundInProgress,
    effectsVolume:number(raw.effectsVolume,0,1),musicVolume:number(raw.musicVolume,0,1),absoluteZeroBuffT:number(raw.absoluteZeroBuffT,0,10),nextTowerId,selectedTowerId,towers,puddles,usage};
  }catch{return null;}
 }
 export function captureRunSave(state,rules){
- const raw={version:SAVE_VERSION,map:MAP_VERSION,savedAt:Date.now(),round:state.round,lives:state.lives,cash:state.cash,speed:state.speed,autoStart:state.autoStart,roundInProgress:!!state.roundInProgress,
+ const raw={version:SAVE_VERSION,map:MAP_VERSION,difficulty:state.difficulty||'medium',legacyMode:!!state.legacyMode,savedAt:Date.now(),round:state.round,lives:state.lives,cash:state.cash,speed:state.speed,autoStart:state.autoStart,roundInProgress:!!state.roundInProgress,
   effectsVolume:state.effectsVolume,musicVolume:state.musicVolume,absoluteZeroBuffT:state.absoluteZeroBuffT,nextTowerId:state.nextTowerId,selectedTowerId:state.selectedTowerId??null,usage:state.usage,
   towers:state.towers.map(t=>{const runtime={};for(const key of runtimeFields)if(t[key]!==undefined)runtime[key]=t[key];return {id:t.id,type:t.type,x:t.x,z:t.z,paths:[...t.paths],target:t.target,throwHand:t.throwHand||1,camoPriority:!!t.camoPriority,level:t.level||0,rotationY:t.mesh.rotation.y,
    runtime,fanBuffs:t.fanBuffs.map(b=>({sourceId:b.sourceId,tier:b.tier,remaining:b.remaining})),activeAbilityKey:t.activeAbility?.key??null,activeAbilityTier:t.activeAbility?.tier??null,stormStats:t.stormStats??null,stormCenter:t.stormCenter?{x:t.stormCenter.x,z:t.stormCenter.z}:null,placementSurface:t.placementSurface||'land',frozenWaterSourceId:t.frozenWaterSourceId??null};}),

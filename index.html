@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=65"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=66"></head>
 <body><div id="gameWrap">
 <canvas id="game" aria-label="Meadow game map"></canvas>
 <header id="topbar" aria-label="Game status">
 <div class="hudStat" aria-label="Lives"><svg aria-hidden="true"><use href="assets/ui/interface.svg#heart"/></svg><span id="lives">100</span></div>
 <div class="hudStat cashHud" aria-label="Cash"><svg aria-hidden="true"><use href="assets/ui/interface.svg#coins"/></svg><span>$<span id="cash">650</span></span></div>
-<div class="roundHud"><small>ROUND</small><strong><span id="round">1</span>/100</strong></div>
+<div class="roundHud"><small>ROUND</small><strong><span id="round">1</span>/<span id="roundLimit">100</span></strong></div>
 <button id="settingsBtn" type="button" aria-label="Settings"><svg aria-hidden="true"><use href="assets/ui/interface.svg#gear"/></svg></button>
 </header>
 <aside id="shop" aria-label="Tower shop"><button id="shopUpgradesBtn" type="button" class="shopTitle">UPGRADES</button><div id="shopTowerName" class="shopCategory">PRIMARY MONKEYS</div><div class="towerGrid">
@@ -34,7 +34,7 @@
 </section>
 <section id="abilityBar" class="hidden" aria-label="Tower abilities"><div class="abilityTitle">ABILITIES</div><div id="abilityButtons"></div></section>
 <dialog id="settingsDialog" aria-labelledby="pauseTitle">
-<h2 id="pauseTitle">PAUSE</h2><div class="pauseCard"><h3>NORMAL DIFFICULTY</h3>
+<h2 id="pauseTitle">PAUSE</h2><div class="pauseCard"><h3 id="pauseDifficulty">NORMAL MODE</h3>
 <div class="pauseOptions"><span>AUTO START</span><button id="settingsAutoBtn" type="button" role="switch" aria-checked="false" aria-label="Auto Start"><i></i></button></div>
 <div class="pauseAudio"><div class="volumeControls">
 <label class="volumeRow" for="effectsVolume"><span class="volumeIcon" aria-hidden="true">◖))</span><span class="srOnly">Sound effects volume</span><input id="effectsVolume" type="range" min="0" max="100" value="35" style="--volume:35%"><output id="effectsPercent" for="effectsVolume">35%</output></label>
@@ -42,6 +42,16 @@
 </div><div class="nowPlaying"><span aria-hidden="true">♫</span><span id="musicTrack">Sunset Samba</span><div class="musicBars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div></div></div>
 <p id="saveStatus" class="saveStatus" role="status">Progress saves automatically in this browser.</p><div class="pauseActions"><button id="restartBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">↶</span><b>RESTART</b></button><button id="closeSettingsBtn" type="button"><span class="pauseActionIcon" aria-hidden="true">➜</span><b>CONTINUE</b></button></div>
 </div></dialog>
+<section id="homeScreen" aria-label="Game home">
+<div id="homeView" class="homeView"><div class="homeLogo"><span>MEADOW</span><strong>BALLOON DEFENSE</strong><small>Monkey Meadow awaits</small></div><img class="homeMonkey" src="assets/ui/towers/dart.png" alt="Dart Monkey"><div class="homeActions"><button id="homeResumeBtn" type="button" hidden><b id="homeResumeLabel">RESUME</b><small id="homeSaveSummary"></small></button><button id="homePlayBtn" type="button">PLAY</button></div><p class="homeHint">Build your defense. Pick your path. Pop every Bloon.</p></div>
+<div id="mapView" class="mapView" hidden><button id="mapBackBtn" class="menuBack" type="button" aria-label="Back to home">↶</button><h1>SELECT A MAP</h1><p class="mapSubtitle">BEGINNER</p><button id="meadowMapBtn" class="mapCard" type="button"><span class="mapPicture"><img src="assets/ui/maps/monkey-meadow.png" alt="Monkey Meadow map"><span id="mapBorderLabel" hidden>SILVER BORDER</span></span><b>MONKEY MEADOW</b><span class="mapMedals"><span data-medal="easy" class="mapMedal">E</span><span data-medal="medium" class="mapMedal">N</span><span data-medal="hard" class="mapMedal">H</span></span></button><p class="mapHelp">Complete Easy and Normal to earn a silver map border.</p></div>
+</section>
+<dialog id="modeDialog" aria-labelledby="modeTitle"><button id="modeBackBtn" class="menuBack" type="button" aria-label="Back to map selection">↶</button><h2 id="modeTitle">CHOOSE YOUR MODE</h2><p class="modeMapName">MONKEY MEADOW</p><div class="modeChoices">
+<button class="modeChoice" data-mode="easy" type="button"><span class="modeBadge easyBadge" aria-hidden="true"></span><b>EASY</b><span>200 lives · Rounds 1–40</span><small>Lower prices · Base Bloon speed</small></button>
+<button class="modeChoice" data-mode="medium" type="button" aria-label="Normal (Medium) mode"><span class="modeBadge normalBadge" aria-hidden="true"></span><b>NORMAL</b><span>150 lives · Rounds 1–60</span><small>Standard prices · 10% faster Bloons</small></button>
+<button class="modeChoice" data-mode="hard" type="button"><span class="modeBadge hardBadge" aria-hidden="true"></span><b>HARD</b><span>100 lives · Rounds 3–80</span><small>Higher prices · 25% faster Bloons</small></button>
+</div><p id="modeReplaceNote" hidden>Starting a new mode replaces your saved run.</p></dialog>
+
 <dialog id="resumeDialog" aria-labelledby="resumeTitle">
 <h2 id="resumeTitle">RESUME YOUR RUN?</h2><p id="resumeSummary"></p><p id="resumeNote"></p><div class="resumeActions"><button id="resumeRunBtn" type="button" autofocus>RESUME</button><button id="newRunBtn" type="button">NEW GAME</button></div><small>Saved on this browser and website.</small>
 </dialog>
@@ -52,4 +62,4 @@
 <div id="treeTooltip" role="tooltip" hidden></div>
 </dialog>
 <div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><button id="endRestartBtn" type="button">Restart</button></div></div>
-</div><script src="game.js?v=65"></script></body></html>
+</div><script src="game.js?v=66"></script></body></html>

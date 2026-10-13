@@ -1,10 +1,12 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v65**. Automatically saves your run locally and offers Resume or New Game when you return. Towers, upgrades, cash, lives, usage XP, targeting, ability cooldowns and persistent effects restore from the saved round checkpoint. Leaving during round 60 lets you replay round 60 from its starting state. Includes all previous artwork, UI and audio updates.
+Latest version: **v66**. Adds a home screen, a Monkey Meadow map selector and Easy/Normal/Hard modes with restyled 3D difficulty badges. Each mode uses the supplied lives, rounds, prices and Bloon speeds; Easy’s round-40 MOAB has 133 base HP. Pause headings and saved runs reflect the selected mode. Easy and Normal wins award a silver map border. Existing v65 saves retain their original 100-round rules.
 
-[Download v65 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v65.zip)
+[Download v66 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v66.zip)
 
-[Resume prompt](docs/resume-run-desktop.png) · [Phone resume prompt](docs/resume-run-mobile.png) · [Saved-run details](docs/save-progress.md)
+[Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
+
+[Saved runs](docs/save-progress.md)
 
 [Boomerang upgrade tree](docs/boomer-upgrade-tree.png) · [Boomerang cards](docs/boomer-upgrade-icons-combat.png) · [Boomerang artwork details](docs/boomer-upgrade-artwork.md)
 

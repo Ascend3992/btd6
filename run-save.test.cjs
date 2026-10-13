@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {game,upgrade}=require('./helpers/game.cjs');
-function codec(){const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','run-save.js'),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);return context;}
+function codec(){const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','difficulty.js'),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);vm.runInContext(fs.readFileSync(path.join(__dirname,'..','run-save.js'),'utf8').replace(/^import.*$/gm,'').replaceAll('export const','const').replaceAll('export function','function'),context);return context;}
 function fixture(){
  const g=game(),c=codec(),definitions=Object.fromEntries(['dart','boomer','bomb','tack','ice','glue','hero'].map(type=>[type,{hero:type==='hero'}]));
  const paths=[[2,5,0],[2,4,0],[5,0,2],[0,5,2],[2,0,5],[4,2,0],[0,0,0]];
@@ -20,7 +20,7 @@ test('snapshot owns its arrays and counters; subsequent combat and purchases can
 });
 test('invalid versions, map, money, towers, crosspaths, duplicate Tier 5s, IDs, coordinates, timers and XP are rejected',()=>{
  const {c,rules,saved}=fixture();
- for(const mutate of [s=>s.version=99,s=>s.map='unknown',s=>s.round=101,s=>s.cash=-1,s=>s.lives=0,s=>s.speed=4,s=>s.towers[0].type='constructor',s=>s.towers[0].paths=[1,1,1],s=>s.towers[0].paths=[3,3,0],s=>s.towers[1].id=s.towers[0].id,s=>s.towers[0].x=1e8,s=>s.towers[0].runtime.cool=null,s=>s.usage.dart=-5,s=>s.selectedTowerId=500,s=>s.nextTowerId=8,s=>s.towers.push({...s.towers[0],id:8}),s=>s.towers.push({...s.towers[6],id:8})]){const bad=clone(saved);mutate(bad);assert.equal(c.validateRunSave(bad,rules),null);}
+ for(const mutate of [s=>s.version=99,s=>delete s.difficulty,s=>s.difficulty='unknown',s=>s.map='unknown',s=>s.round=101,s=>s.cash=-1,s=>s.lives=0,s=>s.speed=4,s=>s.towers[0].type='constructor',s=>s.towers[0].paths=[1,1,1],s=>s.towers[0].paths=[3,3,0],s=>s.towers[1].id=s.towers[0].id,s=>s.towers[0].x=1e8,s=>s.towers[0].runtime.cool=null,s=>s.usage.dart=-5,s=>s.selectedTowerId=500,s=>s.nextTowerId=8,s=>s.towers.push({...s.towers[0],id:8}),s=>s.towers.push({...s.towers[6],id:8})]){const bad=clone(saved);mutate(bad);assert.equal(c.validateRunSave(bad,rules),null);}
  const raw=clone(saved);raw.cash=NaN;assert.equal(c.validateRunSave(raw,rules),null);
 });
 test('storage operations are atomic, use only the run key, tolerate corrupt/oversized/blocked storage and keep the last good save on quota failure',()=>{
@@ -36,4 +36,9 @@ test('unrecognized runtime properties are stripped before restoring, and sold pu
 });
 test('an ability activated at tier 4 retains its tier after a tier 5 purchase, and Storm retains the stats from activation',()=>{
  const {c,g,rules,state}=fixture(),tack=g.towers[3],hero=g.towers[6];tack.activeAbility=g.getTowerAbilities({...tack,paths:[0,4,2]})[0];tack.abilityTimer=2;hero.stormTimer=1;hero.stormStats=g.quincyStormStats(18);const saved=c.captureRunSave(state,rules);assert(saved);assert.equal(saved.towers[3].activeAbilityTier,4);assert.equal(saved.towers[3].paths[1],5);assert.equal(saved.towers[6].stormStats.chance,.075);assert.equal(saved.towers[6].stormStats.ceramicBonus,18);
+});
+test('v65 saves migrate to 100-round legacy Normal, while new difficulty saves enforce their own round range',()=>{
+ const {c,rules,saved}=fixture(),old=clone(saved);old.version=1;delete old.difficulty;delete old.legacyMode;old.round=83;const migrated=c.validateRunSave(old,rules);assert(migrated);assert.equal(migrated.version,2);assert.equal(migrated.difficulty,'medium');assert.equal(migrated.legacyMode,true);assert.equal(migrated.round,83);
+ for(const [key,start,end] of [['easy',1,40],['medium',1,60],['hard',3,80]]){const s=clone(saved);s.difficulty=key;s.legacyMode=false;s.round=start;assert(c.validateRunSave(s,rules));s.round=end;assert(c.validateRunSave(s,rules));s.round=end+1;assert.equal(c.validateRunSave(s,rules),null);s.round=start-1;assert.equal(c.validateRunSave(s,rules),null);}
+ const bad=clone(saved);bad.difficulty='hard';bad.legacyMode=true;assert.equal(c.validateRunSave(bad,rules),null);
 });
