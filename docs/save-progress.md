@@ -1,4 +1,4 @@
-# Saved runs — v67 (v65/v66 compatible)
+# Saved runs — v68 (v65/v66/v67 compatible)
 
 The game automatically keeps **one saved run** in this browser on this website. Return to the Home screen and choose **Resume** to continue. New Game opens map and mode selection; selecting an unlocked mode-tree node replaces the checkpoint. Browsing maps or going back does not discard it. No account or network connection is needed to save.
 
@@ -16,13 +16,13 @@ The checkpoint restores:
 
 Live Bloons, projectiles and cosmetic effects are recreated by replaying the interrupted round. Switching to another tab pauses simulation while the page stays loaded; returning to that existing tab continues the live round. While Home/map/mode selection is open, simulation is paused and the checkpoint cannot be overwritten by the empty starting map. An interrupted-round Resume starts combat; a between-round Resume waits for Start Round before combat resumes, including when Auto Start was enabled.
 
-**Restart**, starting a new run, and winning or losing a Standard/Deflation run clear its save. Sandbox has no win/loss condition. Regular tab closure keeps it. A save belongs to the browser profile and website origin: a different browser, device, private session or hosting address has separate storage. Clearing that website’s browser data removes the save.
+**Restart**, starting a new run, and winning or losing a challenge run clear its save. Sandbox has no win/loss condition. Regular tab closure keeps it. A save belongs to the browser profile and website origin: a different browser, device, private session or hosting address has separate storage. Clearing that website’s browser data removes the save.
 
 [Desktop resume prompt](resume-run-desktop.png) · [Phone resume prompt](resume-run-mobile.png) · [Checkpoint status in Pause](saved-run-pause.png)
 
 ## Implementation and validation
 
-`run-save.js` stores a versioned JSON checkpoint (schema 3 since v67, with difficulty, branch, legacy flag and hero XP) under `meadow-btd6.saved-run`. It validates the map, tower types, bounded numeric values, unique IDs, hero count, upgrade crosspaths and Tier 5 uniqueness. Only allowed fields restore; renderers, meshes, enemy references and arbitrary properties never enter the save. Purchases reconstruct tower statistics from the existing upgrade functions rather than trusting saved attack damage or prices.
+`run-save.js` stores a versioned JSON checkpoint (schema 4 since v68, with difficulty, branch, legacy flag, hero XP and Apopalypse wave state) under `meadow-btd6.saved-run`. It validates the map, tower types, bounded numeric values, unique IDs, hero count, upgrade crosspaths and Tier 5 uniqueness. Only allowed fields restore; renderers, meshes, enemy references and arbitrary properties never enter the save. Purchases reconstruct tower statistics from the existing upgrade functions rather than trusting saved attack damage or prices.
 
 Writes use one atomic `localStorage.setItem`, so a failed quota write retains the previous successful save. Corrupt or incompatible data is rejected before model construction. Storage errors show a message and leave the game playable. The save schema is independent of artwork/cache versions, allowing later icon updates to retain compatible runs.
 
@@ -39,3 +39,7 @@ Schema-1 saves from v65 migrate to legacy Normal and retain their original 100-r
 Schema 3 adds Standard/Deflation/Sandbox and Quincy’s cumulative level XP. v65/v66 snapshots preserve their difficulty rules, economy, timers and stored hero level; the hero is seeded with the minimum cumulative XP for that level, then earns new XP from completed rounds. Overflow in new saves is restored exactly. An interrupted Standard/Deflation round replays from its pre-round XP checkpoint, so a completed round is never rewarded twice.
 
 Deflation restores its rounds 31–60/no-income rules. Sandbox allows zero lives and cash up to 9,999,999, preserves the selected round/test hero level/board, and resumes with Bloon sends cleared. Manual zero lives stays zero; leak recovery retains the last manually set positive amount. Standard map progress and Easy branch unlocks are stored separately from the run checkpoint and survive Restart. Sandbox never updates those stats. See [Easy branches and Sandbox](easy-branches-and-sandbox.md).
+
+## v68 Normal branches
+
+Reverse restores its reversed route before replaying an interrupted round. Apopalypse uses continuous live snapshots instead of replaying a wave: seed, queued sends/spawn timing, pending completions and surviving Bloons with HP/positions/properties/effects/source references are restored, including icicle and puddle hit history. Towers, hero XP and economy resume with that same snapshot. Already completed waves cannot repeat XP rewards. In-flight projectiles and cosmetic effects are discarded, while cooldowns and durable combat effects persist. Schema 4 retains all older checkpoint formats. [Details](normal-branches.md).

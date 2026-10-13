@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v67**. Difficulty choices now open mode trees. Beating Standard Easy unlocks Deflation (rounds 31–60, $20,000, no cash income) and Sandbox with Bloon spawning, editable cash/lives and reset tools. Quincy now levels using the supplied round-XP formula and saved per-level requirements. Existing saves retain their hero levels and mode rules.
+Latest version: **v68**. Beating Standard Normal unlocks Reverse and Apopalypse in its connected mode tree. Reverse flips the route and each round’s Bloon order. Apopalypse uses randomized, continuous waves that overlap, with live-wave save restoration. Both use Normal’s 150 lives, prices, speed and 60-round limit. Easy branches and Quincy XP remain available.
 
-[Download v67 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v67.zip)
+[Download v68 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v68.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -35,3 +35,5 @@ All required Three.js files and licenses are bundled in `assets/vendor/`. See [R
 Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
 
 [Easy branches and Sandbox](docs/easy-branches-and-sandbox.md) · [Mode tree](docs/easy-tree-unlocked.png) · [Sandbox preview](docs/sandbox-desktop.png) · [Quincy XP](docs/quincy-round-xp.png)
+
+[Normal branches](docs/normal-branches.md) · [Normal tree](docs/normal-tree-unlocked.png) · [Apopalypse waves](docs/apopalypse-waves.png)

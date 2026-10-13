@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v67 Easy branches, Sandbox and Quincy level XP
+Meadow Balloon Defense 3D - v68 Normal branches, Reverse and Apopalypse
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -387,3 +387,12 @@ Easy branches, Sandbox and hero XP v67
 - Save schema 3 records branch and hero XP. v65/v66 saves preserve stored hero levels by seeding minimum XP and retain their original difficulty/round rules. Sandbox boards save manual cash/lives/round/towers; active Bloon sends clear on resume.
 - User reference Deflation/Sandbox badges are restyled as faceted 3D gold-rimmed icons in the transparent original generated PNG. All 45 original upgrade icons, other tower stats and all five audio assets remain intact.
 - See docs/easy-branches-and-sandbox.md for rules, screenshots, persistence and verification. 37 regression test files pass.
+
+Normal branches v68
+- Normal selection opens a connected Standard Normal -> Reverse / Apopalypse tree. A Normal win unlocks both; existing Normal medals count. Easy branches and Hard remain as before. Each new mode has a separate medal and uses Normal's 150 lives, $650 starting cash, default costs, 1.10x base speed and rounds 1-60.
+- Reverse flips the true route endpoints and every round's complete Bloon order/spacing. First/Last targeting, children and knockback follow the active route. Other modes restore forward travel. Reverse keeps standard income, breaks, XP and checkpoint replay.
+- Apopalypse uses a fresh saved seed to randomize stock groups by count/color/order/spacing/properties while keeping progression constraints. The next wave starts immediately after the prior wave's last Bloon enters, with older Bloons still active. There are no round breaks, Auto Start delays or end-of-round cash bonuses. Pops still earn cash. Victory waits for all remaining waves to clear after round 60. Leaks can lose the run.
+- Quincy completion XP and end-of-round effects occur once per individually cleared wave, including out-of-order overlap. Children retain origin rounds. Branches do not raise Standard map progress.
+- Save schema 4 supports v65/v66/v67. Apopalypse preserves live logical Bloons, queue/timing/seed/pending wave completions, HP/positions/status/source references, shard/icicle/puddle history and existing tower/economy/XP state. In-flight projectiles and cosmetic effects are discarded on resume, while cooldowns and durable effects persist. Reverse restores its route before replaying the checkpoint.
+- The supplied Reverse and Apopalypse references are restyled as faceted gold-rimmed icons in the original generated transparent PNG. All original 45 upgrade icons and five audio files remain unchanged.
+- 38 regression test files pass. Chromium verifies the real tree locks/unlocks and loads, reverse motion/order/saves, live overlapping Apopalypse waves/effects/source references/XP/win, responsive layouts and existing mode/save compatibility. See docs/normal-branches.md.

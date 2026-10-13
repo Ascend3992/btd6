@@ -5,11 +5,14 @@ export const gameModes={
 };
 export function getGameMode(key='medium',legacy=false,variant='standard'){
  if(!Object.hasOwn(gameModes,key))throw Error('Unknown difficulty');
- if(!['standard','deflation','sandbox'].includes(variant)||variant!=='standard'&&(key!=='easy'||legacy))throw Error('Invalid mode branch');
+ const branchParents={deflation:'easy',sandbox:'easy',reverse:'medium',apopalypse:'medium'};
+ if(variant!=='standard'&&(!Object.hasOwn(branchParents,variant)||key!==branchParents[variant]||legacy))throw Error('Invalid mode branch');
  const mode={...gameModes[key],legacy:false,variant,startCash:650};
  if(legacy){if(key!=='medium')throw Error('Invalid legacy difficulty');return {...mode,lives:100,endRound:100,bloonSpeed:1,legacy:true};}
  if(variant==='deflation')return {...mode,label:'Deflation',startRound:31,endRound:60,startCash:20000};
  if(variant==='sandbox')return {...mode,label:'Easy Sandbox',lives:999999,endRound:999,startCash:9999999};
+ if(variant==='reverse')return {...mode,label:'Reverse'};
+ if(variant==='apopalypse')return {...mode,label:'Apopalypse'};
  return mode;
 }
 export function modePrice(price,mode){return mode.costMultiplier===1?price:Math.max(5,Math.ceil(price*mode.costMultiplier/5-.5-1e-9)*5);}
@@ -23,6 +26,7 @@ export function applyModePrices(definitions,upgrades,mode){
 export function modeBloonHealth(type,base,spawnRound,mode){return mode.variant!=='sandbox'&&!mode.legacy&&mode.key==='easy'&&type==='MOAB'&&spawnRound===40?133:base;}
 export const MAP_MEDALS_KEY='meadow-btd6.map-medals';
 export function createMapMedals(storage=()=>window.localStorage){
- function read(){try{const raw=storage().getItem(MAP_MEDALS_KEY);if(!raw||raw.length>1000)return {easy:false,medium:false,hard:false,deflation:false};const saved=JSON.parse(raw);return {easy:saved.easy===true,medium:saved.medium===true,hard:saved.hard===true,deflation:saved.deflation===true};}catch{return {easy:false,medium:false,hard:false,deflation:false};}}
- return {read,award(key){if(!['easy','medium','hard','deflation'].includes(key))return false;try{storage().setItem(MAP_MEDALS_KEY,JSON.stringify({...read(),[key]:true}));return true;}catch{return false;}}};
+ const keys=['easy','medium','hard','deflation','reverse','apopalypse'];
+ function read(){try{const raw=storage().getItem(MAP_MEDALS_KEY),saved=raw&&raw.length<=1000?JSON.parse(raw):{};return Object.fromEntries(keys.map(key=>[key,saved[key]===true]));}catch{return Object.fromEntries(keys.map(key=>[key,false]));}}
+ return {read,award(key){if(!keys.includes(key))return false;try{storage().setItem(MAP_MEDALS_KEY,JSON.stringify({...read(),[key]:true}));return true;}catch{return false;}}};
 }
