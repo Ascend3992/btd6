@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v73**. All 15 original Ice Monkey upgrade icons appear in the owned/next cards and the complete upgrade tree. Original artwork and transparency are preserved exactly, completing **all 90 upgrades across the six towers**. Quincy's level/XP/cash-purchase panel, compatible saves and all prior modes remain available.
+Latest version: **v74**. Boomerang Monkey's ordinary rangs now seek moving targets instead of following a fixed circle that often missed them. Kylies also track targets on the outbound leg. Existing damage, pierce, attack speed, immunities, abilities and returning mechanics are preserved. All 90 original upgrade icons and Quincy's XP/purchase panel remain available.
 
-[Download v73 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v73.zip)
+[Download v74 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v74.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -47,3 +47,5 @@ Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
 [Quincy level panel](docs/quincy-level-panel.png) · [Phone panel](docs/quincy-level-panel-mobile.png) · [Level purchases and saves](docs/quincy-level-panel.md)
 
 [Ice Monkey upgrade tree](docs/ice-upgrade-tree.png) · [Ice Monkey cards](docs/ice-upgrade-icons-combat.png) · [Ice artwork details](docs/ice-upgrade-artwork.md)
+
+[Boomerang seeking mechanics](docs/boomer-seeking.md) · [Moving MOAB combat](docs/boomer-seeking-combat.png) · [Seeking Kylie](docs/boomer-seeking-kylie.png)

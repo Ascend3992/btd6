@@ -9,7 +9,7 @@ const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBo
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
 const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=8');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=9');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=10');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
 const {captureRunSave,createRunStorage}=await import('./run-save.js?v=6');
 const {getGameMode,applyModePrices,modePrice,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=4');
@@ -103,7 +103,7 @@ const upgradeDescriptions={
  boomer:[
   ['Boomerangs travel through more bloons.','Upgrades to sharper glaives with improved popping.','Glaives ricochet between nearby bloons.','Throws many powerful ricocheting glaives very quickly.','Creates a deadly storm of glaives around the tower.'],
   ['Attacks 33% faster.','Attacks another 33% faster; boomerangs travel 50% faster.','Bionic arm attacks eight times faster than the base monkey and deals +1 damage to MOAB-class bloons.','Ability: attacks five times faster with +1 damage for 10 seconds. 45-second cooldown.','Permanently keeps Turbo Charge attack speed and deals 4 damage. Ability adds +8 damage for 15 seconds. Red Hot Rangs adds +4 permanent damage and +2 ability damage.'],
-  ['Adds 14.19 range and widens the boomerang curve.','Pops Lead and Frozen bloons and adds +1 damage to the main attack and Glaive Lord orbitals. Perma Charge gains its larger damage bonus.','Throws straight out-and-back Kylies with 18 pierce. Each Kylie can hit a bloon again after 0.3 seconds.','Adds a separate 200-pierce throw that deals 1 damage to regular bloons and 5 to blimps, knocking blimps back. Can re-hit after 0.1 seconds. Top-path upgrades increase its pierce and knockback.','Adds +10 main damage and +36 pierce (+54 with Glaives). Both attacks fire twice as fast. Special throws gain +100 pierce, double range, stronger blimp damage and knockback, and explode in flames when they expire.']
+  ['Adds 14.19 range and widens the boomerang curve.','Pops Lead and Frozen bloons and adds +1 damage to the main attack and Glaive Lord orbitals. Perma Charge gains its larger damage bonus.','Throws seeking out-and-back Kylies with 18 pierce. Each Kylie can hit a bloon again after 0.3 seconds.','Adds a separate seeking 200-pierce throw that deals 1 damage to regular bloons and 5 to blimps, knocking blimps back. Can re-hit after 0.1 seconds. Top-path upgrades increase its pierce and knockback.','Adds +10 main damage and +36 pierce (+54 with Glaives). Both attacks fire twice as fast. Special throws gain +100 pierce, double range, stronger blimp damage and knockback, and explode in flames when they expire.']
  ],
  bomb:[
   ['Increases blast radius from 12 to 18 and adds +6 pierce.','Adds +1 damage and +10 pierce.','27 blast radius, 4 damage and 80 pierce. Pushes regular bloons back 20 units and improves Frag Bombs.','Stuns regular bloons for 1.4s, adds +3 range and improves fragment pierce, count and lifespan.','24 damage; pops Black and Zebra bloons. Stuns regular bloons and blimps for 2s and pushes blimps back 5 units. BADs resist crowd control. Improves fragment damage and pierce.'],
@@ -150,7 +150,7 @@ const quincyLevelMetadata=[
 const quincyTuning={costs:[460,540,585,650],bounceRange:50*RANGE_SCALE,explosionRadius:25.7*RANGE_SCALE,explosionPierce:10,arrowLife:1.4,stormRadius:100*RANGE_SCALE,stormDuration:3,stormFrame:1/60,stormRehit:.05};
 const towerDefs={
  dart:{name:'Dart Monkey',cost:200,range:32*RANGE_SCALE,displayRange:32,rate:.95,damage:1,projSpeed:34,color:0x8b5a2b,pierce:2,damageType:'Sharp',notes:'Cannot hit Lead or Camo natively'},
- boomer:{name:'Boomerang Monkey',cost:325,range:43*RANGE_SCALE,displayRange:43,rate:1.2,damage:1,projSpeed:31,color:0xb76a31,pierce:4,damageType:'Sharp',notes:'Cannot hit Camo natively'},
+ boomer:{name:'Boomerang Monkey',cost:325,range:43*RANGE_SCALE,displayRange:43,rate:1.2,damage:1,projSpeed:31,color:0xb76a31,pierce:4,damageType:'Sharp',notes:'Seeking rangs track Bloons; cannot hit Camo natively'},
  bomb:{name:'Bomb Shooter',cost:600,range:40*RANGE_SCALE,displayRange:40,rate:1.5,damage:1,projSpeed:26,color:0x3d4147,pierce:22,splash:12*RANGE_SCALE,damageType:'Explosion',notes:'Pops Lead; cannot hit Black, Zebra, DDT, or Camo'},
  tack:{name:'Tack Shooter',cost:260,costByDifficulty:{easy:220,medium:260,hard:280,impoppable:310},range:23*RANGE_SCALE,displayRange:23,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.12,damage:1,color:0xfa398b,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
  ice:{name:'Ice Monkey',cost:400,towerClass:'Primary',placementSurfaces:['land','water'],range:25*RANGE_SCALE,displayRange:25,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:1.5,radial:true,damageType:'Cold',notes:'Freezes bloons for 1.5s; cannot affect Lead, White, Zebra, or Camo'},
@@ -2016,7 +2016,7 @@ function fireProjectile(t,target,damage=t.damage,extra={}){
  if(t.type==='boomer'&&!extra.mode){
   const dx=target.mesh.position.x-t.x,dz=target.mesh.position.z-t.z,len=Math.hypot(dx,dz)||1;
   mesh.position.set(t.x,2,t.z);scene.add(mesh);
-  projectiles.push({mesh,tower:t,type:t.type,mode:'boomerArc',damage,speed:extra.speed||towerDefs[t.type].projSpeed*(t.paths[0]>=2?1.5:1)*(t.projectileSpeedMult||1),origin:{x:t.x,z:t.z},forward:{x:dx/len,z:dz/len},hand:t.throwHand===-1?-1:1,arcRadius:t.range/2,angle:0,pierceLeft:extra.pierce??t.pierce,hitEnemies:new Set(),radius:.55});
+  projectiles.push({mesh,tower:t,type:t.type,mode:'boomerArc',target,travel:0,returning:false,damage,speed:extra.speed||towerDefs[t.type].projSpeed*(t.paths[0]>=2?1.5:1)*(t.projectileSpeedMult||1),origin:{x:t.x,z:t.z},forward:{x:dx/len,z:dz/len},hand:t.throwHand===-1?-1:1,arcRadius:t.range/2,angle:0,pierceLeft:extra.pierce??t.pierce,hitEnemies:new Set(),radius:.55});
   return;
  }
  if(critical)mesh.traverse(o=>{if(o.material?.emissive){o.material.emissive.setHex(0xffbd32);o.material.emissiveIntensity=.65;}});
@@ -2053,7 +2053,7 @@ function fireKylieProjectile(t,target,{mesh=null,damage=t.damage,special=false}=
  const dx=target.mesh.position.x-t.x,dz=target.mesh.position.z-t.z,len=Math.hypot(dx,dz)||1;
  const topPierce=t.paths[0]>=2?9:t.paths[0]>=1?4:0;
  const knockMult=t.paths[0]>=2?1.5:t.paths[0]>=1?1.25:1;
- projectiles.push({mesh,tower:t,type:t.type,mode:'kylie',origin:{x:t.x,z:t.z},forward:{x:dx/len,z:dz/len},
+ projectiles.push({mesh,tower:t,type:t.type,mode:'kylie',target,seekComplete:false,origin:{x:t.x,z:t.z},forward:{x:dx/len,z:dz/len},
   range:t.range*(special?tuning.rangeMult:1),speed:towerDefs.boomer.projSpeed*(t.projectileSpeedMult||1)*(t.paths[0]>=2?1.5:1),
   travel:0,elapsed:0,hitTimes:new Map(),rehitCooldown:special?.1:.3,radius:special?.75:.55,
   damage:special?1:damage,moabDamage:special?tuning.moabDamage:damage+(t.bonusMoab||0),
@@ -2474,22 +2474,31 @@ function finishKylieProjectile(p){
  p.dead=true;
  if(p.explodes)explodeDominationKylie(p);
 }
+function seekingRangTarget(p){
+ const eligible=(t,e)=>towerCanDamage(t,e)&&!p.hitEnemies?.has(e)&&!p.hitTimes?.has(e)&&(!p.special||e.isBlimp);
+ if(p.target?.alive&&eligible(p.tower,p.target))return p.target;
+ p.target=chooseTarget(p.tower,enemies,eligible);return p.target;
+}
 function updateKylieProjectile(p,dt){
  const end=Math.min(p.range*2,p.travel+p.speed*dt);
  while(p.travel<end&&p.pierceLeft>0){
-  const previous={x:p.mesh.position.x,z:p.mesh.position.z};
-  // Split at the turnaround and use short steps for accurate re-hit cooldowns.
-  const legEnd=p.travel<p.range?p.range:p.range*2;
-  const next=Math.min(end,legEnd,p.travel+p.speed*.025);
-  p.elapsed+=(next-p.travel)/p.speed;p.travel=next;
-  const along=p.travel<=p.range?p.travel:p.range*2-p.travel;
-  p.mesh.position.x=p.origin.x+p.forward.x*along;p.mesh.position.z=p.origin.z+p.forward.z*along;
+  const previous={x:p.mesh.position.x,z:p.mesh.position.z},outbound=p.travel<p.range;
+  // Follow the aimed Bloon until the first hit, then keep the out-and-back flight.
+  if(outbound&&!p.seekComplete){
+   if(p.target&&p.hitTimes.has(p.target))p.seekComplete=true;
+   else{const target=seekingRangTarget(p);if(target){const dx=target.mesh.position.x-previous.x,dz=target.mesh.position.z-previous.z,d=Math.hypot(dx,dz);if(d>1e-9)p.forward={x:dx/d,z:dz/d};}else p.seekComplete=true;}
+  }
+  const legEnd=outbound?p.range:p.range*2;
+  let step=Math.min(end-p.travel,legEnd-p.travel,p.speed*.025),direction=p.forward;
+  if(!outbound){const dx=p.origin.x-previous.x,dz=p.origin.z-previous.z,d=Math.hypot(dx,dz);if(d<=1e-9){p.travel=p.range*2;break;}step=Math.min(step,d);direction={x:dx/d,z:dz/d};}
+  p.elapsed+=step/p.speed;p.travel+=step;
+  p.mesh.position.x=previous.x+direction.x*step;p.mesh.position.z=previous.z+direction.z*step;
   const bounds=projectileBounds(previous,p.mesh.position,p.radius);
   for(const e of [...enemies]){
    if(p.pierceLeft<=0)break;
    if(!e.alive||!inProjectileBounds(e,bounds)||!towerCanDamage(p.tower,e)||(p.hitTimes.has(e)&&p.elapsed-p.hitTimes.get(e)<p.rehitCooldown-1e-9))continue;
    if(pointSegDist(e.mesh.position.x,e.mesh.position.z,previous,p.mesh.position)>p.radius)continue;
-   p.hitTimes.set(e,p.elapsed);p.pierceLeft--;
+   p.hitTimes.set(e,p.elapsed);p.pierceLeft--;if(e===p.target)p.seekComplete=true;
    hitEnemy(e,e.isBlimp?p.moabDamage:p.damage,{tower:p.tower});
    if(e.alive&&e.isBlimp&&e.type!=='BAD'&&p.knockback>0){moveEnemyBackward(e,p.knockback);placeEnemyOnTrack(e)}
   }
@@ -2497,29 +2506,28 @@ function updateKylieProjectile(p,dt){
  p.mesh.rotation.y+=dt*18;
  if(p.travel>=p.range*2||p.pierceLeft<=0)finishKylieProjectile(p);
 }
-function boomerArcPosition(p,angle){
- const along=p.arcRadius*(1-Math.cos(angle)),side=p.hand*p.arcRadius*Math.sin(angle);
- return {x:p.origin.x+p.forward.x*along-p.forward.z*side,z:p.origin.z+p.forward.z*along+p.forward.x*side};
-}
 function updateBoomerArc(p,dt){
- const end=Math.min(Math.PI*2,p.angle+p.speed*dt/p.arcRadius);
- while(p.angle<end&&p.pierceLeft>0){
-  const previous=boomerArcPosition(p,p.angle);
-  p.angle=Math.min(end,p.angle+.05);
-  const next=boomerArcPosition(p,p.angle);
-  p.mesh.position.x=next.x;p.mesh.position.z=next.z;
+ const budget=Math.PI*2*p.arcRadius;let remaining=Math.min(p.speed*dt,budget-(p.travel||0));
+ while(remaining>1e-9&&p.pierceLeft>0){
+  const previous={x:p.mesh.position.x,z:p.mesh.position.z};p.travel=p.travel||0;
+  if(!p.returning&&(p.travel>=budget/2||!seekingRangTarget(p)))p.returning=true;
+  const goal=p.returning?p.origin:p.target.mesh.position,dx=goal.x-previous.x,dz=goal.z-previous.z,d=Math.hypot(dx,dz);
+  if(p.returning&&d<=1e-9){p.dead=true;break;}
+  // Preserve the handed curve, tapering it near impact so the rang reaches its target.
+  const bend=p.returning?0:p.hand*.35*Math.min(1,d/3),length=Math.sqrt(1+bend*bend),ux=d>1e-9?dx/d:1,uz=d>1e-9?dz/d:0;
+  const step=Math.min(remaining,p.speed*.025,p.returning?d:Math.max(d,p.radius));
+  const next={x:previous.x+(ux-uz*bend)/length*step,z:previous.z+(uz+ux*bend)/length*step};
+  p.mesh.position.x=next.x;p.mesh.position.z=next.z;p.travel+=step;p.angle=p.travel/p.arcRadius;remaining-=step;
   const bounds=projectileBounds(previous,next,p.radius);
   for(const e of enemies){
    if(p.pierceLeft<=0)break;
    if(!e.alive||!inProjectileBounds(e,bounds)||p.hitEnemies.has(e)||!towerCanDamage(p.tower,e))continue;
-   if(pointSegDist(e.mesh.position.x,e.mesh.position.z,previous,next)<p.radius){
-    p.hitEnemies.add(e);p.pierceLeft--;
-    hitEnemy(e,p.damage+(e.isBlimp?p.tower.bonusMoab||0:0),{tower:p.tower});
-   }
+   if(pointSegDist(e.mesh.position.x,e.mesh.position.z,previous,next)<=p.radius){p.hitEnemies.add(e);p.pierceLeft--;hitEnemy(e,p.damage+(e.isBlimp?p.tower.bonusMoab||0:0),{tower:p.tower});}
   }
+  if(p.returning&&step>=d-1e-9){p.dead=true;break;}
  }
  p.mesh.rotation.y+=dt*18;
- if(p.angle>=Math.PI*2||p.pierceLeft<=0)p.dead=true;
+ if(p.travel>=budget-1e-9||p.pierceLeft<=0)p.dead=true;
 }
 function bombStunMotionDt(e,dt){
  const stopped=e.type==='BAD'?0:Math.min(dt,e.bombStunT||0);

@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v73 all 90 original tower upgrade icons complete
+Meadow Balloon Defense 3D - v74 seeking Boomerang throws
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -50,7 +50,7 @@ Distinct Camo, Fortified and Regrow models
 Updated Boomerang Monkey
 -----------------------
 - Base cost $325, damage 1, pierce 4, cooldown 1.2 seconds, range 43 game units, Sharp damage and no camo detection.
-- All three upgrade paths use the supplied stats and Medium prices. This includes glaive ricochets, Glaive Lord orbitals and shredding damage, Bionic/Turbo/Perma attack speeds and abilities, straight out-and-back Kylies, independent MOAB Press throws and Domination explosions/burning.
+- All three upgrade paths use the supplied stats and Medium prices. This includes glaive ricochets, Glaive Lord orbitals and shredding damage, Bionic/Turbo/Perma attack speeds and abilities, seeking out-and-back Kylies, independent MOAB Press throws and Domination explosions/burning.
 - All 15 upgrade models follow the supplied upgrade images in the game's faceted style. Colored suits, glaive hoods, bionic lenses, Perma gear and Kylie hats distinguish the paths.
 - Models breathe, sway, blink and move their tails while idle, including between rounds. Throwing animates the arm and body toward the target; rapid throws keep the arm moving and abilities brighten the bionic lights.
 - Held and flying weapons match the upgrades: wooden/heated boomerangs, glaives and Kylies. Glaive Lord has three continuously orbiting, spinning glaives, including between rounds; its damage radius remains 30 game units.
@@ -449,3 +449,11 @@ Ice Monkey upgrade artwork v73
 - All six tower sets are complete: 90 original upgrade icons. No further tower upgrade-icon batch is needed for the current roster.
 - Combat stats, prices, Quincy's XP/purchase panel, save schema, mode rules, ABR rounds, CHIMPS badges and 5 MP3s remain intact.
 - 39 regression test files pass. Chromium verifies 15 actual purchases, owned/next and tree images/names/order, hover/tap details, phone scrolling, both menu entrypoints and all 75 earlier icons. See docs/ice-upgrade-artwork.md.
+
+Boomerang seeking v74
+---------------------
+- Ordinary rangs previously followed a fixed circle that could miss their aimed Bloon even at short range. Base, early top and middle throws now steer toward moving targets with a handed curve, use remaining pierce on eligible targets and return to the source.
+- Kylies and special Press/Domination throws seek their aimed target on the outbound leg until the first hit, then retain out-and-back flight and their re-hit cooldowns. Returns reach the actual source after steering.
+- Targeting/range, damage, pierce, projectile/attack speeds, Camo/Lead/Frozen rules, knockback and expiration explosions remain intact. Existing Glaive Ricochet tracking and Lord orbitals are unchanged. Travel is bounded; swept substeps preserve fast-forward hits.
+- 40 regression test files pass. Chromium compares old/new base damage against a real road-moving round-40 MOAB and checks Kylie seeking and overview text. See docs/boomer-seeking.md.
+- All 90 original icons, 5 MP3s, Quincy XP/purchases/models, saved runs, modes, ABR table and CHIMPS badges remain intact.

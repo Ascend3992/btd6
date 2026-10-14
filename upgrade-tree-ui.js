@@ -1,6 +1,6 @@
 import {setArt} from './tower-ui.js?v=8';
 import {towerUsageXP} from './tower-usage.js?v=2';
-const summaries={dart:'Throws darts at nearby Bloons. Cheap, reliable and versatile.',boomer:'Throws curved boomerangs that strike multiple Bloons.',bomb:'Fires explosive bombs that damage groups of Bloons.',tack:'Sprays tacks around itself to pop nearby Bloons.',ice:'Freezes nearby Bloons, holding them in place.',glue:'Coats Bloons with glue to slow them down.',hero:'Quincy fires bouncing arrows and earns XP at the end of each round to gain levels.'};
+const summaries={dart:'Throws darts at nearby Bloons. Cheap, reliable and versatile.',boomer:'Throws seeking boomerangs that track Bloons, pierce groups and return.',bomb:'Fires explosive bombs that damage groups of Bloons.',tack:'Sprays tacks around itself to pop nearby Bloons.',ice:'Freezes nearby Bloons, holding them in place.',glue:'Coats Bloons with glue to slow them down.',hero:'Quincy fires bouncing arrows and earns XP at the end of each round to gain levels.'};
 export function createUpgradeTree({definitions,upgrades,descriptions,heroLevels,heroLevelXP=()=>0}){
  const dialog=document.getElementById('upgradeTreeDialog'),grid=document.getElementById('treePaths'),tooltip=document.getElementById('treeTooltip'),types=Object.keys(definitions);
  let type='dart',activeNode;
