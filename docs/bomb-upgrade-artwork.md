@@ -26,4 +26,4 @@ The registry supplies both owned/next cards and every future tier in the upgrade
 
 Chromium checks the real single-click purchases of all 15 tiers, owned/next names and decoded images, complete tree ordering and images, hover descriptions, phone scrolling/tap details and the 45 previously supplied upgrade icons. All 39 regression test files pass. The release ZIP includes the complete game, artwork, audio and documentation.
 
-Next tower: **Tack Shooter**, all 15 upgrade icons, named by upgrade. Upload order does not matter.
+Tack Shooter artwork is now complete in [v71](tack-upgrade-artwork.md). Next tower: **Ice Monkey**, all 15 upgrade icons, named by upgrade. Upload order does not matter.

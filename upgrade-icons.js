@@ -61,5 +61,20 @@ export const upgradeIcons={
  "bomb-3-2": "./assets/ui/upgrades/FragBombsUpgradeIcon.webp",
  "bomb-3-3": "./assets/ui/upgrades/ClusterBombsUpgradeIcon.webp",
  "bomb-3-4": "./assets/ui/upgrades/RecursiveClusterUpgradeIcon.webp",
- "bomb-3-5": "./assets/ui/upgrades/BombBlitzUpgradeIcon.webp"
+ "bomb-3-5": "./assets/ui/upgrades/BombBlitzUpgradeIcon.webp",
+ "tack-1-1": "./assets/ui/upgrades/FasterShootingUpgradeIcon_%2528Tack%2529.webp",
+ "tack-1-2": "./assets/ui/upgrades/EvenFasterShootingUpgradeIcon.webp",
+ "tack-1-3": "./assets/ui/upgrades/HotShotsUpgradeIcon.webp",
+ "tack-1-4": "./assets/ui/upgrades/RingOfFireUpgradeIcon.webp",
+ "tack-1-5": "./assets/ui/upgrades/InfernoRingUpgradeIcon.webp",
+ "tack-2-1": "./assets/ui/upgrades/LongRangeTacksUpgradeIcon.webp",
+ "tack-2-2": "./assets/ui/upgrades/SuperRangeTacksUpgradeIcon.webp",
+ "tack-2-3": "./assets/ui/upgrades/BladeShooterUpgradeIcon.webp",
+ "tack-2-4": "./assets/ui/upgrades/BladeMaelstromUpgradeIcon.webp",
+ "tack-2-5": "./assets/ui/upgrades/SuperMaelstromUpgradeIcon.webp",
+ "tack-3-1": "./assets/ui/upgrades/MoreTacksUpgradeIcon.webp",
+ "tack-3-2": "./assets/ui/upgrades/EvenMoreTacksUpgradeIcon.webp",
+ "tack-3-3": "./assets/ui/upgrades/TackSprayerUpgradeIcon.webp",
+ "tack-3-4": "./assets/ui/upgrades/OverdriveUpgradeIcon.webp",
+ "tack-3-5": "./assets/ui/upgrades/TheTackZoneUpgradeIcon.webp"
 };

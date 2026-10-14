@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v70 original Bomb Shooter upgrade icons
+Meadow Balloon Defense 3D - v71 original Tack Shooter upgrade icons
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -418,3 +418,14 @@ Bomb Shooter upgrade artwork v70
 - Tower combat stats, purchases/prices, mode trees, all 100 ABR rounds, CHIMPS badges, schema-5 saves, other icons and 5 MP3s remain intact.
 - 39 regression test files pass. Chromium verifies actual single-click upgrades for all 15 tiers, decoded owned/next and overview images, names, tier order, hover/tap descriptions, phone scrolling, and all 45 earlier icons.
 - Next tower artwork: Tack Shooter, all 15 named upgrade icons. See docs/bomb-upgrade-artwork.md.
+
+Tack Shooter upgrade artwork v71
+-------------------------------
+- All 15 transparent WebP files from Tackshootericons.zip are preserved unchanged, including original filenames, dimensions and alpha. No artwork is generated or converted.
+- Top: Faster Shooting, Even Faster Shooting, Hot Shots, Ring of Fire, Inferno Ring.
+- Middle: Long Range Tacks, Super Range Tacks, Blade Shooter, Blade Maelstrom, Super Maelstrom.
+- Bottom: More Tacks, Even More Tacks, Tack Sprayer, Overdrive, The Tack Zone.
+- Keys tack-1-1 through tack-3-5 supply both owned/next cards and every future tree tier. Faster Shooting's URL correctly escapes the literal percent signs in its original filename. Cache versions are bumped.
+- Combat stats, cash/XP, all mode rules, ABR rounds, CHIMPS badges, schema-5 saves, 60 previous icons and 5 MP3s remain intact.
+- 39 regression test files pass. Chromium verifies 15 actual single-click purchases, owned/next and overview images/names/order, hover/tap descriptions, phone scrolling, both menu entrypoints and all 60 earlier icons.
+- Next artwork batch: Ice Monkey, all 15 named upgrade icons. See docs/tack-upgrade-artwork.md.

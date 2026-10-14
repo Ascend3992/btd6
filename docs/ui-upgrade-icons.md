@@ -1,10 +1,10 @@
 # Upgrade artwork checklist
 
-The UI has stable image slots for all 90 primary-tower upgrades. All 60 supplied Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
+The UI has stable image slots for all 90 primary-tower upgrades. All 75 supplied Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
 
 Add transparent PNG/WebP/SVG files under `assets/ui/upgrades/`, then map each one in `upgrade-icons.js`. Keys use `tower-path-tier`, with paths and tiers numbered from 1. For example: `glue-1-1` is Glue Soak.
 
-Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete. Next tower batch: all 15 Tack Shooter icons, named by upgrade. Archive order does not matter. Ability icons can follow after the tower upgrades.
+Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete. Next tower batch: all 15 Ice Monkey icons, named by upgrade. Archive order does not matter. Ability icons can follow after the tower upgrades.
 
 ## Dart Monkey — complete (v63)
 
@@ -46,7 +46,7 @@ Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete.
 | `boomer-3-4` | MOAB Press |
 | `boomer-3-5` | MOAB Domination |
 
-## Bomb Shooter
+## Bomb Shooter — complete (v70)
 
 | Slot | Upgrade |
 |---|---|
@@ -66,7 +66,7 @@ Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete.
 | `bomb-3-4` | Recursive Cluster |
 | `bomb-3-5` | Bomb Blitz |
 
-## Tack Shooter
+## Tack Shooter — complete (v71)
 
 | Slot | Upgrade |
 |---|---|
@@ -126,26 +126,6 @@ Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete.
 | `glue-3-4` | Relentless Glue |
 | `glue-3-5` | Super Glue |
 
-The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Bomb, Boomerang, Dart and Glue are complete: 60 of 90 slots. No substitute artwork is generated.
+The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Tack, Bomb, Boomerang, Dart and Glue are complete: 75 of 90 slots. No substitute artwork is generated.
 
 v69 adds restyled Hard mode medallions separately at `assets/ui/modes/hard-branch-badges.png`; the 45 original upgrade assets above remain unchanged. [Hard badge artwork and ordering](hard-branches.md).
-
-## Bomb Shooter — complete (v70)
-
-| Slot | Upgrade |
-|---|---|
-| `bomb-1-1` | Bigger Bombs |
-| `bomb-1-2` | Heavy Bombs |
-| `bomb-1-3` | Really Big Bombs |
-| `bomb-1-4` | Bloon Impact |
-| `bomb-1-5` | Bloon Crush |
-| `bomb-2-1` | Faster Reload |
-| `bomb-2-2` | Missile Launcher |
-| `bomb-2-3` | MOAB Mauler |
-| `bomb-2-4` | MOAB Assassin |
-| `bomb-2-5` | MOAB Eliminator |
-| `bomb-3-1` | Extra Range |
-| `bomb-3-2` | Frag Bombs |
-| `bomb-3-3` | Cluster Bombs |
-| `bomb-3-4` | Recursive Cluster |
-| `bomb-3-5` | Bomb Blitz |

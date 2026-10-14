@@ -12,7 +12,7 @@ The v60 interface follows the supplied screenshot: illustrated lives/cash, outli
 - The bottom of the panel shows the sale value and sell button. Existing crosspath and unique Tier 5 rules apply.
 - The settings button pauses the simulation. Auto-start, round start and game speed remain available below the shop. Hero abilities appear in their panel and the ability bar.
 
-Shop portraits and selected portraits use the actual game models. v70 includes all 60 supplied Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons; Tack Shooter and Ice Monkey still use equipment badges until their files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots and the next batch of 15 Tack Shooter icons.
+Shop portraits and selected portraits use the actual game models. v71 includes all 75 supplied Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons. Ice Monkey still uses equipment badges until its files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots and the final batch of 15 Ice Monkey icons.
 
 The v62 Normal Difficulty pause menu provides an Auto Start switch, separate music/effects volume sliders, Restart and Continue. See [upgrade overview and audio](upgrade-tree.md).
 
@@ -27,3 +27,5 @@ The v68 [Normal mode tree](normal-tree-unlocked.png) adds gold-rimmed Reverse an
 The v69 [Hard tree](hard-tree-unlocked.png) adds two connected paths and five challenge modes, with prerequisite status and red/black CHIMPS medals. [Phone tree](hard-tree-mobile.png) · [Rules](hard-branches.md).
 
 The v70 [Bomb Shooter tree](bomb-upgrade-tree.png) and [owned/next cards](bomb-upgrade-icons-combat.png) display all 15 original uploaded icons. [Artwork mapping](bomb-upgrade-artwork.md) · [Phone tree](bomb-upgrade-tree-mobile.png).
+
+The v71 [Tack Shooter tree](tack-upgrade-tree.png) and [owned/next cards](tack-upgrade-icons-combat.png) show all 15 original uploaded icons. [Artwork mapping](tack-upgrade-artwork.md) · [Phone tree](tack-upgrade-tree-mobile.png).

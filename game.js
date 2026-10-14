@@ -8,8 +8,8 @@ const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTa
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
-const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=6');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=7');
+const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=7');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=8');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
 const {captureRunSave,createRunStorage}=await import('./run-save.js?v=5');
 const {getGameMode,applyModePrices,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=4');

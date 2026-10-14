@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v70**. All 15 original Bomb Shooter upgrade icons now appear in the owned/next upgrade cards and the full upgrade tree, in top/middle/bottom tier order. The supplied artwork and transparency are preserved exactly. Hard branches, all 100 ABR rounds, CHIMPS badges and compatible saves remain available.
+Latest version: **v71**. All 15 original Tack Shooter upgrade icons now appear in the owned/next cards and full upgrade tree, in top/middle/bottom tier order. Original artwork and transparency are preserved exactly. All prior artwork, Hard branches, 100 ABR rounds, CHIMPS badges and compatible saves remain available.
 
-[Download v70 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v70.zip)
+[Download v71 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v71.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -41,3 +41,5 @@ Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
 [Hard branches and ABR](docs/hard-branches.md) · [Hard tree](docs/hard-tree-unlocked.png) · [CHIMPS black badge](docs/chimps-black-victory.png)
 
 [Bomb Shooter upgrade tree](docs/bomb-upgrade-tree.png) · [Bomb Shooter cards](docs/bomb-upgrade-icons-combat.png) · [Bomb artwork details](docs/bomb-upgrade-artwork.md)
+
+[Tack Shooter upgrade tree](docs/tack-upgrade-tree.png) · [Tack Shooter cards](docs/tack-upgrade-icons-combat.png) · [Tack artwork details](docs/tack-upgrade-artwork.md)
