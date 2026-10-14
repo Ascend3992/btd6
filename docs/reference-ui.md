@@ -29,3 +29,5 @@ The v69 [Hard tree](hard-tree-unlocked.png) adds two connected paths and five ch
 The v70 [Bomb Shooter tree](bomb-upgrade-tree.png) and [owned/next cards](bomb-upgrade-icons-combat.png) display all 15 original uploaded icons. [Artwork mapping](bomb-upgrade-artwork.md) · [Phone tree](bomb-upgrade-tree-mobile.png).
 
 The v71 [Tack Shooter tree](tack-upgrade-tree.png) and [owned/next cards](tack-upgrade-icons-combat.png) show all 15 original uploaded icons. [Artwork mapping](tack-upgrade-artwork.md) · [Phone tree](tack-upgrade-tree-mobile.png).
+
+The v72 [Quincy level panel](quincy-level-panel.png) displays level, blue XP progress, current/next effects and a green buy-next-level button with the original model. [Phone panel](quincy-level-panel-mobile.png) · [Prices and saves](quincy-level-panel.md).

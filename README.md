@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v71**. All 15 original Tack Shooter upgrade icons now appear in the owned/next cards and full upgrade tree, in top/middle/bottom tier order. Original artwork and transparency are preserved exactly. All prior artwork, Hard branches, 100 ABR rounds, CHIMPS badges and compatible saves remain available.
+Latest version: **v72**. Quincy's selected panel now shows his level, a live XP bar, current/next level effects and a cash button to buy the next level. Prices decrease as he earns XP; level 20 shows the maximum-level state. Existing models, natural XP requirements, purchased-level saves and all prior game features are retained.
 
-[Download v71 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v71.zip)
+[Download v72 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v72.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -43,3 +43,5 @@ Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
 [Bomb Shooter upgrade tree](docs/bomb-upgrade-tree.png) · [Bomb Shooter cards](docs/bomb-upgrade-icons-combat.png) · [Bomb artwork details](docs/bomb-upgrade-artwork.md)
 
 [Tack Shooter upgrade tree](docs/tack-upgrade-tree.png) · [Tack Shooter cards](docs/tack-upgrade-icons-combat.png) · [Tack artwork details](docs/tack-upgrade-artwork.md)
+
+[Quincy level panel](docs/quincy-level-panel.png) · [Phone panel](docs/quincy-level-panel-mobile.png) · [Level purchases and saves](docs/quincy-level-panel.md)

@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v71 original Tack Shooter upgrade icons
+Meadow Balloon Defense 3D - v72 Quincy XP panel and next-level purchases
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -429,3 +429,12 @@ Tack Shooter upgrade artwork v71
 - Combat stats, cash/XP, all mode rules, ABR rounds, CHIMPS badges, schema-5 saves, 60 previous icons and 5 MP3s remain intact.
 - 39 regression test files pass. Chromium verifies 15 actual single-click purchases, owned/next and overview images/names/order, hover/tap descriptions, phone scrolling, both menu entrypoints and all 60 earlier icons.
 - Next artwork batch: Ice Monkey, all 15 named upgrade icons. See docs/tack-upgrade-artwork.md.
+
+Quincy progression panel v72
+---------------------------
+- Quincy keeps his existing models and now shows a level shield, blue XP meter, exact XP toward the next level, current/next effects and a green cash purchase button beneath the portrait. At level 20 the bar fills and MAX LEVEL REACHED replaces purchasing.
+- A single click pays only the next level's remaining XP, from the supplied Normal cost/XP table, scaled by the selected difficulty's normal price rules. Natural round XP and all per-level requirements remain unchanged.
+- Insufficient cash disables buying; guards also prevent invalid selection, resume/restart, ended-run purchases and exceeding level 20. Levels synchronize original stats, model milestones and ability unlocks without resetting existing cooldowns.
+- Cash paid for levels contributes to investment/refunds. Optional schema-5 heroLevelSpend preserves it across resumes; old saves default to zero. Active-round purchases roll back with their cash and XP on checkpoint replay.
+- The compact Rapid Shot/Storm buttons, target controls, stats, sell and level overview remain available. Other tower cards, all 75 original icons, 5 MP3s, modes, ABR table and CHIMPS rules/badges remain intact.
+- 39 regression test files pass. Chromium verifies the real panel/meter, purchases/prices/stats/cooldowns/models, level 20, mobile controls, paid-investment resumes and active-round rollback. See docs/quincy-level-panel.md.

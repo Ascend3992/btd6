@@ -11,8 +11,8 @@ const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrig
 const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=7');
 const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=8');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
-const {captureRunSave,createRunStorage}=await import('./run-save.js?v=5');
-const {getGameMode,applyModePrices,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=4');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=6');
+const {getGameMode,applyModePrices,modePrice,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=4');
 const {createHomeUI}=await import('./home-ui.js?v=4');
 const {setRouteDirection,reverseRoundQueue,apopalypseRoundQueue}=await import('./normal-branches.js?v=1');
 const {alternateRoundQueue}=await import('./alternate-rounds.js?v=1');
@@ -730,6 +730,15 @@ function awardHeroRoundXP(completedRound){
  if(currentMode.variant==='sandbox')return;
  for(const t of towers){if(t.type!=='hero')continue;t.heroXP=(t.heroXP??heroXPAtLevel(t.level))+heroRoundXP(completedRound);const progress=heroXPProgress(t.heroXP);if(syncQuincyStats(t,progress.level))updateHeroAppearance(t);}
 }
+function heroLevelOffer(t){
+ if(!t||t.type!=='hero')return null;const xp=heroXPProgress(t.heroXP??heroXPAtLevel(t.level));if(xp.level===20)return null;
+ const remaining=xp.required-xp.current;return {level:xp.level+1,xp:remaining,cost:modePrice(Math.ceil(remaining),currentMode)};
+}
+function buyHeroLevel(){
+ const t=selectedTower;if(!gameStarted||gameEnded||pendingResume||leavingForRestart)return false;const offer=heroLevelOffer(t);if(!offer||cash<offer.cost)return false;
+ cash-=offer.cost;t.heroXP=heroXPAtLevel(offer.level);t.heroLevelSpend=(t.heroLevelSpend||0)+offer.cost;t.invest+=offer.cost;
+ syncQuincyStats(t,offer.level);updateHeroAppearance(t);refreshSelected();updateUI();saveRunCheckpoint();return true;
+}
 function damageTypeNotes(t){
  if(t.type==='hero')return '';
  const camo=t.camoDetect?'Can detect Camo':'Cannot hit Camo';
@@ -992,7 +1001,7 @@ function setUpgradeLabel(button,title,detail){
 }
 function tierFiveTaken(t,p){return t.paths[p]===4&&towers.some(other=>other!==t&&other.type===t.type&&other.paths[p]===5)}
 function refreshSelected(){
- const t=selectedTower;if(!t)return;const d=towerDefs[t.type];selName.textContent=d.name+(d.hero?` • Lv.${t.level}`:'');
+ const t=selectedTower;if(!t)return;const d=towerDefs[t.type];selName.textContent=d.name;
  const attack=getAttackTower(t);
  rangeRing.scale.setScalar(attack.range);
  const shownRange=Math.round(attack.range/RANGE_SCALE*10)/10;
@@ -1020,8 +1029,8 @@ function refreshSelected(){
  upgradeBtns.forEach(b=>b.classList.remove('selectedUpgrade'));
  if(d.hero){
   const rapidState=abilityState(t,{key:'rapid'}),stormState=abilityState(t,{key:'storm'});
-  upgradeBtns[0].disabled=t.level<3||rapidState.disabled;setUpgradeLabel(upgradeBtns[0],'Rapid Shot',t.level<3?'Unlocks at Lv.3':rapidState.text+' • temporary attack-speed boost');
-  upgradeBtns[1].disabled=t.level<10||stormState.disabled;setUpgradeLabel(upgradeBtns[1],'Storm of Arrows',t.level<10?'Unlocks at Lv.10':stormState.text+' • 100-unit area at his selected target');
+  upgradeBtns[0].disabled=t.level<3||rapidState.disabled;setUpgradeLabel(upgradeBtns[0],'Rapid Shot',t.level<3?'Unlocks at Lv.3':rapidState.text);
+  upgradeBtns[1].disabled=t.level<10||stormState.disabled;setUpgradeLabel(upgradeBtns[1],'Storm of Arrows',t.level<10?'Unlocks at Lv.10':stormState.text);
   upgradeBtns[2].disabled=true;setUpgradeLabel(upgradeBtns[2],`Level ${t.level}`,t.camoDetect?'Camo detection active':'Camo detection unlocks at Lv.5');
 
  }
@@ -1030,8 +1039,18 @@ function refreshSelected(){
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
  sellBtn.disabled=currentMode.canSell===false;sellBtn.textContent=sellBtn.disabled?'SELLING DISABLED':'SELL';
- const xpStatus=document.getElementById('heroXPStatus');xpStatus.hidden=t.type!=='hero';if(t.type==='hero'){const xp=heroXPProgress(t.heroXP??heroXPAtLevel(t.level));xpStatus.textContent=xp.level===20?'LEVEL 20 · MAX':'LEVEL '+t.level+' · XP '+xp.current.toLocaleString()+' / '+xp.required.toLocaleString();}
+ renderHeroProgression(t);
  targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label',currentMode.canSell===false?'Selling is disabled in CHIMPS':'Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken);refreshAbilityUI()
+}
+function renderHeroProgression(t){
+ const hero=t.type==='hero',panel=document.getElementById('heroProgression');panel.hidden=!hero;if(!hero)return;
+ const xp=heroXPProgress(t.heroXP??heroXPAtLevel(t.level)),offer=heroLevelOffer(t),max=!offer,bar=document.getElementById('heroLevelBar');
+ document.getElementById('heroLevelNumber').textContent=t.level;document.getElementById('heroLevelLabel').textContent='LEVEL '+t.level;
+ bar.setAttribute('aria-label',max?'Quincy maximum level':'XP to level '+offer.level);bar.setAttribute('aria-valuemax',max?'1':String(xp.required));bar.setAttribute('aria-valuenow',max?'1':String(xp.current));bar.setAttribute('aria-valuetext',max?'Maximum level':xp.current.toLocaleString()+' of '+xp.required.toLocaleString()+' XP');
+ document.getElementById('heroXPFill').style.width=(max?100:xp.current/xp.required*100)+'%';document.getElementById('heroXPStatus').textContent=max?'LEVEL 20 · MAX':xp.current.toLocaleString()+' / '+xp.required.toLocaleString()+' XP';
+ document.getElementById('heroCurrentDescription').textContent=quincyLevelMetadata[t.level-1].description;document.getElementById('heroNextLevel').hidden=max;document.getElementById('heroMaxLevel').hidden=!max;
+ const buy=document.getElementById('buyHeroLevelBtn');buy.disabled=max||cash<offer.cost||gameEnded;buy.classList.toggle('unaffordable',!max&&cash<offer.cost);
+ if(offer){document.getElementById('heroNextLevelLabel').textContent='NEXT: LEVEL '+offer.level;document.getElementById('heroNextDescription').textContent=quincyLevelMetadata[offer.level-1].description;document.getElementById('heroBuyLabel').textContent='BUY LEVEL '+offer.level;document.getElementById('heroLevelCost').textContent='$'+offer.cost.toLocaleString();buy.setAttribute('aria-label','Buy Quincy level '+offer.level+' for $'+offer.cost.toLocaleString());}
 }
 function syncDartStats(t){
  const [top,middle,bottom]=t.paths;
@@ -1177,6 +1196,7 @@ function cycleTarget(direction){if(!selectedTower)return;const modes=['first','l
  const upgradeTree=createUpgradeTree({definitions:towerDefs,upgrades:upgradeData,descriptions:upgradeDescriptions,heroLevels:quincyLevelMetadata,heroLevelXP:()=>towers.find(t=>t.type==='hero')?.heroXP||0});
  document.getElementById('shopUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type||selectedType));
  document.getElementById('selectedUpgradesBtn').addEventListener('click',()=>upgradeTree.open(selectedTower?.type));
+ document.getElementById('buyHeroLevelBtn').addEventListener('click',buyHeroLevel);
  addEventListener('pointerdown',unlockPopAudio,{passive:true});addEventListener('keydown',unlockPopAudio);
  for(const [id,setVolume] of [['effects',setEffectsVolume],['music',setMusicVolume]])document.getElementById(id+'Volume').addEventListener('input',ev=>{const value=Number(ev.currentTarget.value);setVolume(value/100);ev.currentTarget.style.setProperty('--volume',value+'%');document.getElementById(id+'Percent').textContent=value+'%';saveRunCheckpoint();});
  document.getElementById('settingsAutoBtn').addEventListener('click',()=>autoBtn.click());
@@ -2781,7 +2801,7 @@ function restoreRunState(saved){
  for(const record of saved.towers){
   const t=createTower(record.type,record.x,record.z);towers.push(t);t.id=record.id;
   for(let p=0;p<3;p++)for(let tier=0;tier<record.paths[p];tier++){t.paths[p]++;applyUpgrade(t,p,tier);}
-  if(t.type==='hero'){t.heroXP=record.heroXP;syncQuincyStats(t,record.level);heroPlaced=true;}
+  if(t.type==='hero'){t.heroXP=record.heroXP;t.heroLevelSpend=record.heroLevelSpend||0;t.invest+=t.heroLevelSpend;syncQuincyStats(t,record.level);heroPlaced=true;}
   Object.assign(t,record.runtime);t.target=record.target;t.throwHand=record.throwHand;t.camoPriority=record.camoPriority;t.fanBuffs=record.fanBuffs.map(buff=>({...buff}));setFanBoostTier(t,t.fanBuffs.reduce((tier,buff)=>Math.max(tier,buff.tier),0));
   t.placementSurface=record.placementSurface;t.frozenWaterSourceId=record.frozenWaterSourceId;
   t.activeAbility=record.activeAbilityKey?getTowerAbilities({...t,paths:t.paths.map((tier,p)=>p===1?record.activeAbilityTier:tier)}).find(a=>a.key===record.activeAbilityKey):null;

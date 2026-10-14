@@ -40,8 +40,9 @@ export function validateRunSave(raw,rules){
    let stormStats=null;if(saved.stormStats){requireValue(hero);stormStats={};for(const key of ['chance','damage','moabBonus','ceramicBonus','cooldown'])stormStats[key]=number(saved.stormStats[key],0,key==='chance'?1:1000);}
    const placementSurface=saved.placementSurface??'land';requireValue(['land','water'].includes(placementSurface));
    const level=integer(saved.level,hero?1:0,hero?20:0),heroXP=hero?(raw.version<3?heroXPAtLevel(level):integer(saved.heroXP)):0;requireValue(!hero||heroXPProgress(heroXP).level===level);
+   const heroLevelSpend=integer(saved.heroLevelSpend??0,0,1e12);requireValue(hero||heroLevelSpend===0);
    return {id,type:saved.type,...position,paths,target:saved.target,throwHand:saved.throwHand,camoPriority:saved.camoPriority,
-    level,heroXP,rotationY:number(saved.rotationY,-1e12,1e12),runtime,fanBuffs,activeAbilityKey,activeAbilityTier,stormStats,
+    level,heroXP,heroLevelSpend,rotationY:number(saved.rotationY,-1e12,1e12),runtime,fanBuffs,activeAbilityKey,activeAbilityTier,stormStats,
     stormCenter:saved.stormCenter==null?null:point(saved.stormCenter,rules,10),placementSurface,frozenWaterSourceId:optionalId(saved.frozenWaterSourceId)};
   });
   requireValue(Array.isArray(raw.puddles)&&raw.puddles.length<=2000);
@@ -64,7 +65,7 @@ export function captureRunSave(state,rules){
  const raw={apop,chimpsClean:!!state.chimpsClean,version:SAVE_VERSION,map:MAP_VERSION,difficulty:state.difficulty||'medium',legacyMode:!!state.legacyMode,variant:state.variant||'standard',sandboxLivesTarget:state.sandboxLivesTarget??999999,savedAt:Date.now(),round:state.round,lives:state.lives,cash:state.cash,speed:state.speed,autoStart:state.autoStart,roundInProgress:!!state.roundInProgress,
   effectsVolume:state.effectsVolume,musicVolume:state.musicVolume,absoluteZeroBuffT:state.absoluteZeroBuffT,nextTowerId:state.nextTowerId,selectedTowerId:state.selectedTowerId??null,usage:state.usage,
   towers:state.towers.map(t=>{const runtime={};for(const key of runtimeFields)if(t[key]!==undefined)runtime[key]=t[key];return {id:t.id,type:t.type,x:t.x,z:t.z,paths:[...t.paths],target:t.target,throwHand:t.throwHand||1,camoPriority:!!t.camoPriority,level:t.level||0,rotationY:t.mesh.rotation.y,
-    heroXP:t.type==='hero'?Math.max(t.heroXP??0,heroXPAtLevel(t.level)):0,runtime,fanBuffs:t.fanBuffs.map(b=>({sourceId:b.sourceId,tier:b.tier,remaining:b.remaining})),activeAbilityKey:t.activeAbility?.key??null,activeAbilityTier:t.activeAbility?.tier??null,stormStats:t.stormStats??null,stormCenter:t.stormCenter?{x:t.stormCenter.x,z:t.stormCenter.z}:null,placementSurface:t.placementSurface||'land',frozenWaterSourceId:t.frozenWaterSourceId??null};}),
+    heroLevelSpend:t.type==='hero'?t.heroLevelSpend||0:0,heroXP:t.type==='hero'?Math.max(t.heroXP??0,heroXPAtLevel(t.level)):0,runtime,fanBuffs:t.fanBuffs.map(b=>({sourceId:b.sourceId,tier:b.tier,remaining:b.remaining})),activeAbilityKey:t.activeAbility?.key??null,activeAbilityTier:t.activeAbility?.tier??null,stormStats:t.stormStats??null,stormCenter:t.stormCenter?{x:t.stormCenter.x,z:t.stormCenter.z}:null,placementSurface:t.placementSurface||'land',frozenWaterSourceId:t.frozenWaterSourceId??null};}),
   puddles:state.puddles.filter(p=>p.life>0&&p.pierceLeft>0).map(p=>({x:p.x,z:p.z,radius:p.radius,life:p.life,totalLife:p.totalLife,pierceLeft:p.pierceLeft,damage:p.damage,roundCarry:p.roundCarry,sourceId:state.towers.some(t=>t===p.attack.sourceTower)?p.attack.sourceTower.id:null,camoDetect:!!p.attack.camoDetect}))};
  return validateRunSave(raw,rules);
 }

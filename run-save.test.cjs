@@ -61,3 +61,8 @@ test('v68 snapshots and Apopalypse stay compatible; Hard challenges enforce live
  const {c,rules,saved}=fixture(),older=clone(saved);older.version=4;assert.equal(c.validateRunSave(older,rules).version,5);
  for(const [variant,start,end,lives] of [['double-hp-moabs',3,80,100],['half-cash',3,80,100],['alternate',3,100,100],['impoppable',6,100,1],['chimps',6,100,1]]){const s=clone(saved);Object.assign(s,{difficulty:'hard',legacyMode:false,variant,round:start,lives,chimpsClean:true});const v=c.validateRunSave(s,rules);assert(v);assert.equal(v.chimpsClean,variant==='chimps');s.round=end;assert(c.validateRunSave(s,rules));s.round=end+1;assert.equal(c.validateRunSave(s,rules),null);s.round=start-1;assert.equal(c.validateRunSave(s,rules),null);s.round=start;if(lives===1){s.lives=2;assert.equal(c.validateRunSave(s,rules),null);s.lives=1;}if(variant==='chimps'){delete s.chimpsClean;assert.equal(c.validateRunSave(s,rules),null);s.chimpsClean=false;assert.equal(c.validateRunSave(s,rules).chimpsClean,false);}s.version=4;assert.equal(c.validateRunSave(s,rules),null);}
 });
+test('paid hero level investment round-trips and older snapshots default to zero without accepting non-hero or invalid spending',()=>{
+ const {c,rules,saved}=fixture();saved.towers[6].heroLevelSpend=1230;const v=c.validateRunSave(saved,rules);assert(v);assert.equal(v.towers[6].heroLevelSpend,1230);delete saved.towers[6].heroLevelSpend;assert.equal(c.validateRunSave(saved,rules).towers[6].heroLevelSpend,0);
+ for(const amount of [-1,NaN,Infinity,1.5,1e13]){const s=clone(saved);s.towers[6].heroLevelSpend=amount;assert.equal(c.validateRunSave(s,rules),null);}
+ saved.towers[0].heroLevelSpend=100;assert.equal(c.validateRunSave(saved,rules),null);
+});

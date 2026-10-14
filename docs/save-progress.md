@@ -1,4 +1,4 @@
-# Saved runs — v69 (v65–v68 compatible)
+# Saved runs — v72 (v65–v71 compatible)
 
 The game automatically keeps **one saved run** in this browser on this website. Return to the Home screen and choose **Resume** to continue. New Game opens map and mode selection; selecting an unlocked mode-tree node replaces the checkpoint. Browsing maps or going back does not discard it. No account or network connection is needed to save.
 
@@ -47,3 +47,7 @@ Reverse restores its reversed route before replaying an interrupted round. Apopa
 ## v69 Hard branches
 
 All five Hard variants restore their rules and prices before rebuilding towers. Impoppable and CHIMPS validate exactly one life. Any CHIMPS Resume earns red eligibility; page closure/backing out also marks red, while ordinary Pause/tab switching keeps the uninterrupted run eligible for black. CHIMPS defeat offers an in-memory pre-round Retry Last Round, which rolls back all partial-wave rewards and changes eligibility to red. A black medal never downgrades after a later red win. Schema 5 accepts all previous formats; [Hard rules and retry details](hard-branches.md).
+
+## v72 paid Quincy levels
+
+Schema 5 accepts optional nonnegative integer `heroLevelSpend` only on Quincy. Earlier saves default it to zero. Paid XP, cash and cooldowns restore normally; the paid amount is added once to his reconstructed investment. Between-round purchases save immediately. Purchases during an interrupted round roll back with all other changes to its pre-round checkpoint. [Quincy purchase rules](quincy-level-panel.md).

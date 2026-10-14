@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=71"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=72"></head>
 <body><div id="gameWrap">
 <canvas id="game" aria-label="Meadow game map"></canvas>
 <header id="topbar" aria-label="Game status">
@@ -20,9 +20,13 @@
 <div class="roundControls" aria-label="Round controls"><button id="autoBtn" type="button" data-label="Auto off" aria-pressed="false">Auto Start: Off</button><button id="startBtn" type="button" data-label="Start">Start Round</button><button id="speedBtn" type="button" data-label="1×">Speed ×1</button></div></aside>
 <section id="selectedPanel" class="hidden" aria-label="Selected monkey upgrades">
 <div class="selHeader"><h3 id="selName"></h3><button id="closeSel" type="button" aria-label="Close tower panel">×</button></div>
-<p id="heroXPStatus" hidden></p><div class="damageCounter" title="Total damage dealt"><svg aria-hidden="true"><use href="assets/ui/interface.svg#pop"/></svg><span id="damageDealt">0</span></div>
+<div class="damageCounter" title="Total damage dealt"><svg aria-hidden="true"><use href="assets/ui/interface.svg#pop"/></svg><span id="damageDealt">0</span></div>
 <div class="panelBody"><div class="towerPortrait"><button id="towerInfoBtn" type="button" aria-label="Show tower stats" aria-expanded="false">i</button><img id="selectedPortrait" alt="">
 <div class="targetControls"><button id="targetPrevBtn" type="button" aria-label="Previous targeting mode">◀</button><button id="targetBtn" type="button">First</button><button id="targetNextBtn" type="button" aria-label="Next targeting mode">▶</button></div></div>
+<section id="heroProgression" class="heroProgression" hidden aria-label="Quincy level progression">
+<div class="heroLevelRow"><span id="heroLevelNumber" class="heroLevelBadge">1</span><div id="heroLevelBar" class="heroLevelBar" role="progressbar" aria-label="XP to next level" aria-valuemin="0"><span id="heroXPFill" class="heroXPFill"></span><b id="heroLevelLabel">LEVEL 1</b></div></div>
+<p id="heroXPStatus"></p><p id="heroCurrentDescription" class="heroCurrentDescription"></p><div id="heroNextLevel" class="heroNextLevel"><small id="heroNextLevelLabel"></small><p id="heroNextDescription"></p><button id="buyHeroLevelBtn" type="button"><b id="heroBuyLabel">BUY NEXT LEVEL</b><span><svg aria-hidden="true"><use href="assets/ui/interface.svg#coins"/></svg><strong id="heroLevelCost"></strong></span></button></div><p id="heroMaxLevel" class="heroMaxLevel" hidden>MAX LEVEL REACHED</p>
+</section>
 <div id="upgradeGrid">
 <div class="upgradeRow" data-path="0"><div class="tierMarkers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="ownedUpgrade"><b>NOT UPGRADED</b><span class="upgradeArt"></span><strong></strong></div><button class="upgradePath top" id="upgrade0" type="button"><b></b><span class="upgradeArt"></span><small></small></button></div>
 <div class="upgradeRow" data-path="1"><div class="tierMarkers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div class="ownedUpgrade"><b>NOT UPGRADED</b><span class="upgradeArt"></span><strong></strong></div><button class="upgradePath middle" id="upgrade1" type="button"><b></b><span class="upgradeArt"></span><small></small></button></div>
@@ -64,4 +68,4 @@
 <div id="treeTooltip" role="tooltip" hidden></div>
 </dialog>
 <div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><p id="endChimpsBadge" hidden></p><button id="retryRoundBtn" type="button" hidden>Retry Last Round · Red badge</button><button id="endRestartBtn" type="button">Restart</button></div></div>
-</div><script src="game.js?v=71"></script></body></html>
+</div><script src="game.js?v=72"></script></body></html>
