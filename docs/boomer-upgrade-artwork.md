@@ -26,4 +26,4 @@ The registry serves both tower purchase cards and all future tiers in the upgrad
 
 Chromium checks actual one-click purchases of all 15 Boomerang tiers, owned/next image loads and names, tree tier order and images, hover descriptions, phone scrolling/tap details, and all 30 existing Dart/Glue tree images. All 33 regression test files pass. The release ZIP includes the complete game, artwork, audio and documentation.
 
-Next tower: **Bomb Shooter**, all 15 upgrade icons, named by upgrade. Filenames determine path and tier; upload order does not matter.
+Bomb Shooter artwork is now complete in [v70](bomb-upgrade-artwork.md). Next tower: **Tack Shooter**, all 15 upgrade icons, named by upgrade. Upload order does not matter.

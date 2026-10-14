@@ -46,5 +46,20 @@ export const upgradeIcons={
  "boomer-3-2": "./assets/ui/upgrades/RedHotRangsUpgradeIcon.webp",
  "boomer-3-3": "./assets/ui/upgrades/KylieBoomerangUpgradeIcon.webp",
  "boomer-3-4": "./assets/ui/upgrades/MOABPressUpgradeIcon.webp",
- "boomer-3-5": "./assets/ui/upgrades/MOABDominationUpgradeIcon.webp"
+ "boomer-3-5": "./assets/ui/upgrades/MOABDominationUpgradeIcon.webp",
+ "bomb-1-1": "./assets/ui/upgrades/BiggerBombsUpgradeIcon.webp",
+ "bomb-1-2": "./assets/ui/upgrades/HeavyBombsUpgradeIcon.webp",
+ "bomb-1-3": "./assets/ui/upgrades/ReallyBigBombsUpgradeIcon.webp",
+ "bomb-1-4": "./assets/ui/upgrades/BloonImpactUpgradeIcon.webp",
+ "bomb-1-5": "./assets/ui/upgrades/BloonCrushUpgradeIcon.webp",
+ "bomb-2-1": "./assets/ui/upgrades/FasterReloadUpgradeIcon.webp",
+ "bomb-2-2": "./assets/ui/upgrades/MissileLauncherUpgradeIcon.webp",
+ "bomb-2-3": "./assets/ui/upgrades/MoabMaulerUpgradeIcon.webp",
+ "bomb-2-4": "./assets/ui/upgrades/MoabAssassinUpgradeIcon.webp",
+ "bomb-2-5": "./assets/ui/upgrades/MOABEliminatorUpgradeIcon.webp",
+ "bomb-3-1": "./assets/ui/upgrades/ExtraRangeUpgradeIcon.webp",
+ "bomb-3-2": "./assets/ui/upgrades/FragBombsUpgradeIcon.webp",
+ "bomb-3-3": "./assets/ui/upgrades/ClusterBombsUpgradeIcon.webp",
+ "bomb-3-4": "./assets/ui/upgrades/RecursiveClusterUpgradeIcon.webp",
+ "bomb-3-5": "./assets/ui/upgrades/BombBlitzUpgradeIcon.webp"
 };

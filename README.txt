@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v69 Hard branches, 100 Alternate Bloon Rounds and CHIMPS badges
+Meadow Balloon Defense 3D - v70 original Bomb Shooter upgrade icons
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -407,3 +407,14 @@ Hard branches v69
 - An uninterrupted CHIMPS win earns black; Resume/page closure/Retry Last Round earns red. Retry restores the exact pre-round checkpoint without retaining partial-wave cash, purchases, damage or XP. Pause/tab switching alone keeps black eligibility. A later red win never downgrades an existing black medal.
 - Save schema 5 preserves versions 1-4, adds Hard variants and CHIMPS eligibility, and validates one-life runs. All 45 original upgrade icons, 5 MP3s and base combat stats remain intact.
 - 39 regression test files pass. Actual Chromium tests cover tree images/ordering/unlocks, prices/economy/HP, ABR spawning and final round, Impoppable saves, CHIMPS selling/income guards, retry restoration and badge retention. See docs/hard-branches.md.
+
+Bomb Shooter upgrade artwork v70
+-------------------------------
+- All 15 named transparent WebP files from Bombshooterupgrades.zip are preserved unchanged, including dimensions and alpha. No artwork is generated or converted.
+- Top path: Bigger Bombs, Heavy Bombs, Really Big Bombs, Bloon Impact, Bloon Crush.
+- Middle path: Faster Reload, Missile Launcher, MOAB Mauler, MOAB Assassin, MOAB Eliminator.
+- Bottom path: Extra Range, Frag Bombs, Cluster Bombs, Recursive Cluster, Bomb Blitz.
+- Keys bomb-1-1 through bomb-3-5 supply both owned/next cards and all future tiers in the upgrade tree. Module cache versions are bumped.
+- Tower combat stats, purchases/prices, mode trees, all 100 ABR rounds, CHIMPS badges, schema-5 saves, other icons and 5 MP3s remain intact.
+- 39 regression test files pass. Chromium verifies actual single-click upgrades for all 15 tiers, decoded owned/next and overview images, names, tier order, hover/tap descriptions, phone scrolling, and all 45 earlier icons.
+- Next tower artwork: Tack Shooter, all 15 named upgrade icons. See docs/bomb-upgrade-artwork.md.

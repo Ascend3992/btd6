@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v69**. Hard now branches to Double HP MOABs → Half Cash and Alternate Bloons Rounds → Impoppable → CHIMPS. ABR uses all 100 supplied rounds and ends with the Fortified BAD. CHIMPS enforces its restrictions and awards red or black badges according to resume/retry history. Existing Easy/Normal branches, saves, tower artwork and audio are preserved.
+Latest version: **v70**. All 15 original Bomb Shooter upgrade icons now appear in the owned/next upgrade cards and the full upgrade tree, in top/middle/bottom tier order. The supplied artwork and transparency are preserved exactly. Hard branches, all 100 ABR rounds, CHIMPS badges and compatible saves remain available.
 
-[Download v69 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v69.zip)
+[Download v70 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v70.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -39,3 +39,5 @@ Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
 [Normal branches](docs/normal-branches.md) · [Normal tree](docs/normal-tree-unlocked.png) · [Apopalypse waves](docs/apopalypse-waves.png)
 
 [Hard branches and ABR](docs/hard-branches.md) · [Hard tree](docs/hard-tree-unlocked.png) · [CHIMPS black badge](docs/chimps-black-victory.png)
+
+[Bomb Shooter upgrade tree](docs/bomb-upgrade-tree.png) · [Bomb Shooter cards](docs/bomb-upgrade-icons-combat.png) · [Bomb artwork details](docs/bomb-upgrade-artwork.md)
