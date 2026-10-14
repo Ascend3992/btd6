@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v72 Quincy XP panel and next-level purchases
+Meadow Balloon Defense 3D - v73 all 90 original tower upgrade icons complete
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -438,3 +438,14 @@ Quincy progression panel v72
 - Cash paid for levels contributes to investment/refunds. Optional schema-5 heroLevelSpend preserves it across resumes; old saves default to zero. Active-round purchases roll back with their cash and XP on checkpoint replay.
 - The compact Rapid Shot/Storm buttons, target controls, stats, sell and level overview remain available. Other tower cards, all 75 original icons, 5 MP3s, modes, ABR table and CHIMPS rules/badges remain intact.
 - 39 regression test files pass. Chromium verifies the real panel/meter, purchases/prices/stats/cooldowns/models, level 20, mobile controls, paid-investment resumes and active-round rollback. See docs/quincy-level-panel.md.
+
+Ice Monkey upgrade artwork v73
+------------------------------
+- All 15 transparent WebP files from Icemonekyicons.zip preserve original filenames, bytes, dimensions and alpha. No artwork is generated or converted.
+- Top: Permafrost, Cold Snap, Ice Shards, Embrittlement, Super Brittle. MetalFreezeUpgradeIcon.webp is the older artwork name for Cold Snap, mapped to ice-1-2.
+- Middle: Enhanced Freeze, Deep Freeze, Arctic Wind, Snowstorm, Absolute Zero.
+- Bottom: Larger Radius, Re-Freeze, Cryo Cannon, Icicles, Icicle Impale.
+- Keys ice-1-1 through ice-3-5 serve owned/next cards and every future tree tier. Cache versions are bumped.
+- All six tower sets are complete: 90 original upgrade icons. No further tower upgrade-icon batch is needed for the current roster.
+- Combat stats, prices, Quincy's XP/purchase panel, save schema, mode rules, ABR rounds, CHIMPS badges and 5 MP3s remain intact.
+- 39 regression test files pass. Chromium verifies 15 actual purchases, owned/next and tree images/names/order, hover/tap details, phone scrolling, both menu entrypoints and all 75 earlier icons. See docs/ice-upgrade-artwork.md.

@@ -76,5 +76,20 @@ export const upgradeIcons={
  "tack-3-2": "./assets/ui/upgrades/EvenMoreTacksUpgradeIcon.webp",
  "tack-3-3": "./assets/ui/upgrades/TackSprayerUpgradeIcon.webp",
  "tack-3-4": "./assets/ui/upgrades/OverdriveUpgradeIcon.webp",
- "tack-3-5": "./assets/ui/upgrades/TheTackZoneUpgradeIcon.webp"
+ "tack-3-5": "./assets/ui/upgrades/TheTackZoneUpgradeIcon.webp",
+ "ice-1-1": "./assets/ui/upgrades/PermafrostUpgradeIcon.webp",
+ "ice-1-2": "./assets/ui/upgrades/MetalFreezeUpgradeIcon.webp",
+ "ice-1-3": "./assets/ui/upgrades/IceShardsUpgradeIcon.webp",
+ "ice-1-4": "./assets/ui/upgrades/EmbrittlementUpgradeIcon.webp",
+ "ice-1-5": "./assets/ui/upgrades/SuperBrittleUpgradeIcon.webp",
+ "ice-2-1": "./assets/ui/upgrades/EnhancedFreezeUpgradeIcon.webp",
+ "ice-2-2": "./assets/ui/upgrades/DeepFreezeUpgradeIcon.webp",
+ "ice-2-3": "./assets/ui/upgrades/ArcticWindUpgradeIcon.webp",
+ "ice-2-4": "./assets/ui/upgrades/SnowstormUpgradeIcon.webp",
+ "ice-2-5": "./assets/ui/upgrades/AbsoluteZeroUpgradeIcon.webp",
+ "ice-3-1": "./assets/ui/upgrades/LargerRadiusUpgradeIcon.webp",
+ "ice-3-2": "./assets/ui/upgrades/Re-FreezeUpgradeIcon.webp",
+ "ice-3-3": "./assets/ui/upgrades/CryoCannonUpgradeIcon.webp",
+ "ice-3-4": "./assets/ui/upgrades/IciclesUpgradeIcon.webp",
+ "ice-3-5": "./assets/ui/upgrades/IcicleImpaleUpgradeIcon.webp"
 };

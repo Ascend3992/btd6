@@ -12,7 +12,7 @@ The v60 interface follows the supplied screenshot: illustrated lives/cash, outli
 - The bottom of the panel shows the sale value and sell button. Existing crosspath and unique Tier 5 rules apply.
 - The settings button pauses the simulation. Auto-start, round start and game speed remain available below the shop. Hero abilities appear in their panel and the ability bar.
 
-Shop portraits and selected portraits use the actual game models. v71 includes all 75 supplied Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons. Ice Monkey still uses equipment badges until its files are supplied. [The artwork checklist](ui-upgrade-icons.md) lists all 90 slots and the final batch of 15 Ice Monkey icons.
+Shop portraits and selected portraits use the actual game models. v73 includes all 90 original upgrade icons across Ice Monkey, Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner. [The artwork checklist](ui-upgrade-icons.md) marks all six sets complete.
 
 The v62 Normal Difficulty pause menu provides an Auto Start switch, separate music/effects volume sliders, Restart and Continue. See [upgrade overview and audio](upgrade-tree.md).
 
@@ -31,3 +31,5 @@ The v70 [Bomb Shooter tree](bomb-upgrade-tree.png) and [owned/next cards](bomb-u
 The v71 [Tack Shooter tree](tack-upgrade-tree.png) and [owned/next cards](tack-upgrade-icons-combat.png) show all 15 original uploaded icons. [Artwork mapping](tack-upgrade-artwork.md) · [Phone tree](tack-upgrade-tree-mobile.png).
 
 The v72 [Quincy level panel](quincy-level-panel.png) displays level, blue XP progress, current/next effects and a green buy-next-level button with the original model. [Phone panel](quincy-level-panel-mobile.png) · [Prices and saves](quincy-level-panel.md).
+
+The v73 [Ice Monkey tree](ice-upgrade-tree.png) and [owned/next cards](ice-upgrade-icons-combat.png) show all 15 original uploaded icons. [Artwork mapping](ice-upgrade-artwork.md) · [Phone tree](ice-upgrade-tree-mobile.png).

@@ -1,8 +1,8 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v72**. Quincy's selected panel now shows his level, a live XP bar, current/next level effects and a cash button to buy the next level. Prices decrease as he earns XP; level 20 shows the maximum-level state. Existing models, natural XP requirements, purchased-level saves and all prior game features are retained.
+Latest version: **v73**. All 15 original Ice Monkey upgrade icons appear in the owned/next cards and the complete upgrade tree. Original artwork and transparency are preserved exactly, completing **all 90 upgrades across the six towers**. Quincy's level/XP/cash-purchase panel, compatible saves and all prior modes remain available.
 
-[Download v72 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v72.zip)
+[Download v73 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v73.zip)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 
@@ -45,3 +45,5 @@ Run the regression checks with `bash scripts/test.sh` using Node.js 24 or newer.
 [Tack Shooter upgrade tree](docs/tack-upgrade-tree.png) · [Tack Shooter cards](docs/tack-upgrade-icons-combat.png) · [Tack artwork details](docs/tack-upgrade-artwork.md)
 
 [Quincy level panel](docs/quincy-level-panel.png) · [Phone panel](docs/quincy-level-panel-mobile.png) · [Level purchases and saves](docs/quincy-level-panel.md)
+
+[Ice Monkey upgrade tree](docs/ice-upgrade-tree.png) · [Ice Monkey cards](docs/ice-upgrade-icons-combat.png) · [Ice artwork details](docs/ice-upgrade-artwork.md)

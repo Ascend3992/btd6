@@ -28,4 +28,4 @@ The registry serves owned/next cards and every future tier in the upgrade overvi
 
 Chromium checks actual one-click purchases for all 15 tiers, decoded owned/next images and names, the complete tree order, hover descriptions, phone scrolling/tap details, both menu entrypoints and all 60 previously supplied icons. All 39 regression test files pass. The complete release ZIP includes all artwork, game modules, audio and documentation.
 
-Next tower: **Ice Monkey**, all 15 upgrade icons, named by upgrade. Upload order does not matter.
+Ice Monkey artwork is now complete in [v73](ice-upgrade-artwork.md). All six towers have all 90 original upgrade icons; no tower batch remains.

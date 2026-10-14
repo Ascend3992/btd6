@@ -1,10 +1,10 @@
 # Upgrade artwork checklist
 
-The UI has stable image slots for all 90 primary-tower upgrades. All 75 supplied Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons are installed. Other unregistered slots still show the tower’s equipment badge and full upgrade name. Shop tiles and the selected portrait use the actual game models.
+The UI has stable image slots for all 90 primary-tower upgrades. All 90 supplied Ice Monkey, Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner icons are installed. Shop tiles and the selected portrait use the actual game models.
 
 Add transparent PNG/WebP/SVG files under `assets/ui/upgrades/`, then map each one in `upgrade-icons.js`. Keys use `tower-path-tier`, with paths and tiers numbered from 1. For example: `glue-1-1` is Glue Soak.
 
-Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwork is complete. Next tower batch: all 15 Ice Monkey icons, named by upgrade. Archive order does not matter. Ability icons can follow after the tower upgrades.
+All six tower artwork sets are complete. No further tower upgrade-icon batch is needed for the current roster. Ability artwork is separate.
 
 ## Dart Monkey — complete (v63)
 
@@ -86,7 +86,7 @@ Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwor
 | `tack-3-4` | Overdrive |
 | `tack-3-5` | The Tack Zone |
 
-## Ice Monkey
+## Ice Monkey — complete (v73)
 
 | Slot | Upgrade |
 |---|---|
@@ -126,6 +126,8 @@ Tack Shooter, Bomb Shooter, Boomerang Monkey, Dart Monkey and Glue Gunner artwor
 | `glue-3-4` | Relentless Glue |
 | `glue-3-5` | Super Glue |
 
-The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Tack, Bomb, Boomerang, Dart and Glue are complete: 75 of 90 slots. No substitute artwork is generated.
+The same registry supplies both the owned/next cards and all future tiers in the upgrade-tree menu. Ice, Tack, Bomb, Boomerang, Dart and Glue are complete: 90 of 90 slots. No substitute artwork is generated.
 
 v69 adds restyled Hard mode medallions separately at `assets/ui/modes/hard-branch-badges.png`; the 45 original upgrade assets above remain unchanged. [Hard badge artwork and ordering](hard-branches.md).
+
+Ice Monkey v73 uses all 15 original files from `Icemonekyicons.zip`. `MetalFreezeUpgradeIcon.webp` is the older artwork name for Cold Snap and maps to `ice-1-2`; no artwork or gameplay name is changed. [Full mapping and validation](ice-upgrade-artwork.md).
