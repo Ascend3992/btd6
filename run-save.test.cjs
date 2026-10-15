@@ -12,6 +12,10 @@ function fixture(){
  return {g,c,rules,state,saved:c.captureRunSave(state,rules)};
 }
 const clone=s=>JSON.parse(JSON.stringify(s));
+test('temporary MIB saves round-trip with a zero-cost restored aura and reject invented upgrade paths',()=>{
+ const {g,c,rules,state}=fixture();rules.definitions.mib={support:true};const mib=g.createTower('mib',-17,3);g.towers.push(mib);const saved=c.captureRunSave(state,rules);assert(saved);const restored=c.validateRunSave(clone(saved),rules);assert(restored);const record=restored.towers.find(t=>t.type==='mib');assert.deepEqual(Array.from(record.paths),[0,0,0]);assert.equal(record.level,0);
+ const fresh=game();for(const data of restored.towers)fresh.towers.push(Object.assign(fresh.createTower(data.type,data.x,data.z),{paths:data.paths}));const ally=fresh.towers.find(t=>t.type==='dart');assert.equal(fresh.towers.find(t=>t.type==='mib').invest,0);assert(fresh.hasMIBSupport(ally));record.paths[0]=1;assert.equal(c.validateRunSave(restored,rules),null);
+});
 test('round 60 snapshot round-trips all towers, upgrades, resources, timers, XP, hand, buffs and persistent puddles without meshes',()=>{
  const {c,rules,saved}=fixture();assert(saved);const restored=c.validateRunSave(clone(saved),rules);assert(restored);assert.equal(restored.round,60);assert.equal(restored.cash,1234.5);assert.equal(restored.lives,72);assert.equal(restored.towers.length,7);assert.equal(restored.towers[1].throwHand,-1);assert.equal(restored.towers[1].activeAbilityKey,'primary');assert.equal(restored.towers[1].runtime.abilityCd,40);assert.equal(restored.towers[6].level,12);assert.equal(restored.nextTowerId,100);assert.equal(restored.towers[0].fanBuffs[0].sourceId,99);assert.equal(restored.usage.dart,1719);assert.equal(restored.puddles[0].sourceId,restored.towers[5].id);assert.equal(restored.puddles[0].pierceLeft,3);assert.equal(JSON.stringify(restored),JSON.stringify(saved));assert(!JSON.stringify(saved).includes('mesh'));
 });

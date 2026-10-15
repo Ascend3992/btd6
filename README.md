@@ -1,8 +1,10 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v74**. Boomerang Monkey's ordinary rangs now seek moving targets instead of following a fixed circle that often missed them. Kylies also track targets on the outbound leg. Existing damage, pierce, attack speed, immunities, abilities and returning mechanics are preserved. All 90 original upgrade icons and Quincy's XP/purchase panel remain available.
+Latest version: **v75**. Adds a temporary, free MIB support building with spinning twin radar dishes. Monkeys within its 25-tile radius can target Camo and hit every Bloon material and class. Their damage and attack range stay the same. The MIB saves with your run; all existing towers, seeking boomerangs and 90 original upgrade icons remain available.
 
-[Download v74 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v74.zip)
+[Download v75 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v75.zip)
+
+[MIB model and support details](docs/mib-support.md) · [Desktop preview](docs/mib-support-desktop.png) · [Phone preview](docs/mib-support-mobile.png)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 

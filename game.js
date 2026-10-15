@@ -7,13 +7,14 @@ const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBo
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
+const {makeMIBTowerMesh,animateMIB}=await import('./mib-visuals.js?v=1');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
-const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=8');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=10');
+const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=9');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=11');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
-const {captureRunSave,createRunStorage}=await import('./run-save.js?v=6');
-const {getGameMode,applyModePrices,modePrice,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=4');
-const {createHomeUI}=await import('./home-ui.js?v=4');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=7');
+const {getGameMode,applyModePrices,modePrice,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=5');
+const {createHomeUI}=await import('./home-ui.js?v=5');
 const {setRouteDirection,reverseRoundQueue,apopalypseRoundQueue}=await import('./normal-branches.js?v=1');
 const {alternateRoundQueue}=await import('./alternate-rounds.js?v=1');
 const {sandboxTypes,sandboxSpawnQueue,sandboxBlimpHp,createMapProgress,SANDBOX_MAX,TEST_BLOON_HP}=await import('./sandbox.js?v=1');
@@ -155,6 +156,7 @@ const towerDefs={
  tack:{name:'Tack Shooter',cost:260,costByDifficulty:{easy:220,medium:260,hard:280,impoppable:310},range:23*RANGE_SCALE,displayRange:23,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.12,damage:1,color:0xfa398b,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
  ice:{name:'Ice Monkey',cost:400,towerClass:'Primary',placementSurfaces:['land','water'],range:25*RANGE_SCALE,displayRange:25,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:1.5,radial:true,damageType:'Cold',notes:'Freezes bloons for 1.5s; cannot affect Lead, White, Zebra, or Camo'},
  glue:{name:'Glue Gunner',cost:270,range:46*RANGE_SCALE,displayRange:46,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1,damage:0,projSpeed:300*RANGE_SCALE,displayProjectileSpeed:300,projectileLife:.43,projectileRadius:4*RANGE_SCALE,displayProjectileRadius:4,glueLevel:1,color:0xd1b034,pierce:1,slow:.5,slowDuration:11,glueLayers:3,damageType:'Acid',notes:'50% slow for 11s; soaks 3 layers; ignores Camo, blimps and already-glued Bloons'},
+ mib:{name:'MIB',cost:0,towerClass:'Support',support:true,range:25*RANGE_SCALE,displayRange:25,footprintRadius:5*RANGE_SCALE,rate:1,damage:0,color:0x398bc0,damageType:'Normal',notes:'Temporary support: nearby monkeys can hit every Bloon type.'},
  hero:{name:'Quincy',cost:540,costByDifficulty:{easy:460,medium:540,hard:585,impoppable:650},range:50*RANGE_SCALE,displayRange:50,rate:.95,damage:1,projSpeed:44,color:0x704527,hero:true,pierce:3,camoDetect:false,damageType:'Sharp'}
 };
 
@@ -275,7 +277,7 @@ function syncControls(){
  autoBtn.dataset.label=autoStart?'Auto on':'Auto off';autoBtn.setAttribute('aria-pressed',String(autoStart));autoBtn.title=autoBtn.textContent;
  speedBtn.dataset.label=speed+'×';speedBtn.title=speedBtn.textContent;
 }
-function flushUI(){if(!uiDirty)return;uiDirty=false;livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;syncControls();shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=(cash<d.cost||(d.hero&&heroPlaced))&&selectedType!==b.dataset.tower;b.classList.toggle('unaffordable',cash<d.cost);b.title=d.name+' — $'+d.cost.toLocaleString()+(d.hero&&heroPlaced?' (already placed)':'');b.setAttribute('aria-label',b.title)})}
+function flushUI(){if(!uiDirty)return;uiDirty=false;livesEl.textContent=Math.max(0,Math.ceil(lives));cashEl.textContent=formatCash(cash);roundEl.textContent=round;syncControls();shopBtns.forEach(b=>{const d=towerDefs[b.dataset.tower];b.disabled=(cash<d.cost||(d.hero&&heroPlaced))&&selectedType!==b.dataset.tower;b.classList.toggle('unaffordable',cash<d.cost);b.title=d.name+' — '+(d.cost===0?'FREE':'$'+d.cost.toLocaleString())+(d.hero&&heroPlaced?' (already placed)':'');b.setAttribute('aria-label',b.title)})}
 function clearPlacementPreview(){if(placementPreview){disposeTransientMesh(placementPreview);placementPreview=null;}}
 function clearSelection(){
  selectedType=null;selectedTower=null;clearPlacementPreview();rangeRing.visible=false;
@@ -295,6 +297,7 @@ shopBtns.forEach(b=>b.addEventListener('click',()=>selectShop(b.dataset.tower)))
 function mat(color){return new THREE.MeshStandardMaterial({flatShading:true,color,roughness:.65,metalness:.02})}
 // All models are original procedural meshes; no optional model downloads are needed.
 function makeTowerMesh(type,legacyBomb=false,legacyTack=false,legacyIce=false){
+ if(type==='mib')return makeMIBTowerMesh();
  if(type==='hero')return makeQuincyTowerMesh(1);
  if(type==='glue')return makeBaseGlueTowerMesh();
  if(type==='boomer')return makeBoomerangTowerMesh();
@@ -610,6 +613,7 @@ function box(w,h,d,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.BoxGeomet
 function cyl(rt,rb,h,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,12),mat(color));o.position.set(x,y,z);return o}
 function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,24),mat(color));o.rotation.x=Math.PI/2;o.position.y=y;return o}
 function updateTowerAppearance(t){
+ if(t.type==='mib')return;
  if(t.type==='hero'){updateHeroAppearance(t);return;}
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
  if(t.type==='glue'){
@@ -898,7 +902,7 @@ function applyMapIceFreeze(t,ability){
  if(absolute)absoluteZeroBuffT=Math.max(absoluteZeroBuffT,10);
  t.fireAnim=.24;t.iceAbilityAnim=.8;
  for(const e of enemies){
-  if(!e.alive||e.type==='BAD'||(!absolute&&['Lead','DDT'].includes(e.type)&&t.damageType!=='Cold Snap'&&t.damageType!=='Normal'))continue;
+  if(!e.alive||e.type==='BAD'||(!absolute&&['Lead','DDT'].includes(e.type)&&t.damageType!=='Cold Snap'&&t.damageType!=='Normal'&&!hasMIBSupport(t)))continue;
   const duration=e.isBlimp||e.camo||['White','Zebra'].includes(e.type)?ability.specialFreezeDuration:ability.freezeDuration;
   e.abilityFreezeT=Math.max(e.abilityFreezeT||0,duration);
   if(!e.isBlimp){e.abilityFreezeLayers=Math.max(e.abilityFreezeLayers||0,ability.freezeLayers);if(t.postFreezeSlow<1){e.permafrostLayers=Math.max(e.permafrostLayers||0,ability.freezeLayers);e.permafrostSlow=Math.min(e.permafrostSlow||1,t.postFreezeSlow);}}
@@ -989,7 +993,7 @@ function surfacePlacement(type,x,z){
 }
 function placeTower(x,z){if(!selectedType)return;const d=towerDefs[selectedType],edgeClearance=d.footprintRadius??1;if(Math.abs(x)>MAP_W/2-edgeClearance||Math.abs(z)>MAP_H/2-edgeClearance)return toastMsg('Place towers on the meadow');if(cash<d.cost)return toastMsg('Not enough cash');if(d.hero&&heroPlaced)return toastMsg('Only one hero');if(onPath(x,z,d.footprintRadius??.25))return toastMsg('Cannot place on the path');if(towerFootprintsOverlap(selectedType,x,z))return toastMsg('Too close to another tower');const placement=surfacePlacement(selectedType,x,z);if(!placement.allowed)return toastMsg('Place this tower on land or frozen water');cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;clearPlacementPreview();selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
 
-function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected();saveRunCheckpoint()}
+function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(t.type==='mib'?0x2786b6:0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected();saveRunCheckpoint()}
 
 // Preserve the elements under the pointer between pointerdown and click.
 // Replacing innerHTML during the periodic panel refresh can swallow that click.
@@ -1027,7 +1031,8 @@ function refreshSelected(){
  if(t.fanTier)selStats.innerHTML+='<br>Fan Club attack boost active';
  if(t.type==='bomb'&&t.paths[2]>=5)selStats.innerHTML+='<br>Bomb Blitz: '+(t.blitzCd>0?'Cooldown '+Math.ceil(t.blitzCd)+'s':'Automatic on leak');
  upgradeBtns.forEach(b=>b.classList.remove('selectedUpgrade'));
- if(d.hero){
+ if(d.support){upgradeBtns.forEach(b=>b.disabled=true);selStats.innerHTML='<b>MIB · Temporary support</b><br>Range: 25 tiles<br>Allows nearby monkeys to hit every Bloon type, including Camo.<br>No attacks or upgrades.';}
+ else if(d.hero){
   const rapidState=abilityState(t,{key:'rapid'}),stormState=abilityState(t,{key:'storm'});
   upgradeBtns[0].disabled=t.level<3||rapidState.disabled;setUpgradeLabel(upgradeBtns[0],'Rapid Shot',t.level<3?'Unlocks at Lv.3':rapidState.text);
   upgradeBtns[1].disabled=t.level<10||stormState.disabled;setUpgradeLabel(upgradeBtns[1],'Storm of Arrows',t.level<10?'Unlocks at Lv.10':stormState.text);
@@ -1039,7 +1044,7 @@ function refreshSelected(){
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
  sellBtn.disabled=currentMode.canSell===false;sellBtn.textContent=sellBtn.disabled?'SELLING DISABLED':'SELL';
- renderHeroProgression(t);
+ renderHeroProgression(t);const mibStatus=document.getElementById('mibStatus');mibStatus.hidden=!hasMIBSupport(t);document.getElementById('supportPanelInfo').hidden=!d.support;
  targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label',currentMode.canSell===false?'Selling is disabled in CHIMPS':'Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken);refreshAbilityUI()
 }
 function renderHeroProgression(t){
@@ -1549,7 +1554,7 @@ function applyGlueCoating(e,fx){
  e.glueCoatings.push({key,priority,remaining:duration,slow,layers:fx.glueLayers||3,interval,tick:superGlue?(previous?.tick||0):0,damage:corrosion?(t?.corrosionDamage||1):0,
   superGlue,stuckSlow:stuck?.[0]??1,stuckRemaining:stuck?.[1]||0,relentlessTier,stunPierce,
   ceramicDamage:t?.corrosionCeramicDamage,moabDamage:t?.corrosionMoabDamage,source:sourceTowerForDamage(t),
-  damageAmp:fx.damageAmp||0,suppressProperties:!!fx.suppressGlueProperties,direct:!!fx.directGlue,puddleTier:t?.gluePuddleTier||0,puddleSettings:t?.gluePuddleSettings?{...t.gluePuddleSettings}:null,camoDetect:!!t?.camoDetect});
+  damageAmp:fx.damageAmp||0,suppressProperties:!!fx.suppressGlueProperties,direct:!!fx.directGlue,puddleTier:t?.gluePuddleTier||0,puddleSettings:t?.gluePuddleSettings?{...t.gluePuddleSettings}:null,camoDetect:!!t?.camoDetect||hasMIBSupport(t)});
  syncGlueCoatings(e);
 }
 function damageGlueFamily(coat,e,damage,initial=true){
@@ -1570,7 +1575,7 @@ function updateGlueCoatings(e,dt){
  }
 }
 function hitGlueTarget(t,e){
- return hitEnemy(e,t.damage+(e.isBlimp?t.bonusMoab||0:0),{tower:t,glue:true,directGlue:true,slow:t.slow,slowDuration:t.slowDuration,glueLayers:t.glueLayers,glueDps:t.glueDps,allowBlimpSlow:!!(t.canGlueBlimps||t.moabGlue)});
+ return hitEnemy(e,t.damage+(e.isBlimp?t.bonusMoab||0:0),{tower:t,glue:true,directGlue:true,slow:t.slow,slowDuration:t.slowDuration,glueLayers:t.glueLayers,glueDps:t.glueDps,allowBlimpSlow:!!(t.canGlueBlimps||t.moabGlue||hasMIBSupport(t))});
 }
 function explodeGlueSplatter(p,position){
  const targets=enemies.filter(e=>e.alive&&towerCanDamage(p.tower,e)&&(e.mesh.position.x-position.x)**2+(e.mesh.position.z-position.z)**2<=p.glueSplash*p.glueSplash);
@@ -1675,14 +1680,20 @@ function gluePriority(t){
  if(corrosive)return 3;
  return 1;
 }
+function hasMIBSupport(t){
+ const source=t?.sourceTower||t;if(!source||source.type==='mib'||!Number.isFinite(source.x)||!Number.isFinite(source.z))return false;
+ return towers.some(provider=>provider.type==='mib'&&(provider.x-source.x)**2+(provider.z-source.z)**2<=provider.range**2+1e-9);
+}
 function towerCanDamage(t,e){
+ if(t.type==='mib')return false;const mib=hasMIBSupport(t);
  if(t.type==='glue'){
-  if(e.isBoss||e.boss||e.isBlimp&&!(t.canGlueBlimps||t.moabGlue))return false;
+  if(!mib&&(e.isBoss||e.boss||e.isBlimp&&!(t.canGlueBlimps||t.moabGlue)))return false;
   if(e.glueT>0&&(e.gluePriority||1)>=gluePriority(t)){
    const rehit=(t.paths?.[2]||0)>=5&&e.gluePriority===gluePriority(t)&&e.glueCoatings?.some(coat=>coat.remaining>0&&coat.superGlue&&coat.priority===gluePriority(t));
    if(!rehit)return false;
   }
  }
+ if(mib)return true;
  const n=e.isBlimp?e.type:layerNames[e.layer];
  if(t.type==='ice'&&e.isBlimp&&!t.canHitBlimps)return false;
  const brittle=e.brittleT>0,glueVulnerable=e.glueVulnerableT>0;
@@ -2345,6 +2356,7 @@ function updateTowers(dt){
  if(currentMode.variant==='sandbox'&&lives<=0)return;
  const iceBuffDt=(roundActive||currentMode.variant==='sandbox')?Math.min(dt,absoluteZeroBuffT):0;if(roundActive||currentMode.variant==='sandbox')absoluteZeroBuffT=Math.max(0,absoluteZeroBuffT-dt);
  for(const t of towers){
+  if(t.type==='mib'){animateMIB(t,dt);continue;}
   const combatDt=roundActive||currentMode.variant==='sandbox'?dt:0;
   updateTowerAbility(t,combatDt);
   if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else if(t.type==='hero'&&t.mesh.userData.quincyRig)animateQuincy(t,dt);else animateTower(t,dt);
@@ -2843,7 +2855,7 @@ function restoreApopalypseState(saved,byId,active){
 function configureDifficulty(key,legacy=false,variant='standard'){
  currentMode=getGameMode(key,legacy,variant);setRouteDirection(PATH,trackDistances,variant==='reverse');applyModePrices(towerDefs,upgradeData,currentMode);gameWrap.classList.toggle('isApopalypse',variant==='apopalypse');gameWrap.classList.toggle('isChimps',variant==='chimps');updateChimpsStatus();
  document.getElementById('pauseDifficulty').textContent=currentMode.label.toUpperCase()+' MODE';document.getElementById('roundLimit').textContent=currentMode.endRound;document.getElementById('settingsAutoBtn').disabled=['sandbox','apopalypse'].includes(currentMode.variant);if(currentMode.variant==='apopalypse'){autoStart=false;autoBtn.textContent='Auto Start: Off';autoBtn.classList.remove('active');document.getElementById('settingsAutoBtn').setAttribute('aria-checked','false');}sandboxUI.sync();
- for(const button of shopBtns)button.querySelector('span').textContent='$'+towerDefs[button.dataset.tower].cost.toLocaleString();updateUI();
+ for(const button of shopBtns)button.querySelector('span').textContent=towerDefs[button.dataset.tower].cost===0?'FREE':'$'+towerDefs[button.dataset.tower].cost.toLocaleString();updateUI();
 }
 function setGameStarted(started){gameStarted=started;gameWrap.classList.toggle('inHome',!started);for(const id of ['topbar','shop','selectedPanel','abilityBar','game','endScreen'])document.getElementById(id).inert=!started;resize();}
 function startNewMode(key,variant='standard'){

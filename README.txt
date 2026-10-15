@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v74 seeking Boomerang throws
+Meadow Balloon Defense 3D - v75 temporary MIB support
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -9,7 +9,7 @@ From this folder, run:
   python -m http.server 8000
 Then open http://localhost:8000 in a browser with WebGL support.
 
-Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.js, ice-visuals.js, glue-visuals.js, quincy-visuals.js, tower-ui.js, upgrade-icons.js, bloon-renderer.js, bloon-visuals.js, meadow-map.js, style.css, _headers and assets together at the site root. No build step or external script host is required. Three.js 0.168.0 and its MIT license are bundled in assets/vendor. All tower models in this version are procedural; no GLTF assets or model loader are needed.
+Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.js, ice-visuals.js, glue-visuals.js, quincy-visuals.js, mib-visuals.js, tower-ui.js, upgrade-icons.js, bloon-renderer.js, bloon-visuals.js, meadow-map.js, style.css, _headers and assets together at the site root. No build step or external script host is required. Three.js 0.168.0 and its MIT license are bundled in assets/vendor. All tower models in this version are procedural; no GLTF assets or model loader are needed.
 
 Preserved from the uploaded game
 -------------------------------
@@ -457,3 +457,13 @@ Boomerang seeking v74
 - Targeting/range, damage, pierce, projectile/attack speeds, Camo/Lead/Frozen rules, knockback and expiration explosions remain intact. Existing Glaive Ricochet tracking and Lord orbitals are unchanged. Travel is bounded; swept substeps preserve fast-forward hits.
 - 40 regression test files pass. Chromium compares old/new base damage against a real road-moving round-40 MOAB and checks Kylie seeking and overview text. See docs/boomer-seeking.md.
 - All 90 original icons, 5 MP3s, Quincy XP/purchases/models, saved runs, modes, ABR table and CHIMPS badges remain intact.
+
+Temporary MIB support v75
+------------------------
+- Free in every difficulty and variant, including Impoppable. Uses ordinary land/footprint placement and can be saved/resumed with existing schema 5 checkpoints.
+- Blue office building, orange windows, recessed doorway, X-braced roof mast and twin silver dishes follow the supplied reference in the game’s faceted 3D style. Only the radar rotates; the building remains planted. Its transparent shop icon is rendered from this actual model.
+- Nearby monkeys within 25 game tiles (8 world units) can target Camo and hit every material and Bloon class, including Lead, Purple, Frozen and DDTs. Eligibility derives from the attacking/source tower’s position, including secondary attacks. Removing or selling an MIB removes its support immediately.
+- Damage, attack range, pierce and attack speed remain unchanged. Existing blimp/BAD crowd-control restrictions remain; zero-damage Glue still applies glue rather than gaining invented damage. MIB itself never attacks, gains usage XP or has upgrades.
+- Selected MIB displays its support radius and explanation instead of attack/upgrade controls. Supported monkeys show an MIB ACTIVE indicator; the upgrade browser has a support overview. Existing tower panels and Quincy purchases remain available.
+- All 41 regression test files pass, including universal hit permissions, exact radius, removal, real projectile damage, free prices across modes, animation isolation, save round-trip and invalid support upgrades. Chromium verifies the live desktop/phone UI, actual image decoding, rotating dishes, saved-run resume and damage to Camo Lead/DDT/BAD targets.
+- Game, stylesheet and affected module cache versions are bumped. Full ZIP includes runtime, assets/audio, documentation and regression sources. Details and screenshots: docs/mib-support.md.

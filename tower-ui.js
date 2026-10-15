@@ -26,7 +26,7 @@ export function setArt(node,type,path,tier,locked=false){
 }
 function setFallback(node,key){node.innerHTML='<svg aria-hidden="true"><use href="assets/ui/interface.svg#'+key+'"></use></svg>';}
 export function renderUpgradeRows(t,data,cash,uniqueTierTaken){
- const hero=t.type==='hero',panel=document.getElementById('selectedPanel');panel.classList.toggle('heroPanel',hero);
+ const hero=t.type==='hero',panel=document.getElementById('selectedPanel');panel.classList.toggle('heroPanel',hero);panel.classList.toggle('supportPanel',t.type==='mib');if(t.type==='mib')return;
  for(let path=0;path<3;path++){
   const b=document.getElementById('upgrade'+path),row=b.parentElement,owned=row.querySelector('.ownedUpgrade'),tier=t.paths[path],next=data[t.type]?.[path]?.[tier],current=data[t.type]?.[path]?.[tier-1];
   if(hero){row.classList.remove('pathLocked','maxed');b.classList.remove('unaffordable');setArt(b.querySelector('.upgradeArt'),'hero',path,1);continue;}

@@ -20,7 +20,7 @@ export function getGameMode(key='medium',legacy=false,variant='standard'){
  if(variant==='chimps')return {...mode,label:'CHIMPS',lives:1,startRound:6,endRound:100,canSell:false,extraIncome:false};
  return mode;
 }
-export function modePrice(price,mode){return mode.costMultiplier===1?price:Math.max(5,Math.ceil(price*mode.costMultiplier/5-.5-1e-9)*5);}
+export function modePrice(price,mode){if(price===0)return 0;return mode.costMultiplier===1?price:Math.max(5,Math.ceil(price*mode.costMultiplier/5-.5-1e-9)*5);}
 const basePrices=new WeakMap();
 export function applyModePrices(definitions,upgrades,mode){
  if(!basePrices.has(definitions))basePrices.set(definitions,{towers:Object.fromEntries(Object.entries(definitions).map(([type,d])=>[type,d.cost])),upgrades:Object.fromEntries(Object.entries(upgrades).map(([type,paths])=>[type,paths.map(path=>path.map(u=>u[1]))]))});
