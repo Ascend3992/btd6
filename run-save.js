@@ -1,5 +1,5 @@
 // Round checkpoints, with logical live Bloons for continuous Apopalypse. Never meshes or projectiles.
-import {getGameMode} from './difficulty.js?v=5';
+import {getGameMode} from './difficulty.js?v=6';
 import {heroXPAtLevel,heroXPProgress} from './hero-xp.js?v=1';
 import {captureApopalypse,validateApopalypse} from './apopalypse-save.js?v=1';
 export const RUN_SAVE_KEY='meadow-btd6.saved-run';
@@ -27,7 +27,7 @@ export function validateRunSave(raw,rules){
    const paths=saved.paths.map(t=>integer(t,0,5));
    requireValue(crosspathingUsed||paths.filter(t=>t>0).length<=2&&paths.filter(t=>t>2).length<=1);
    if(hero){requireValue(paths.every(t=>t===0)&&++heroes<=1);}
-   if(rules.definitions[saved.type].support)requireValue(paths.every(t=>t===0));
+   if(rules.definitions[saved.type].support||rules.definitions[saved.type].baseOnly)requireValue(paths.every(t=>t===0));
    paths.forEach((tier,path)=>{if(tier===5){const key=saved.type+'-'+path;requireValue(!tierFives.has(key));tierFives.add(key);}});
    requireValue(['first','last','strong','close'].includes(saved.target));
    requireValue(saved.throwHand===1||saved.throwHand===-1);

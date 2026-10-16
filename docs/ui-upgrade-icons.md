@@ -131,3 +131,7 @@ The same registry supplies both the owned/next cards and all future tiers in the
 v69 adds restyled Hard mode medallions separately at `assets/ui/modes/hard-branch-badges.png`; the 45 original upgrade assets above remain unchanged. [Hard badge artwork and ordering](hard-branches.md).
 
 Ice Monkey v73 uses all 15 original files from `Icemonekyicons.zip`. `MetalFreezeUpgradeIcon.webp` is the older artwork name for Cold Snap and maps to `ice-1-2`; no artwork or gameplay name is changed. [Full mapping and validation](ice-upgrade-artwork.md).
+
+## Sniper Monkey — base tower added (v77)
+
+The base model and its rendered shop portrait follow the supplied camouflage-beret reference. Sniper upgrade stats, models and original upgrade icons have not been supplied yet; no placeholder upgrade artwork is installed. The selected panel and upgrade browser show a base-tower overview until the paths are provided. The existing 90 original primary upgrade icons are unchanged. See [base Sniper details](sniper-base.md).

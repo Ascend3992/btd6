@@ -11,7 +11,7 @@ function game(){
   ultimateCrosspathing:false,placeAnywhere:false,crosspathingUsed:false,currentMode:{key:'medium',legacy:true,bloonSpeed:1},round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
   saveRunCheckpoint(){},recordTowerUse(){},playBloonPop(){},updateTowerAppearance(){},updateHeroAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
   glueMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),animateGlue(){},iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
-  animateMIB(){},animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
+  animateSniper(){},spawnSniperShotVisual(){},animateMIB(){},animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
   acidPuddleRenderer:{create:mesh},updateUI(){},ensureGlueMarker(){},destroyEnemyAndSpawnChildren(e){e.alive=false},
   PATH:Array.from({length:10},()=>({distanceTo:()=>10})),
   trackDistances:Array.from({length:10},(_,i)=>i*10),

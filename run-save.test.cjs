@@ -12,6 +12,10 @@ function fixture(){
  return {g,c,rules,state,saved:c.captureRunSave(state,rules)};
 }
 const clone=s=>JSON.parse(JSON.stringify(s));
+test('base Sniper saves positions, targets, cooldown and XP while deriving infinite range on restoration',()=>{
+ const {g,c,rules,state}=fixture();rules.definitions.sniper={baseOnly:true};const t=g.createTower('sniper',-14,8);t.target='last';t.cool=.71;t.damageDealt=42;g.towers.push(t);state.usage.sniper=21;const saved=c.captureRunSave(state,rules);assert(saved);const restored=c.validateRunSave(clone(saved),rules),record=restored.towers.find(t=>t.type==='sniper');assert(record);assert.equal(record.target,'last');assert.equal(record.runtime.cool,.71);assert.equal(restored.usage.sniper,21);assert(!JSON.stringify(saved).includes('Infinity'));const fresh=game(),rebuilt=fresh.createTower(record.type,record.x,record.z);Object.assign(rebuilt,record.runtime);assert.equal(rebuilt.range,Infinity);assert.equal(rebuilt.damage,2);assert.equal(rebuilt.damageDealt,42);
+ restored.ultimateCrosspathing=true;restored.crosspathingUsed=true;record.paths[0]=1;assert.equal(c.validateRunSave(restored,rules),null,'base-only tower never accepts invented upgrades');
+});
 test('play switches and 5-5-5 towers save/resume, including after switching off; older runs keep normal rules',()=>{
  const {g,c,rules,state,saved}=fixture();assert.equal(saved.ultimateCrosspathing,false);assert.equal(saved.placeAnywhere,false);assert.equal(saved.crosspathingUsed,false);
  const old=clone(saved);for(const key of ['ultimateCrosspathing','placeAnywhere','crosspathingUsed'])delete old[key];assert.equal(c.validateRunSave(old,rules).ultimateCrosspathing,false);

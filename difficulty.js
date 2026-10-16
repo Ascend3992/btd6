@@ -25,7 +25,8 @@ const basePrices=new WeakMap();
 export function applyModePrices(definitions,upgrades,mode){
  if(!basePrices.has(definitions))basePrices.set(definitions,{towers:Object.fromEntries(Object.entries(definitions).map(([type,d])=>[type,d.cost])),upgrades:Object.fromEntries(Object.entries(upgrades).map(([type,paths])=>[type,paths.map(path=>path.map(u=>u[1]))]))});
  const base=basePrices.get(definitions);
- for(const [type,d] of Object.entries(definitions))d.cost=modePrice(base.towers[type],mode);
+ const priceKey=mode.variant==='impoppable'?'impoppable':mode.key;
+ for(const [type,d] of Object.entries(definitions))d.cost=d.costByDifficulty?.[priceKey]??modePrice(base.towers[type],mode);
  for(const [type,paths] of Object.entries(upgrades))paths.forEach((path,p)=>path.forEach((u,tier)=>u[1]=modePrice(base.upgrades[type][p][tier],mode)));
 }
 export function modeBloonHealth(type,base,spawnRound,mode){return mode.variant!=='sandbox'&&!mode.legacy&&mode.key==='easy'&&type==='MOAB'&&spawnRound===40?133:base;}

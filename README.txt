@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v76 gameplay switches
+Meadow Balloon Defense 3D - v77 base Sniper Monkey
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -9,7 +9,7 @@ From this folder, run:
   python -m http.server 8000
 Then open http://localhost:8000 in a browser with WebGL support.
 
-Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.js, ice-visuals.js, glue-visuals.js, quincy-visuals.js, mib-visuals.js, tower-ui.js, upgrade-icons.js, bloon-renderer.js, bloon-visuals.js, meadow-map.js, style.css, _headers and assets together at the site root. No build step or external script host is required. Three.js 0.168.0 and its MIT license are bundled in assets/vendor. All tower models in this version are procedural; no GLTF assets or model loader are needed.
+Deploy index.html, game.js, boomerang-visuals.js, bomb-visuals.js, tack-visuals.js, ice-visuals.js, glue-visuals.js, quincy-visuals.js, mib-visuals.js, sniper-visuals.js, tower-ui.js, upgrade-icons.js, bloon-renderer.js, bloon-visuals.js, meadow-map.js, style.css, _headers and assets together at the site root. No build step or external script host is required. Three.js 0.168.0 and its MIT license are bundled in assets/vendor. All tower models in this version are procedural; no GLTF assets or model loader are needed.
 
 Preserved from the uploaded game
 -------------------------------
@@ -479,3 +479,14 @@ Ultimate Crosspathing and Place Anywhere v76
 - Combined high Boomerang paths recompute stats consistently across all purchase orders. Bomb Shooter retains its middle-path active ability alongside passive Bomb Storm when both paths are upgraded. Existing valid crosspaths retain their combat stats.
 - All 42 regression files pass, covering six purchase orders for all six primary 5-5-5 towers, switch-off rules, exact map bounds, water/path/overlap placement, stack selection, save migration and invalid snapshots. Chromium verifies all 90 actual upgrade purchases, combat/abilities for every 5-5-5 primary, restored stats/positions, switch-off behavior, image loads, keyboard controls, phone layout and live placement preview colors.
 - Game, stylesheet and affected UI/save module caches are bumped. Full ZIP preserves all 90 original upgrade images, all five MP3s and the MIB. Details: docs/play-options.md.
+
+Base Sniper Monkey v77
+----------------------
+- Military tower: infinite range, instant hitscan, 2 Sharp damage, 1 pierce and 1.59s per attack. Targets First, Last, Strong or Close using existing route/strength/distance targeting. No native Camo, Lead or Frozen popping. A nearby MIB grants the existing universal hit support.
+- Supplied costs are exact: Easy $300, Normal $350, Hard/CHIMPS $380, Impoppable $420. Explicit per-difficulty tower prices are respected instead of applying generic rounding; existing towers retain their prior prices. Footprint radius uses 6 game units.
+- The reference model has a patch-colored green camouflage beret with black band and yellow round badge, angular brown face, large white eyes, tan face/belly/hands/feet, curled tail and long gray upright rifle. The rifle raises to aim and recoils during a shot; feet remain planted, with idle motion and blinking. Shop icon renders the actual model.
+- Hitscan damage happens in the shot call, with no traveling combat projectile. A brief cosmetic line and muzzle flash show the shot. Damage can carry through the chosen Bloon’s child layers as with existing multi-damage attacks; independent nearby Bloons are not pierced. Infinite range is not sent to range-circle geometry.
+- Selected panel keeps target/sell/stats controls and shows Infinite range and the base attack summary. Upgrade browser contains a Sniper overview and usage XP. No upgrade paths or placeholder upgrade artwork are invented; base-only saves reject upgraded paths even with Ultimate Crosspathing enabled.
+- Existing save schema 5 stores the new tower type, placement, target, damage, attack cooldown and usage XP. Infinite range derives from the definition on restore rather than being serialized as a non-finite number. Existing saves remain compatible, including v76 switches and 5-5-5 primary towers.
+- All 43 regression files pass. Chromium verifies all four exact prices, real shop image decoding, placement, targeting controls, immediate global damage, one-target pierce, cadence, all native immunities, MIB support/removal, saved-run restoration, upgrade overview navigation and phone layout without page/resource errors.
+- Entry, style and affected UI/save/difficulty modules have new cache versions. ZIP preserves all 90 original upgrade icons, the MIB, all five MP3s and previous runtime/docs/tests. Details: docs/sniper-base.md.

@@ -1,4 +1,4 @@
-import {gameModes,getGameMode,modeUnlocked} from './difficulty.js?v=5';
+import {gameModes,getGameMode,modeUnlocked} from './difficulty.js?v=6';
 export function createHomeUI({savedRun,onResume,onStart,medals}){
  const screen=document.getElementById('homeScreen'),home=document.getElementById('homeView'),maps=document.getElementById('mapView'),dialog=document.getElementById('modeDialog'),branches=document.getElementById('branchDialog'),resume=document.getElementById('homeResumeBtn');let activeMode='easy';
  function refresh(){

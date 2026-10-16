@@ -1,12 +1,12 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v76**. The pause menu now has **Ultimate Crosspathing** and **Place Anywhere** switches. Ultimate Crosspathing lets each primary tower reach 5-5-5; Place Anywhere allows paths, obstacles, water, overlapping towers and map edges. Both save with your run. Turning them off keeps existing towers and restores normal rules for new actions.
+Latest version: **v77**. Adds the base **Sniper Monkey**, a Military tower with infinite range and instant hitscan attacks: 2 Sharp damage, 1 pierce and a 1.59-second attack interval. Its camouflage beret, yellow badge, bare brown fur and long rifle follow the supplied reference, with idle, blink, aim and recoil animation. Exact difficulty prices and saved-run restoration are included. Upgrade paths will be added from the next supplied stats and references.
 
-[Download v76 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v76.zip)
+[Download v77 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v77.zip)
 
-[Gameplay switch details](docs/play-options.md) · [Desktop settings](docs/play-options-desktop.png) · [Phone settings](docs/play-options-mobile.png) · [5-5-5 upgrades](docs/ultimate-crosspathing.png)
+[Sniper details](docs/sniper-base.md) · [Reference model](docs/sniper-model.png) · [Aiming pose](docs/sniper-aiming.png) · [In game](docs/sniper-in-game.png) · [Phone panel](docs/sniper-mobile.png)
 
-[MIB model and support details](docs/mib-support.md)
+[Ultimate Crosspathing and Place Anywhere](docs/play-options.md) · [MIB support](docs/mib-support.md)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 

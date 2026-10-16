@@ -7,15 +7,16 @@ const {makeBaseBombTowerMesh,makeBombTopTowerMesh,makeBombMiddleTowerMesh,makeBo
 const {makeBaseTackTowerMesh,makeTackTopTowerMesh,makeTackMiddleTowerMesh,makeTackBottomTowerMesh,makeTackBladeProjectile,animateTack,tackMuzzleOrigin,tackAbilityOrigin}=await import('./tack-visuals.js?v=4');
 const {makeBaseIceTowerMesh,makeIceTopTowerMesh,makeIceMiddleTowerMesh,makeIceBottomTowerMesh,iceMuzzleOrigin,animateIce}=await import('./ice-visuals.js?v=4');
 const {makeBaseGlueTowerMesh,makeGlueTopTowerMesh,makeGlueMiddleTowerMesh,makeGlueBottomTowerMesh,animateGlue,glueMuzzleOrigin}=await import('./glue-visuals.js?v=4');
+const {makeSniperTowerMesh,animateSniper,sniperMuzzleOrigin}=await import('./sniper-visuals.js?v=1');
 const {makeMIBTowerMesh,animateMIB}=await import('./mib-visuals.js?v=1');
 const {makeQuincyTowerMesh,makeQuincyArrowMesh,quincyModelLevel,quincyMuzzleOrigin,animateQuincy}=await import('./quincy-visuals.js?v=1');
-const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=10');
+const {renderTowerPortrait,renderUpgradeRows}=await import('./tower-ui.js?v=11');
 const {upgradePathBlocked}=await import('./upgrade-rules.js?v=1');
-const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=12');
+const {createUpgradeTree}=await import('./upgrade-tree-ui.js?v=13');
 const {recordTowerUse,exportTowerUsage,restoreTowerUsage}=await import('./tower-usage.js?v=2');
-const {captureRunSave,createRunStorage}=await import('./run-save.js?v=8');
-const {getGameMode,applyModePrices,modePrice,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=5');
-const {createHomeUI}=await import('./home-ui.js?v=5');
+const {captureRunSave,createRunStorage}=await import('./run-save.js?v=9');
+const {getGameMode,applyModePrices,modePrice,modeBloonHealth,modeIncome,modeUnlocked,createMapMedals}=await import('./difficulty.js?v=6');
+const {createHomeUI}=await import('./home-ui.js?v=6');
 const {setRouteDirection,reverseRoundQueue,apopalypseRoundQueue}=await import('./normal-branches.js?v=1');
 const {alternateRoundQueue}=await import('./alternate-rounds.js?v=1');
 const {sandboxTypes,sandboxSpawnQueue,sandboxBlimpHp,createMapProgress,SANDBOX_MAX,TEST_BLOON_HP}=await import('./sandbox.js?v=1');
@@ -158,6 +159,7 @@ const towerDefs={
  tack:{name:'Tack Shooter',cost:260,costByDifficulty:{easy:220,medium:260,hard:280,impoppable:310},range:23*RANGE_SCALE,displayRange:23,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.12,damage:1,color:0xfa398b,pierce:1,radial:true,tacks:8,damageType:'Sharp',notes:'8 tacks in a full ring; cannot hit Lead, Frozen, or Camo'},
  ice:{name:'Ice Monkey',cost:400,towerClass:'Primary',placementSurfaces:['land','water'],range:25*RANGE_SCALE,displayRange:25,rate:2.4,damage:1,color:0x6bcde9,pierce:40,freeze:1.5,radial:true,damageType:'Cold',notes:'Freezes bloons for 1.5s; cannot affect Lead, White, Zebra, or Camo'},
  glue:{name:'Glue Gunner',cost:270,range:46*RANGE_SCALE,displayRange:46,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1,damage:0,projSpeed:300*RANGE_SCALE,displayProjectileSpeed:300,projectileLife:.43,projectileRadius:4*RANGE_SCALE,displayProjectileRadius:4,glueLevel:1,color:0xd1b034,pierce:1,slow:.5,slowDuration:11,glueLayers:3,damageType:'Acid',notes:'50% slow for 11s; soaks 3 layers; ignores Camo, blimps and already-glued Bloons'},
+ sniper:{name:'Sniper Monkey',towerClass:'Military',baseOnly:true,cost:350,costByDifficulty:{easy:300,medium:350,hard:380,impoppable:420},range:Infinity,displayRange:Infinity,footprintRadius:6*RANGE_SCALE,displayFootprintRadius:6,rate:1.59,damage:2,pierce:1,color:0x537821,damageType:'Sharp',camoDetect:false,notes:'Infinite-range instant hits; cannot pop Lead, Frozen or Camo natively'},
  mib:{name:'MIB',cost:0,towerClass:'Support',support:true,range:25*RANGE_SCALE,displayRange:25,footprintRadius:5*RANGE_SCALE,rate:1,damage:0,color:0x398bc0,damageType:'Normal',notes:'Temporary support: nearby monkeys can hit every Bloon type.'},
  hero:{name:'Quincy',cost:540,costByDifficulty:{easy:460,medium:540,hard:585,impoppable:650},range:50*RANGE_SCALE,displayRange:50,rate:.95,damage:1,projSpeed:44,color:0x704527,hero:true,pierce:3,camoDetect:false,damageType:'Sharp'}
 };
@@ -284,7 +286,7 @@ function clearPlacementPreview(){if(placementPreview){disposeTransientMesh(place
 function clearSelection(){
  selectedType=null;selectedTower=null;clearPlacementPreview();rangeRing.visible=false;
  selPanel.classList.add('hidden');selPanel.classList.remove('inspecting');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');gameWrap.classList.remove('hasSelection','placing');
- shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});document.getElementById('shopTowerName').textContent='PRIMARY MONKEYS';document.getElementById('hint').innerHTML='Pick a monkey to place.<br>Click it again to cancel.';refreshAbilityUI();updateUI();
+ shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});document.getElementById('shopTowerName').textContent='TOWERS';document.getElementById('hint').innerHTML='Pick a monkey to place.<br>Click it again to cancel.';refreshAbilityUI();updateUI();
 }
 function selectShop(type){
  if(selectedType===type){clearSelection();return;}
@@ -299,6 +301,7 @@ shopBtns.forEach(b=>b.addEventListener('click',()=>selectShop(b.dataset.tower)))
 function mat(color){return new THREE.MeshStandardMaterial({flatShading:true,color,roughness:.65,metalness:.02})}
 // All models are original procedural meshes; no optional model downloads are needed.
 function makeTowerMesh(type,legacyBomb=false,legacyTack=false,legacyIce=false){
+ if(type==='sniper')return makeSniperTowerMesh();
  if(type==='mib')return makeMIBTowerMesh();
  if(type==='hero')return makeQuincyTowerMesh(1);
  if(type==='glue')return makeBaseGlueTowerMesh();
@@ -615,7 +618,7 @@ function box(w,h,d,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.BoxGeomet
 function cyl(rt,rb,h,color,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,12),mat(color));o.position.set(x,y,z);return o}
 function ring(r,t,color,y=1.2){const o=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,24),mat(color));o.rotation.x=Math.PI/2;o.position.y=y;return o}
 function updateTowerAppearance(t){
- if(t.type==='mib')return;
+ if(t.type==='mib'||t.type==='sniper')return;
  if(t.type==='hero'){updateHeroAppearance(t);return;}
  if(t.type==='boomer'){updateBoomerangAppearance(t,disposeTransientMesh);return}
  if(t.type==='glue'){
@@ -1011,7 +1014,7 @@ function towerAtPoint(x,z){
 }
 function placeTower(x,z){if(!selectedType)return;const problem=placementProblem(selectedType,x,z);if(problem)return toastMsg(problem);const d=towerDefs[selectedType],placement=surfacePlacement(selectedType,x,z);cash-=d.cost;const t=createTower(selectedType,x,z);t.placementSurface=placement.surface;t.frozenWaterSourceId=placeAnywhere?null:placement.frozenBy;updateTowerAppearance(t);towers.push(t);if(d.hero)heroPlaced=true;clearPlacementPreview();selectedType=null;shopBtns.forEach(b=>b.classList.remove('active'));selectTower(t);updateUI()}
 
-function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(t.type==='mib'?0x2786b6:0x263c26);rangeRing.visible=true;rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.set(t.range,t.range,t.range);selPanel.classList.remove('hidden');refreshSelected();saveRunCheckpoint()}
+function selectTower(t){clearPlacementPreview();selectedTower=t;selectedType=null;gameWrap.classList.remove('placing');gameWrap.classList.add('hasSelection');towerDetails.classList.add('hidden');towerInfoBtn.setAttribute('aria-expanded','false');shopBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});rangeRing.material.color.setHex(t.type==='mib'?0x2786b6:0x263c26);rangeRing.visible=Number.isFinite(t.range);rangeRing.position.set(t.x,.7,t.z);rangeRing.scale.setScalar(Number.isFinite(t.range)?t.range:1);selPanel.classList.remove('hidden');refreshSelected();saveRunCheckpoint()}
 
 // Preserve the elements under the pointer between pointerdown and click.
 // Replacing innerHTML during the periodic panel refresh can swallow that click.
@@ -1025,8 +1028,8 @@ function tierFiveTaken(t,p){return t.paths[p]===4&&towers.some(other=>other!==t&
 function refreshSelected(){
  const t=selectedTower;if(!t)return;const d=towerDefs[t.type];selName.textContent=d.name;
  const attack=getAttackTower(t);
- rangeRing.scale.setScalar(attack.range);
- const shownRange=Math.round(attack.range/RANGE_SCALE*10)/10;
+ rangeRing.visible=Number.isFinite(attack.range);rangeRing.scale.setScalar(Number.isFinite(attack.range)?attack.range:1);
+ const shownRange=Number.isFinite(attack.range)?Math.round(attack.range/RANGE_SCALE*10)/10:'Infinite';
  const speedMultiplier=t.type==='hero'&&t.rapidTimer>0?(t.level>=15?4:3):t.type==='ice'&&absoluteZeroBuffT>0?1.5:1;
  selStats.innerHTML=`<b>Damage dealt: ${Math.floor(t.damageDealt||0).toLocaleString()}</b><br>Range ${shownRange} • Cooldown ${(attack.rate/speedMultiplier).toFixed(2)}s • Damage ${attack.damage} • Pierce ${attack.pierce}<br><b>${attack.damageType||'Hero'}</b>${t.type==='hero'?'':' • '+damageTypeNotes(attack)}`;
  if(t.type==='hero')selStats.innerHTML+=`<br>${t.shots} arrow${t.shots>1?'s':''} per shot • MOAB damage ${1+t.bonusMoab} • Bounce range 50${t.explosionEvery?'<br>Exploding arrows every '+t.explosionEvery+' shots • Blast radius 25.7':''}${t.level>=17?' • Arrow lifetime +25%':''}`;
@@ -1050,6 +1053,7 @@ function refreshSelected(){
  if(t.type==='bomb'&&t.paths[2]>=5)selStats.innerHTML+='<br>Bomb Blitz: '+(t.blitzCd>0?'Cooldown '+Math.ceil(t.blitzCd)+'s':'Automatic on leak');
  upgradeBtns.forEach(b=>b.classList.remove('selectedUpgrade'));
  if(d.support){upgradeBtns.forEach(b=>b.disabled=true);selStats.innerHTML='<b>MIB · Temporary support</b><br>Range: 25 tiles<br>Allows nearby monkeys to hit every Bloon type, including Camo.<br>No attacks or upgrades.';}
+ else if(d.baseOnly){upgradeBtns.forEach(b=>b.disabled=true);}
  else if(d.hero){
   const rapidState=abilityState(t,{key:'rapid'}),stormState=abilityState(t,{key:'storm'});
   upgradeBtns[0].disabled=t.level<3||rapidState.disabled;setUpgradeLabel(upgradeBtns[0],'Rapid Shot',t.level<3?'Unlocks at Lv.3':rapidState.text);
@@ -1062,7 +1066,7 @@ function refreshSelected(){
  camoPriorityBtn.classList.toggle('hidden',!(t.type==='dart'&&t.paths[2]>=2));camoPriorityBtn.textContent='Prioritize Camo: '+(t.camoPriority?'On':'Off');camoPriorityBtn.setAttribute('aria-pressed',String(!!t.camoPriority));
  if(t.critEvery)selStats.innerHTML+=`<br>Critical: ${t.critDamage} damage every ${t.critEvery} shots`;
  sellBtn.disabled=currentMode.canSell===false;sellBtn.textContent=sellBtn.disabled?'SELLING DISABLED':'SELL';
- renderHeroProgression(t);const mibStatus=document.getElementById('mibStatus');mibStatus.hidden=!hasMIBSupport(t);document.getElementById('supportPanelInfo').hidden=!d.support;
+ renderHeroProgression(t);const mibStatus=document.getElementById('mibStatus');mibStatus.hidden=!hasMIBSupport(t);document.getElementById('supportPanelInfo').hidden=!d.support;document.getElementById('baseTowerInfo').hidden=!d.baseOnly;
  targetBtn.textContent=t.target[0].toUpperCase()+t.target.slice(1);targetBtn.setAttribute('aria-label','Target: '+targetBtn.textContent);document.getElementById('damageDealt').textContent=Math.floor(t.damageDealt||0).toLocaleString();document.getElementById('sellValue').textContent=Math.floor(t.invest*.7).toLocaleString();sellBtn.setAttribute('aria-label',currentMode.canSell===false?'Selling is disabled in CHIMPS':'Sell '+d.name+' for $'+Math.floor(t.invest*.7).toLocaleString());document.getElementById('shopTowerName').textContent=d.name.toUpperCase();const portrait=renderTowerPortrait(t);if(selectedPortrait.getAttribute('src')!==portrait)selectedPortrait.src=portrait;selectedPortrait.alt=d.name+(d.hero?' level '+t.level:' '+t.paths.join('-'));renderUpgradeRows(t,upgradeData,cash,tierFiveTaken,ultimateCrosspathing);refreshAbilityUI()
 }
 function renderHeroProgression(t){
@@ -1216,6 +1220,7 @@ function applyUpgrade(t,p,tier){
 upgradeBtns.forEach((b,p)=>b.addEventListener('click',()=>{
  const t=selectedTower;if(!t||b.disabled)return;
  if(towerDefs[t.type].hero){activateTowerAbility(t,p===0?'rapid':'storm');return;}
+ if(towerDefs[t.type].baseOnly||towerDefs[t.type].support)return;
  const tier=t.paths[p],u=upgradeData[t.type][p][tier];
  if(upgradePathBlocked(t.paths,p,ultimateCrosspathing)||tier>=5||tierFiveTaken(t,p)){refreshSelected();return;}
  if(!u||cash<u[1])return;
@@ -1247,7 +1252,7 @@ function pointerGround(ev){const r=canvas.getBoundingClientRect();pointer.x=((ev
 function previewPlacement(ev){
  if(!selectedType||!placementPreview)return;const p=pointerGround(ev);if(!p){placementPreview.visible=false;rangeRing.visible=false;return;}
  const d=towerDefs[selectedType],valid=!placementProblem(selectedType,p.x,p.z);
- placementPreview.visible=true;placementPreview.position.set(p.x,.66,p.z);rangeRing.visible=true;rangeRing.position.set(p.x,.7,p.z);rangeRing.scale.setScalar(d.range);rangeRing.material.color.setHex(valid?0x287a34:0xe2391e);gameWrap.dataset.placement=valid?'valid':'blocked';
+ placementPreview.visible=true;placementPreview.position.set(p.x,.66,p.z);rangeRing.visible=Number.isFinite(d.range);rangeRing.position.set(p.x,.7,p.z);rangeRing.scale.setScalar(Number.isFinite(d.range)?d.range:1);rangeRing.material.color.setHex(valid?0x287a34:0xe2391e);gameWrap.dataset.placement=valid?'valid':'blocked';
 }
  canvas.addEventListener('pointermove',previewPlacement);canvas.addEventListener('pointerleave',()=>{if(selectedType){if(placementPreview)placementPreview.visible=false;rangeRing.visible=false;}});
  canvas.addEventListener('pointerdown',ev=>{if(gameEnded)return;const p=pointerGround(ev);if(!p)return;if(selectedType){placeTower(p.x,p.z);return;}const next=towerAtPoint(p.x,p.z);if(next)selectTower(next);else clearSelection();});
@@ -1845,6 +1850,16 @@ function chooseTarget(t,candidates=enemies,canHit=towerCanDamage){
  }
  return best;
 }
+function damageSniperFamily(t,e,damage,initial=true){
+ if(!e?.alive||!towerCanDamage(t,e))return;
+ const result=hitEnemy(e,damage,{tower:t,ignoreGlueAmp:!initial,suppressGlueStrikeAmp:!initial});
+ if(result?.remainingDamage>0)for(const child of result.children||[])damageSniperFamily(t,child,result.remainingDamage,false);
+}
+function fireSniperShot(t,target){
+ if(!target?.alive||!towerCanDamage(t,target))return false;
+ aimTower(t,target);animateSniper(t,0);spawnSniperShotVisual(t,target.mesh.position);
+ damageSniperFamily(t,target,t.damage);return true;
+}
 function makeProjectileMesh(kind,angle=0){
  if(kind==='iceSnowball')return new THREE.Mesh(new THREE.IcosahedronGeometry(.25,1),new THREE.MeshStandardMaterial({color:0xe4fbff,emissive:0x21b9d0,emissiveIntensity:.35,flatShading:true}));
  if(kind==='iceImpale'){
@@ -2027,6 +2042,7 @@ function updateRicochet(p,dt){
 }
 
 function fireProjectile(t,target,damage=t.damage,extra={}){
+ if(t.type==='sniper'&&!extra.cosmetic){fireSniperShot(t,target);return;}
  if(t.type==='glue'&&!extra.cosmetic){
   const muzzles=t.mesh.userData.glueRig?.muzzles;t.glueMuzzleIndex=muzzles?.length>1?(t.shotCounter||0)%muzzles.length:0;
   const origin=glueMuzzleOrigin(t),angle=Math.atan2(target.mesh.position.z-origin.z,target.mesh.position.x-origin.x);
@@ -2189,6 +2205,11 @@ function spawnArrowRainVisual(e){
  const arrow=makeProjectileMesh('hero');arrow.rotation.x=Math.PI/2;arrow.position.copy(e.mesh.position);arrow.position.y+=8;scene.add(arrow);
  visualEffects.push({kind:'arrowRain',meshes:[arrow],velocities:[new THREE.Vector3(0,-26,0)],life:.25,maxLife:.25});
 }
+function spawnSniperShotVisual(t,target){
+ const end=new THREE.Vector3(target.x,1.35,target.z),geometry=new THREE.BufferGeometry().setFromPoints([sniperMuzzleOrigin(t),end]);
+ const tracer=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:0xffefa6,transparent:true,opacity:.6,depthWrite:false}));scene.add(tracer);
+ visualEffects.push({kind:'sniperShot',meshes:[tracer],life:.055,maxLife:.055,opacities:[.6]});
+}
 function spawnImpactVisual(p,position){
  if(p.critical)spawnBurst(position,0xffd151,5,2,.3,'impact');
  const colors={bomb:0xffb657,missile:0xffb657,infernoMeteor:0xff9522,glue:0xf6dd4e,ice:0xb8f4ff,iceSnowball:0xb8f4ff,iceImpale:0x7eefff,hotBoomer:0xff7138,plasma:0xcb93ff};
@@ -2201,7 +2222,7 @@ function updateVisualEffects(dt){
    if(m.material)m.material.opacity=(fx.opacities?.[i]??(m.geometry.type==='TorusGeometry'?.72:.30))*k;
    if(fx.kind==='arrowRain'){m.position.addScaledVector(fx.velocities[i],dt);}
    else if(fx.velocities){m.position.addScaledVector(fx.velocities[i],dt);fx.velocities[i].y-=dt*5;m.rotation.x+=dt*8;m.rotation.z+=dt*6;m.scale.setScalar(.4+k*.6);}
-   else m.scale.setScalar(fx.kind==='abilityPulse'?.12+(1-k)*1.15:1+(1-k)*.035);
+   else if(fx.kind!=='sniperShot')m.scale.setScalar(fx.kind==='abilityPulse'?.12+(1-k)*1.15:1+(1-k)*.035);
   });
  }
  for(let i=visualEffects.length-1;i>=0;i--)if(visualEffects[i].life<=0){for(const m of visualEffects[i].meshes)disposeTransientMesh(m);visualEffects.splice(i,1)}
@@ -2393,14 +2414,17 @@ function updateTowers(dt){
   if(t.type==='mib'){animateMIB(t,dt);continue;}
   const combatDt=roundActive||currentMode.variant==='sandbox'?dt:0;
   updateTowerAbility(t,combatDt);
-  if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else if(t.type==='hero'&&t.mesh.userData.quincyRig)animateQuincy(t,dt);else animateTower(t,dt);
+  if(t.type==='sniper')animateSniper(t,dt);else if(t.type==='boomer'){animateBoomerang(t,dt);updateMOABPress(t,combatDt);if(t.paths[0]>=5)updateGlaiveLord(t,combatDt,dt)}else if(t.type==='bomb'&&t.mesh.userData.bombRig)animateBomb(t,dt);else if(t.type==='tack'&&t.mesh.userData.tackRig)animateTack(t,dt);else if(t.type==='ice'&&t.mesh.userData.iceRig)animateIce(t,dt);else if(t.type==='glue'&&t.mesh.userData.glueRig)animateGlue(t,dt);else if(t.type==='hero'&&t.mesh.userData.quincyRig)animateQuincy(t,dt);else animateTower(t,dt);
   if(t.type==='hero'){
    updateQuincyAbilities(t,combatDt);
   }
   if(t.type==='tack')updateInfernoMeteor(t,combatDt);
-  const pausedRadial=(t.type==='tack'||t.type==='ice'||t.type==='hero')&&combatDt<=0;
-  t.cool-=t.type==='ice'?combatDt+iceBuffDt*.5:t.type==='tack'||t.type==='hero'?combatDt:dt;if(pausedRadial)continue;if(t.cool>(t.type==='hero'?1e-9:0))continue;
-  if(t.type==='hero'){
+  const pausedRadial=(t.type==='tack'||t.type==='ice'||t.type==='hero'||t.type==='sniper')&&combatDt<=0;
+  t.cool-=t.type==='ice'?combatDt+iceBuffDt*.5:t.type==='tack'||t.type==='hero'||t.type==='sniper'?combatDt:dt;if(pausedRadial)continue;if(t.cool>(t.type==='hero'||t.type==='sniper'?1e-9:0))continue;
+  if(t.type==='sniper'){
+   while(t.cool<=1e-9){const e=chooseTarget(t);if(!e){t.cool=0;break;}fireSniperShot(t,e);recordCombatUse(t);t.shotCounter++;t.cool+=t.rate;}
+   continue;
+  }else if(t.type==='hero'){
    while(t.cool<=1e-9){
     const e=chooseTarget(t,enemies,quincyCanTarget);if(!e){t.cool=0;break;}
     aimTower(t,e);for(let i=0;i<t.shots;i++)fireProjectile(t,e,t.damage,{visualSpread:(i-(t.shots-1)/2)*.18});
