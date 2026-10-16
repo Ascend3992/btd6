@@ -12,6 +12,15 @@ function fixture(){
  return {g,c,rules,state,saved:c.captureRunSave(state,rules)};
 }
 const clone=s=>JSON.parse(JSON.stringify(s));
+test('play switches and 5-5-5 towers save/resume, including after switching off; older runs keep normal rules',()=>{
+ const {g,c,rules,state,saved}=fixture();assert.equal(saved.ultimateCrosspathing,false);assert.equal(saved.placeAnywhere,false);assert.equal(saved.crosspathingUsed,false);
+ const old=clone(saved);for(const key of ['ultimateCrosspathing','placeAnywhere','crosspathingUsed'])delete old[key];assert.equal(c.validateRunSave(old,rules).ultimateCrosspathing,false);
+ for(const t of g.towers.filter(t=>t.type!=='hero'))for(let p=0;p<3;p++)while(t.paths[p]<5)upgrade(g,t,p);
+ Object.assign(state,{ultimateCrosspathing:true,placeAnywhere:true,crosspathingUsed:true});const captured=c.captureRunSave(state,rules);assert(captured);assert(captured.ultimateCrosspathing&&captured.placeAnywhere&&captured.crosspathingUsed);
+ assert(captured.towers.filter(t=>t.type!=='hero').every(t=>t.paths.every(v=>v===5)));const off=clone(captured);off.ultimateCrosspathing=false;off.placeAnywhere=false;assert(c.validateRunSave(off,rules));off.crosspathingUsed=false;assert.equal(c.validateRunSave(off,rules),null);
+ for(const key of ['ultimateCrosspathing','placeAnywhere','crosspathingUsed'])for(const value of ['true',1,null,{}]){const bad=clone(captured);bad[key]=value;assert.equal(c.validateRunSave(bad,rules),null);}
+ for(const change of [s=>s.towers[0].paths[0]=6,s=>s.towers[6].paths[0]=1,s=>s.crosspathingUsed=false,s=>s.towers.push({...s.towers[0],id:90})]){const bad=clone(captured);change(bad);assert.equal(c.validateRunSave(bad,rules),null);}
+});
 test('temporary MIB saves round-trip with a zero-cost restored aura and reject invented upgrade paths',()=>{
  const {g,c,rules,state}=fixture();rules.definitions.mib={support:true};const mib=g.createTower('mib',-17,3);g.towers.push(mib);const saved=c.captureRunSave(state,rules);assert(saved);const restored=c.validateRunSave(clone(saved),rules);assert(restored);const record=restored.towers.find(t=>t.type==='mib');assert.deepEqual(Array.from(record.paths),[0,0,0]);assert.equal(record.level,0);
  const fresh=game();for(const data of restored.towers)fresh.towers.push(Object.assign(fresh.createTower(data.type,data.x,data.z),{paths:data.paths}));const ally=fresh.towers.find(t=>t.type==='dart');assert.equal(fresh.towers.find(t=>t.type==='mib').invest,0);assert(fresh.hasMIBSupport(ally));record.paths[0]=1;assert.equal(c.validateRunSave(restored,rules),null);

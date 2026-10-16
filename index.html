@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=75"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meadow Balloon Defense 3D</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css?v=76"></head>
 <body><div id="gameWrap">
 <canvas id="game" aria-label="Meadow game map"></canvas>
 <header id="topbar" aria-label="Game status">
@@ -42,6 +42,10 @@
 <dialog id="settingsDialog" aria-labelledby="pauseTitle">
 <h2 id="pauseTitle">PAUSE</h2><div class="pauseCard"><h3 id="pauseDifficulty">NORMAL MODE</h3>
 <div class="pauseOptions"><span>AUTO START</span><button id="settingsAutoBtn" type="button" role="switch" aria-checked="false" aria-label="Auto Start"><i></i></button></div>
+<div class="playOptions" aria-label="Gameplay options">
+<div class="pauseOptions"><span id="ultimateCrosspathingLabel">ULTIMATE CROSSPATHING<small>Upgrade all three paths to Tier 5</small></span><button id="ultimateCrosspathingBtn" type="button" role="switch" aria-checked="false" aria-labelledby="ultimateCrosspathingLabel"><i></i></button></div>
+<div class="pauseOptions"><span id="placeAnywhereLabel">PLACE ANYWHERE<small>Place on paths, obstacles or other towers</small></span><button id="placeAnywhereBtn" type="button" role="switch" aria-checked="false" aria-labelledby="placeAnywhereLabel"><i></i></button></div>
+</div>
 <div class="pauseAudio"><div class="volumeControls">
 <label class="volumeRow" for="effectsVolume"><span class="volumeIcon" aria-hidden="true">◖))</span><span class="srOnly">Sound effects volume</span><input id="effectsVolume" type="range" min="0" max="100" value="35" style="--volume:35%"><output id="effectsPercent" for="effectsVolume">35%</output></label>
 <label class="volumeRow" for="musicVolume"><span class="volumeIcon" aria-hidden="true">♫</span><span class="srOnly">Music volume</span><input id="musicVolume" type="range" min="0" max="100" value="30" style="--volume:30%"><output id="musicPercent" for="musicVolume">30%</output></label>
@@ -70,4 +74,4 @@
 <div id="treeTooltip" role="tooltip" hidden></div>
 </dialog>
 <div id="toast" role="status"></div><div id="endScreen" class="hidden"><div class="endCard"><h1 id="endTitle">Game Over</h1><p id="endText"></p><p id="endChimpsBadge" hidden></p><button id="retryRoundBtn" type="button" hidden>Retry Last Round · Red badge</button><button id="endRestartBtn" type="button">Restart</button></div></div>
-</div><script src="game.js?v=75"></script></body></html>
+</div><script src="game.js?v=76"></script></body></html>

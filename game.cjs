@@ -8,7 +8,7 @@ const visuals=fs.readFileSync(path.join(__dirname,'..','..','boomerang-visuals.j
 function game(){
  const context={RANGE_SCALE:.32,meadowDepthScale:1,towers:[],enemies:[],projectiles:[],acidPuddles:[],roundActive:true,gameEnded:false,selectedTower:null,
   gameStarted:true,pendingResume:null,leavingForRestart:false,refreshSelected(){},spawnQueue:[],spawnTimer:0,apopSeed:123,apopPending:[],autoStart:false,autoStartTimer:0,startBtn:{},syncControls(){},endRoundAcidPuddles(){},mapProgress:{record(){}},endGame(win){context.gameEnded=true;context.won=win},
-  currentMode:{key:'medium',legacy:true,bloonSpeed:1},round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
+  ultimateCrosspathing:false,placeAnywhere:false,crosspathingUsed:false,currentMode:{key:'medium',legacy:true,bloonSpeed:1},round:1,cash:0,lives:100,MAP_W:100,MAP_H:100,nextTowerId:1,animationTime:0,performance:{now:()=>0},
   saveRunCheckpoint(){},recordTowerUse(){},playBloonPop(){},updateTowerAppearance(){},updateHeroAppearance(){},setFanVisual(){},disposeTransientMesh(){},refreshAbilityUI(){},toastMsg(){},spawnAbilityPulse(){},setAbilityHalo(){},
   glueMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),animateGlue(){},iceMuzzleOrigin:t=>({x:t.x,y:1.8,z:t.z}),addIcicles(){},clearIcicles(){},
   animateMIB(){},animateTower(){},animateTack(){},animateIce(){},aimTower(){},spawnIceAuraVisual(){},spawnArrowRainVisual(){},spawnImpactVisual(){},ensureFreezeMarker(){},
@@ -18,7 +18,7 @@ function game(){
   placeEnemyOnTrack(e){e.mesh.position.x=e.seg*10+e.dist;e.mesh.position.z=0},
   scene:{add(){}},makeTowerMesh:mesh,makeProjectileMesh:mesh,makeQuincyArrowMesh:mesh,quincyMuzzleOrigin:t=>({x:t.x,y:2.15,z:t.z})};
  vm.createContext(context);
- for(const file of ['hero-xp.js','sandbox.js','normal-branches.js','apopalypse-save.js','alternate-rounds.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..',file),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
+ for(const file of ['upgrade-rules.js','hero-xp.js','sandbox.js','normal-branches.js','apopalypse-save.js','alternate-rounds.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..',file),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'..','..','difficulty.js'),'utf8').replaceAll('export const','const').replaceAll('export function','function'),context);
  // Use the real visual selectors and throw hooks; mock meshes simply have no rig.
  for(const [start,end] of [['export function boomerangProjectileKind','export function makeBoomerangWeapon'],['export function triggerBoomerangThrow',null]]){

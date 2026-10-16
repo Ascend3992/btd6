@@ -1,4 +1,4 @@
-Meadow Balloon Defense 3D - v75 temporary MIB support
+Meadow Balloon Defense 3D - v76 gameplay switches
 
 This version uses deploy-6abdc942324750a5403b3fb5.zip as the game base, with the updated Boomerang Monkey stats, upgrade models, animations and projectiles merged in.
 Bomb Shooter stats now follow the supplied tables; its base and all 15 upgrade models follow the supplied references with idle and recoil animation.
@@ -467,3 +467,15 @@ Temporary MIB support v75
 - Selected MIB displays its support radius and explanation instead of attack/upgrade controls. Supported monkeys show an MIB ACTIVE indicator; the upgrade browser has a support overview. Existing tower panels and Quincy purchases remain available.
 - All 41 regression test files pass, including universal hit permissions, exact radius, removal, real projectile damage, free prices across modes, animation isolation, save round-trip and invalid support upgrades. Chromium verifies the live desktop/phone UI, actual image decoding, rotating dishes, saved-run resume and damage to Camo Lead/DDT/BAD targets.
 - Game, stylesheet and affected module cache versions are bumped. Full ZIP includes runtime, assets/audio, documentation and regression sources. Details and screenshots: docs/mib-support.md.
+
+Ultimate Crosspathing and Place Anywhere v76
+------------------------------------------
+- Two independent switches in the pause/settings menu, both off for a new run. Auto Start, difficulty label, audio sliders, Restart and Continue remain available.
+- Ultimate Crosspathing allows all three paths to reach Tier 5 on each primary tower. Prices, five-tier caps and the existing one-of-each-Tier-5-per-tower-type limit remain. Quincy and MIB retain their own progression/support panels.
+- The upgrade buttons and owned/next artwork use the same crosspath rule. A 5-5-5 tower shows all 15 purchased tiers. The existing highest-path model selection continues to apply; no replacement artwork or hybrid model is generated.
+- Place Anywhere bypasses road, surface and tower-footprint restrictions and permits a tower’s center at the map edge. It does not permit off-map coordinates, unaffordable purchases or extra Quincys. Placement previews use the same validation as actual placement.
+- Click overlapping towers repeatedly to cycle through the stack. Turning the switch off does not remove previously placed towers.
+- Save schema 5 adds optional boolean switch fields and a remembered crosspath-use flag. Versions 1-5 still load with switches off when fields are absent. Existing 5-5-5 towers remain valid after the switch is turned off; new purchases again follow normal rules. Round checkpoints retain switch changes during a round while keeping the existing round-start rollback behavior for tower purchases.
+- Combined high Boomerang paths recompute stats consistently across all purchase orders. Bomb Shooter retains its middle-path active ability alongside passive Bomb Storm when both paths are upgraded. Existing valid crosspaths retain their combat stats.
+- All 42 regression files pass, covering six purchase orders for all six primary 5-5-5 towers, switch-off rules, exact map bounds, water/path/overlap placement, stack selection, save migration and invalid snapshots. Chromium verifies all 90 actual upgrade purchases, combat/abilities for every 5-5-5 primary, restored stats/positions, switch-off behavior, image loads, keyboard controls, phone layout and live placement preview colors.
+- Game, stylesheet and affected UI/save module caches are bumped. Full ZIP preserves all 90 original upgrade images, all five MP3s and the MIB. Details: docs/play-options.md.

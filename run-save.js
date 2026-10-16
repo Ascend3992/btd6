@@ -15,6 +15,8 @@ export function validateRunSave(raw,rules){
  try{
   requireValue(raw&&[1,2,3,4,SAVE_VERSION].includes(raw.version)&&raw.map===MAP_VERSION);
   const difficulty=raw.version===1?'medium':raw.difficulty,legacyMode=raw.version===1?true:raw.legacyMode,variant=raw.version<3?'standard':raw.variant;requireValue(typeof difficulty==='string'&&typeof legacyMode==='boolean');const mode=getGameMode(difficulty,legacyMode,variant);requireValue(typeof variant==='string'&&(!['reverse','apopalypse'].includes(variant)||raw.version>=4));
+  const ultimateCrosspathing=raw.ultimateCrosspathing===undefined?false:raw.ultimateCrosspathing,placeAnywhere=raw.placeAnywhere===undefined?false:raw.placeAnywhere,crosspathingUsed=raw.crosspathingUsed===undefined?false:raw.crosspathingUsed;
+  requireValue([ultimateCrosspathing,placeAnywhere,crosspathingUsed].every(value=>typeof value==='boolean')&&(!ultimateCrosspathing||crosspathingUsed));
   requireValue(Array.isArray(raw.towers)&&raw.towers.length<=1000);
   const ids=new Set(),tierFives=new Set();let heroes=0;
   const towers=raw.towers.map(saved=>{
@@ -23,7 +25,7 @@ export function validateRunSave(raw,rules){
    const position=point(saved,rules),hero=!!rules.definitions[saved.type].hero;
    requireValue(Array.isArray(saved.paths)&&saved.paths.length===3);
    const paths=saved.paths.map(t=>integer(t,0,5));
-   requireValue(paths.filter(t=>t>0).length<=2&&paths.filter(t=>t>2).length<=1);
+   requireValue(crosspathingUsed||paths.filter(t=>t>0).length<=2&&paths.filter(t=>t>2).length<=1);
    if(hero){requireValue(paths.every(t=>t===0)&&++heroes<=1);}
    if(rules.definitions[saved.type].support)requireValue(paths.every(t=>t===0));
    paths.forEach((tier,path)=>{if(tier===5){const key=saved.type+'-'+path;requireValue(!tierFives.has(key));tierFives.add(key);}});
@@ -58,13 +60,13 @@ export function validateRunSave(raw,rules){
   const nextTowerId=integer(raw.nextTowerId,1,1e9);requireValue(towers.every(t=>t.id<nextTowerId&&t.fanBuffs.every(b=>b.sourceId<nextTowerId)&&(t.frozenWaterSourceId===null||t.frozenWaterSourceId<nextTowerId)));
   const sandbox=variant==='sandbox',apopalypse=variant==='apopalypse',chimps=variant==='chimps';requireValue(!['double-hp-moabs','half-cash','alternate','impoppable','chimps'].includes(variant)||raw.version===5);if(chimps)requireValue(typeof raw.chimpsClean==='boolean');if(chimps||variant==='impoppable')requireValue(raw.lives===1);requireValue(!apopalypse||raw.version>=4);const apop=apopalypse?validateApopalypse(raw.apop,{round:raw.round,pathLengths:rules.pathLengths,towerIds:ids,puddleCount:puddles.length,active:raw.roundInProgress}):null;
   return {version:SAVE_VERSION,map:MAP_VERSION,difficulty,legacyMode,variant,apop,chimpsClean:chimps?raw.chimpsClean:false,sandboxLivesTarget:sandbox?integer(raw.sandboxLivesTarget,0,9999999):0,savedAt:number(raw.savedAt,0,1e15),round:integer(raw.round,mode.startRound,mode.endRound),lives:number(raw.lives,sandbox?0:.001,sandbox?9999999:1e9),cash:number(raw.cash,0,sandbox?9999999:1e12),speed:integer(raw.speed,1,3),autoStart:sandbox||apopalypse?false:raw.autoStart,roundInProgress:sandbox?false:raw.roundInProgress,
-   effectsVolume:number(raw.effectsVolume,0,1),musicVolume:number(raw.musicVolume,0,1),absoluteZeroBuffT:number(raw.absoluteZeroBuffT,0,10),nextTowerId,selectedTowerId,towers,puddles,usage};
+   ultimateCrosspathing,placeAnywhere,crosspathingUsed,effectsVolume:number(raw.effectsVolume,0,1),musicVolume:number(raw.musicVolume,0,1),absoluteZeroBuffT:number(raw.absoluteZeroBuffT,0,10),nextTowerId,selectedTowerId,towers,puddles,usage};
  }catch{return null;}
 }
 export function captureRunSave(state,rules){
  const apop=state.variant==='apopalypse'?captureApopalypse({...state.apop,enemies:state.enemies,puddles:state.puddles,towers:state.towers}):null;
  const raw={apop,chimpsClean:!!state.chimpsClean,version:SAVE_VERSION,map:MAP_VERSION,difficulty:state.difficulty||'medium',legacyMode:!!state.legacyMode,variant:state.variant||'standard',sandboxLivesTarget:state.sandboxLivesTarget??999999,savedAt:Date.now(),round:state.round,lives:state.lives,cash:state.cash,speed:state.speed,autoStart:state.autoStart,roundInProgress:!!state.roundInProgress,
-  effectsVolume:state.effectsVolume,musicVolume:state.musicVolume,absoluteZeroBuffT:state.absoluteZeroBuffT,nextTowerId:state.nextTowerId,selectedTowerId:state.selectedTowerId??null,usage:state.usage,
+  ultimateCrosspathing:state.ultimateCrosspathing??false,placeAnywhere:state.placeAnywhere??false,crosspathingUsed:state.crosspathingUsed??false,effectsVolume:state.effectsVolume,musicVolume:state.musicVolume,absoluteZeroBuffT:state.absoluteZeroBuffT,nextTowerId:state.nextTowerId,selectedTowerId:state.selectedTowerId??null,usage:state.usage,
   towers:state.towers.map(t=>{const runtime={};for(const key of runtimeFields)if(t[key]!==undefined)runtime[key]=t[key];return {id:t.id,type:t.type,x:t.x,z:t.z,paths:[...t.paths],target:t.target,throwHand:t.throwHand||1,camoPriority:!!t.camoPriority,level:t.level||0,rotationY:t.mesh.rotation.y,
     heroLevelSpend:t.type==='hero'?t.heroLevelSpend||0:0,heroXP:t.type==='hero'?Math.max(t.heroXP??0,heroXPAtLevel(t.level)):0,runtime,fanBuffs:t.fanBuffs.map(b=>({sourceId:b.sourceId,tier:b.tier,remaining:b.remaining})),activeAbilityKey:t.activeAbility?.key??null,activeAbilityTier:t.activeAbility?.tier??null,stormStats:t.stormStats??null,stormCenter:t.stormCenter?{x:t.stormCenter.x,z:t.stormCenter.z}:null,placementSurface:t.placementSurface||'land',frozenWaterSourceId:t.frozenWaterSourceId??null};}),
   puddles:state.puddles.filter(p=>p.life>0&&p.pierceLeft>0).map(p=>({x:p.x,z:p.z,radius:p.radius,life:p.life,totalLife:p.totalLife,pierceLeft:p.pierceLeft,damage:p.damage,roundCarry:p.roundCarry,sourceId:state.towers.some(t=>t===p.attack.sourceTower)?p.attack.sourceTower.id:null,camoDetect:!!p.attack.camoDetect}))};

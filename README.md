@@ -1,10 +1,12 @@
 # Meadow Balloon Defense 3D
 
-Latest version: **v75**. Adds a temporary, free MIB support building with spinning twin radar dishes. Monkeys within its 25-tile radius can target Camo and hit every Bloon material and class. Their damage and attack range stay the same. The MIB saves with your run; all existing towers, seeking boomerangs and 90 original upgrade icons remain available.
+Latest version: **v76**. The pause menu now has **Ultimate Crosspathing** and **Place Anywhere** switches. Ultimate Crosspathing lets each primary tower reach 5-5-5; Place Anywhere allows paths, obstacles, water, overlapping towers and map edges. Both save with your run. Turning them off keeps existing towers and restores normal rules for new actions.
 
-[Download v75 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v75.zip)
+[Download v76 from GitHub](https://github.com/Ascend3992/btd6/raw/refs/heads/main/releases/meadow-balloon-defense-v76.zip)
 
-[MIB model and support details](docs/mib-support.md) · [Desktop preview](docs/mib-support-desktop.png) · [Phone preview](docs/mib-support-mobile.png)
+[Gameplay switch details](docs/play-options.md) · [Desktop settings](docs/play-options-desktop.png) · [Phone settings](docs/play-options-mobile.png) · [5-5-5 upgrades](docs/ultimate-crosspathing.png)
+
+[MIB model and support details](docs/mib-support.md)
 
 [Home screen](docs/home-screen.png) · [Map selector](docs/map-selection.png) · [Mode selector](docs/mode-selection.png) · [Phone mode selector](docs/mode-selection-mobile.png) · [Mode rules](docs/home-and-modes.md)
 

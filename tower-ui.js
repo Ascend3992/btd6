@@ -1,5 +1,6 @@
 import * as THREE from './assets/vendor/three.module.js';
 import {upgradeIcons} from './upgrade-icons.js?v=7';
+import {upgradePathBlocked} from './upgrade-rules.js?v=1';
 let portraitRenderer,portraitScene,portraitCamera;
 const portraits=new Map(),unavailableIcons=new Set();
 export function renderTowerPortrait(t){
@@ -25,12 +26,12 @@ export function setArt(node,type,path,tier,locked=false){
  else setFallback(node,key);
 }
 function setFallback(node,key){node.innerHTML='<svg aria-hidden="true"><use href="assets/ui/interface.svg#'+key+'"></use></svg>';}
-export function renderUpgradeRows(t,data,cash,uniqueTierTaken){
+export function renderUpgradeRows(t,data,cash,uniqueTierTaken,ultimateCrosspathing=false){
  const hero=t.type==='hero',panel=document.getElementById('selectedPanel');panel.classList.toggle('heroPanel',hero);panel.classList.toggle('supportPanel',t.type==='mib');if(t.type==='mib')return;
  for(let path=0;path<3;path++){
   const b=document.getElementById('upgrade'+path),row=b.parentElement,owned=row.querySelector('.ownedUpgrade'),tier=t.paths[path],next=data[t.type]?.[path]?.[tier],current=data[t.type]?.[path]?.[tier-1];
   if(hero){row.classList.remove('pathLocked','maxed');b.classList.remove('unaffordable');setArt(b.querySelector('.upgradeArt'),'hero',path,1);continue;}
-  const blocked=tier<5&&(tier>=2&&t.paths.some((v,i)=>i!==path&&v>2)||tier===0&&t.paths.filter(v=>v>0).length>=2);
+  const blocked=tier<5&&upgradePathBlocked(t.paths,path,ultimateCrosspathing);
   const maxed=tier>=5||blocked&&tier>0,locked=blocked&&tier===0;
   row.classList.toggle('pathLocked',locked);row.classList.toggle('maxed',maxed);
   [...row.querySelectorAll('.tierMarkers i')].forEach((el,i)=>el.classList.toggle('owned',i<tier));
